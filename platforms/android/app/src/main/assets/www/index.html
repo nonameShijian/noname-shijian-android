@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="user-scalable=no">
+<link rel="stylesheet" href="app/color.css">
+<script type="text/javascript" src="app/eruda.js"></script>
+<script type="text/javascript" src="app/redirect.js"></script>
+<body>
+	<script src="app/server.js"></script>
+    <script>
+		document.addEventListener('deviceready', () => {
+			// 是否开启手机的eruda控制台
+			cordova.exec(result => {
+				if (result && result.type == 'environment') {
+					const bool = result.message;
+					if(bool == "true") {
+						eruda.init();
+						window.noname_shijianInterfaces.environment = true;
+					}
+				}
+			}, () => {}, 'FinishImport', 'environment', []);
+			if (localStorage.getItem('noname_inited')) {
+				// 防止关不掉dialog动画
+				navigator.notification.activityStop();
+				/** 读取app的资源目录(在安卓是file:///android_asset/) */
+				window.resolveLocalFileSystemURL(cordova.file.applicationDirectory,
+					/** @param { DirectoryEntry } entry */
+					entry => {
+						entry.getDirectory('www/app', { create: false }, appDirEntry => {
+							appDirEntry.getFile('noname.zip', { create: false }, fileEntry => {
+								// 检测app是否更新了，是就跳转到java解压
+								cordova.exec(() => {}, () => {}, 'FinishImport', 'checkAppUpdate', []);
+							}, error => {
+								console.warn('检查更新:www/app/noname.zip不存在: ' + error.code);
+							});
+						}, error => {
+							console.warn('检查更新:www/app文件夹不存在: ' + error.code);
+						});
+					});
+			}
+		}, false);
+    </script>
+	<script type="text/javascript" src="app/index.js"></script>
+</body>

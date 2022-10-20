@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="cordova-plugin-websocket-server"
+    version="1.6.0">
+
+    <name>WebSocket Server</name>
+    <description>WebSocket Server plugin for Cordova/Phonegap</description>
+    <author>Sylvain Bréjeon</author>
+    <keywords>cordova,plugin,network,websocket,server</keywords>
+    <license>MIT</license>
+
+    <platform name="android">
+        <js-module src="www/wsserver.js" name="WebSocketServer">
+            <clobbers target="cordova.plugins.wsserver"/>
+        </js-module>
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+        </config-file>
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="WebSocketServer">
+              <param name="android-package" value="net.becvert.cordova.WebSocketServerPlugin"/>
+            </feature>
+        </config-file>
+        <source-file src="src/android/net/becvert/cordova/WebSocketServerPlugin.java" target-dir="src/net/becvert/cordova"/>
+        <source-file src="src/android/net/becvert/cordova/WebSocketServerImpl.java" target-dir="src/net/becvert/cordova"/>
+        <framework src="src/android/websocket-server.gradle" custom="true" type="gradleReference"/>
+    </platform>
+
+    <platform name="ios">
+        <js-module src="www/wsserver.js" name="WebSocketServer">
+            <clobbers target="cordova.plugins.wsserver"/>
+        </js-module>
+        <config-file target="config.xml" parent="/*">
+            <feature name="WebSocketServer">
+              <param name="ios-package" value="WebSocketServer"/>
+            </feature>
+        </config-file>
+        <header-file src="src/ios/WebSocketServer-Bridging-Header.h"/>
+        <source-file src="src/ios/WebSocketServer.swift"/>
+        <framework src="Foundation.framework"/>
+        <framework src="CFNetwork.framework"/>
+        <framework src="Security.framework"/>
+        <framework src="libz.tbd"/>
+        <header-file src="src/ios/vendor/headers/PSWebSocket.h"/>
+        <header-file src="src/ios/vendor/headers/PSWebSocketServer.h"/>
+        <header-file src="src/ios/vendor/headers/PSWebSocketTypes.h"/>
+        <source-file framework="true" src="src/ios/vendor/libPocketSocket.a"/>
+        <!-- https://github.com/hibento/swift-netutils/blob/master/NetUtils/Interface.swift -->
+        <source-file src="src/ios/Interface.swift" />
+    </platform>
+
+    <dependency id="cordova-plugin-add-swift-support" version="2.0.2"/>
+
+</plugin>

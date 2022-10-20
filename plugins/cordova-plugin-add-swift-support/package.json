@@ -1,0 +1,77 @@
+{
+  "_from": "cordova-plugin-add-swift-support@2.0.2",
+  "_id": "cordova-plugin-add-swift-support@2.0.2",
+  "_inBundle": false,
+  "_integrity": "sha1-v6hINW817cCJhAPrUQ/kB620Dp8=",
+  "_location": "/cordova-plugin-add-swift-support",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "cordova-plugin-add-swift-support@2.0.2",
+    "name": "cordova-plugin-add-swift-support",
+    "escapedName": "cordova-plugin-add-swift-support",
+    "rawSpec": "2.0.2",
+    "saveSpec": null,
+    "fetchSpec": "2.0.2"
+  },
+  "_requiredBy": [
+    "#DEV:/",
+    "#USER"
+  ],
+  "_resolved": "https://registry.npm.taobao.org/cordova-plugin-add-swift-support/download/cordova-plugin-add-swift-support-2.0.2.tgz",
+  "_shasum": "bfa848356f35edc0898403eb510fe407adb40e9f",
+  "_spec": "cordova-plugin-add-swift-support@2.0.2",
+  "_where": "E:\\Kuang\\xuanwunoname",
+  "author": {
+    "name": "Alexis Kofman",
+    "email": "alexis.kofman@gmail.com",
+    "url": "http://twitter.com/alexiskofman"
+  },
+  "bugs": {
+    "url": "https://github.com/akofman/cordova-plugin-add-swift-support/issues"
+  },
+  "bundleDependencies": false,
+  "cordova": {
+    "id": "cordova-plugin-add-swift-support",
+    "platforms": [
+      "ios"
+    ]
+  },
+  "dependencies": {
+    "glob": "^7.1.3",
+    "semver": "^6.0.0",
+    "xcode": "^2.0.0"
+  },
+  "deprecated": false,
+  "description": "Add Swift support to your iOS plugins",
+  "devDependencies": {
+    "acorn": "^6.1.1",
+    "eslint": "^5.15.3",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-node": "^8.0.1",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0"
+  },
+  "homepage": "https://github.com/akofman/cordova-plugin-add-swift-support",
+  "keywords": [
+    "cordova",
+    "ios",
+    "swift",
+    "swift-support",
+    "ecosystem:cordova",
+    "cordova-ios",
+    "cordova:plugin"
+  ],
+  "license": "Apache-2.0",
+  "name": "cordova-plugin-add-swift-support",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akofman/cordova-plugin-add-swift-support.git"
+  },
+  "scripts": {
+    "test": "eslint src"
+  },
+  "version": "2.0.2"
+}

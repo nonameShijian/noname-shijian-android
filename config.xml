@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.noname.shijian" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>无名杀</name>
+    <description>
+        无名杀
+    </description>
+    <author email="dev@cordova.apache.org" href="http://cordova.io">
+        诗笺
+    </author>
+    <content src="index.html" />
+
+    <preference name="Orientation" value="landscape" />
+    <preference name="Fullscreen" value="true" />
+    <preference name="SplashScreenDelay" value="1500" />
+
+    <access origin="*" />
+    <access origin="http://*/*" />
+    <access origin="https://*/*" />
+
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+
+    <feature name="FinishImport">
+        <param name="android-package" value="com.noname.shijian.FinishImport" />
+    </feature>
+
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <allow-navigation href="http://*/*" />
+        <allow-navigation href="https://*/*" />
+        <allow-navigation href="data:*" />
+
+        <icon density="ldpi" src="res/drawable-ldpi/icon.png" />
+        <icon density="mdpi" src="res/drawable-mdpi/icon.png" />
+        <icon density="hdpi" src="res/drawable-hdpi/icon.png" />
+        <icon density="xhdpi" src="res/drawable-land-xhdpi/icon.png" />
+        <icon density="xxhdpi" src="res/drawable-land-xxhdpi/icon.png" />
+        <icon density="xxxhdpi" src="res/drawable-land-xxxhdpi/icon.png" />
+
+        <splash src="res/drawable-hdpi/screen.png" density="land-hdpi"/>
+        <splash src="res/drawable-hdpi/screen.png" density="land-ldpi"/>
+        <splash src="res/drawable-hdpi/screen.png" density="land-mdpi"/>
+        <splash src="res/drawable-hdpi/screen.png" density="land-xhdpi"/>
+
+        <splash src="res/drawable-port-hdpi/screen.png" density="port-hdpi"/>
+        <splash src="res/drawable-port-ldpi/screen.png" density="port-ldpi"/>
+        <splash src="res/drawable-port-mdpi/screen.png" density="port-mdpi"/>
+        <splash src="res/drawable-port-xhdpi/screen.png" density="port-xhdpi"/>
+    </platform>
+    <platform name="ios">
+        <allow-intent href="itms:*" />
+        <allow-intent href="itms-apps:*" />
+    </platform>
+</widget>

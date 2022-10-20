@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.noname.shijian"
+    version="1.0.0"
+    xmlns="http://www.w3.org/ns/widgets"
+    xmlns:cdv="http://cordova.apache.org/ns/1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.w3.org/ns/widgets ">
+    <feature name="File">
+        <param
+            name="android-package"
+            value="org.apache.cordova.file.FileUtils" />
+        <param
+            name="onload"
+            value="true" />
+    </feature>
+    <allow-navigation href="cdvfile:*" />
+    <feature name="FileTransfer">
+        <param
+            name="android-package"
+            value="org.apache.cordova.filetransfer.FileTransfer" />
+    </feature>
+    <feature name="Device">
+        <param
+            name="android-package"
+            value="org.apache.cordova.device.Device" />
+    </feature>
+    <feature name="LocalNotification">
+        <param
+            name="android-package"
+            value="de.appplant.cordova.plugin.localnotification.LocalNotification" />
+    </feature>
+    <feature name="Whitelist">
+        <param
+            name="android-package"
+            value="org.apache.cordova.whitelist.WhitelistPlugin" />
+        <param
+            name="onload"
+            value="true" />
+    </feature>
+    <feature name="Notification">
+        <param
+            name="android-package"
+            value="org.apache.cordova.dialogs.Notification" />
+    </feature>
+    <feature name="WebSocket">
+        <param
+            name="android-package"
+            value="com.knowledgecode.cordova.websocket.WebSocket" />
+    </feature>
+    <feature name="WebSocketServer">
+        <param
+            name="android-package"
+            value="net.becvert.cordova.WebSocketServerPlugin" />
+    </feature>
+    <feature name="Permissions">
+        <param
+            name="android-package"
+            value="com.android.plugins.Permissions" />
+    </feature>
+    <feature name="Badge">
+        <param
+            name="android-package"
+            value="de.appplant.cordova.plugin.badge.Badge" />
+    </feature>
+    <feature name="FinishImport">
+        <param
+            name="android-package"
+            value="com.noname.shijian.FinishImport" />
+    </feature>
+    <name>无名杀</name>
+    <description>
+        无名杀
+    </description>
+    <author
+        email="dev@cordova.apache.org"
+        href="http://cordova.io">
+        诗笺
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <access origin="http://*/*" />
+    <access origin="https://*/*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <allow-intent href="market:*" />
+    <allow-navigation href="http://*/*" />
+    <allow-navigation href="https://*/*" />
+    <allow-navigation href="data:*" />
+    <icon
+        density="ldpi"
+        src="res/drawable-ldpi/icon.png" />
+    <icon
+        density="mdpi"
+        src="res/drawable-mdpi/icon.png" />
+    <icon
+        density="hdpi"
+        src="res/drawable-hdpi/icon.png" />
+    <icon
+        density="xhdpi"
+        src="res/drawable-land-xhdpi/icon.png" />
+    <icon
+        density="xxhdpi"
+        src="res/drawable-land-xxhdpi/icon.png" />
+    <icon
+        density="xxxhdpi"
+        src="res/drawable-land-xxxhdpi/icon.png" />
+    <splash
+        density="land-hdpi"
+        src="res/drawable-hdpi/screen.png" />
+    <splash
+        density="land-ldpi"
+        src="res/drawable-hdpi/screen.png" />
+    <splash
+        density="land-mdpi"
+        src="res/drawable-hdpi/screen.png" />
+    <splash
+        density="land-xhdpi"
+        src="res/drawable-hdpi/screen.png" />
+    <splash
+        density="port-hdpi"
+        src="res/drawable-port-hdpi/screen.png" />
+    <splash
+        density="port-ldpi"
+        src="res/drawable-port-ldpi/screen.png" />
+    <splash
+        density="port-mdpi"
+        src="res/drawable-port-mdpi/screen.png" />
+    <splash
+        density="port-xhdpi"
+        src="res/drawable-port-xhdpi/screen.png" />
+    <preference
+        name="loglevel"
+        value="DEBUG" />
+    <preference
+        name="Orientation"
+        value="landscape" />
+    <preference
+        name="Fullscreen"
+        value="true" />
+    <preference
+        name="SplashScreenDelay"
+        value="1500" />
+</widget>
