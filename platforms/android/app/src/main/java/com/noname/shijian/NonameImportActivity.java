@@ -427,8 +427,24 @@ public class NonameImportActivity extends Activity {
 		File cacheJs = new File(cacheDir, "extension.js");
 		try {
 			String extensionName = getExtensionName(cacheJs);
-			updateText("扩展名输入为：" + extensionName + "\n正在解压到对应扩展文件夹。请耐心等待。");
-			showProgressDialogAndExtractAll(getExtensionFile(extensionName).getPath(), cacheDir, extensionName);
+			updateText("扩展名解析为：" + extensionName);
+			runOnUiThread(() -> {
+				final EditText editText = new EditText(NonameImportActivity.this);
+				editText.setText(extensionName);
+				new AlertDialog.Builder(NonameImportActivity.this)
+						.setTitle("请确认扩展名是否正确")
+						.setView(editText)
+						.setCancelable(false)
+						.setPositiveButton("确定", (dialogInterface, i) -> {
+							if (editText.getText().length() == 0) {
+								ToastUtils.show(NonameImportActivity.this,  "请输入扩展名！");
+							} else {
+								final String extName = editText.getText().toString();
+								updateText("正在解压到对应扩展文件夹。请耐心等待。");
+								showProgressDialogAndExtractAll(getExtensionFile(extName).getPath(), cacheDir, extName);
+							}
+						}).create().show();
+			});
 		} catch (ExtensionNameException e) {
 			runOnUiThread(() -> {
 				final EditText editText = new EditText(NonameImportActivity.this);
@@ -461,7 +477,8 @@ public class NonameImportActivity extends Activity {
 			public void run() {
 				try {
 					String extensionNameFromDir = split[split.length - 1];
-					String extensionNameFromJs = getExtensionName(cacheJs);
+					String extensionNameFromJs = null;
+					extensionNameFromJs = getExtensionName(cacheJs);
 					updateText("从文件夹名解析扩展名为: " + extensionNameFromDir);
 					updateText("从js文件解析扩展名为: " + extensionNameFromJs);
 					String extensionName;
@@ -472,52 +489,71 @@ public class NonameImportActivity extends Activity {
 						extensionName = extensionNameFromDir;
 					}
 					updateText("扩展名解析为：" + extensionName);
-					updateText("开始检测解压文件，此过程时间可能会较长，请耐心等待。");
-					// 获取到extension的文件夹位置
-					File extDir = getExtensionFile(extensionName);
-					if (!extDir.exists()) {
-						extDir.mkdir();
-					}
-					// updateText("rootPath: " + rootPath);
-					// updateText("原文件数量: " + zipFile.getFileHeaders().size());
-					// 移除除了rootPath外的文件
-					List<String> filesToRemove = new ArrayList<>();
-					Map<String, String> fileNamesMap = new HashMap<>();
-					List<FileHeader> list = zipFile.getFileHeaders();
-					for (FileHeader f: list) {
-						String name = f.getFileName();
-						// 如果rootPath是a/b时，name为a此判断依旧返回真
-						// if (!name.startsWith(rootPath)) {
-						if (!name.startsWith(rootPath) && rootPath.indexOf(name) != 0) {
-							filesToRemove.add(name);
-						} else if(!f.isDirectory()) {
-							fileNamesMap.put(name, name.substring(rootPath.length()));
-						}
-					}
-					// zip文件中删除多个文件和文件夹
-					zipFile.removeFiles(filesToRemove);
-					// 把rootPath中的文件移动到zip根目录
-					zipFile.renameFiles(fileNamesMap);
-					// 删除rootPath
-					zipFile.removeFile(rootPath);
-					// 循环删除
-					if (rootPath.split("/").length > 1) {
-						String[] split = rootPath.split("/");
-						for (int i = split.length - 1; i > -1; i--) {
-							String p = "";
-							for (int j = 0; j <= i; j++) {
-								p = p + split[j] + '/';
-							}
-							zipFile.removeFile(p);
-						}
-					}
-					// 解压zip
-					// updateText("filesToRemove: " + filesToRemove.size());
-					// updateText("fileNamesMap: " + fileNamesMap.size());
-					// zipFile.extractAll(extDir.getPath());
-					showProgressDialogAndExtractAll(extDir.getPath(), cacheDir, extensionName);
+					runOnUiThread(() -> {
+						final EditText editText = new EditText(NonameImportActivity.this);
+						new AlertDialog.Builder(NonameImportActivity.this)
+								.setTitle("请确认扩展名是否正确")
+								.setView(editText)
+								.setCancelable(false)
+								.setPositiveButton("确定", (dialogInterface, num) -> {
+									if (editText.getText().length() == 0) {
+										ToastUtils.show(NonameImportActivity.this,  "请输入扩展名！");
+									} else {
+										final String extName = editText.getText().toString();
+										updateText("开始检测解压文件，此过程时间可能会较长，请耐心等待。");
+										try {
+											// 获取到extension的文件夹位置
+											File extDir = getExtensionFile(extName);
+											if (!extDir.exists()) {
+												extDir.mkdir();
+											}
+											// updateText("rootPath: " + rootPath);
+											// updateText("原文件数量: " + zipFile.getFileHeaders().size());
+											// 移除除了rootPath外的文件
+											List<String> filesToRemove = new ArrayList<>();
+											Map<String, String> fileNamesMap = new HashMap<>();
+											List<FileHeader> list = zipFile.getFileHeaders();
+											for (FileHeader f: list) {
+												String name = f.getFileName();
+												// 如果rootPath是a/b时，name为a此判断依旧返回真
+												// if (!name.startsWith(rootPath)) {
+												if (!name.startsWith(rootPath) && rootPath.indexOf(name) != 0) {
+													filesToRemove.add(name);
+												} else if(!f.isDirectory()) {
+													fileNamesMap.put(name, name.substring(rootPath.length()));
+												}
+											}
+											// zip文件中删除多个文件和文件夹
+											zipFile.removeFiles(filesToRemove);
+											// 把rootPath中的文件移动到zip根目录
+											zipFile.renameFiles(fileNamesMap);
+											// 删除rootPath
+											zipFile.removeFile(rootPath);
+											// 循环删除
+											if (rootPath.split("/").length > 1) {
+												String[] split = rootPath.split("/");
+												for (int i = split.length - 1; i > -1; i--) {
+													String p = "";
+													for (int j = 0; j <= i; j++) {
+														p = p + split[j] + '/';
+													}
+													zipFile.removeFile(p);
+												}
+											}
+											// 解压zip
+											// updateText("filesToRemove: " + filesToRemove.size());
+											// updateText("fileNamesMap: " + fileNamesMap.size());
+											// zipFile.extractAll(extDir.getPath());
+											showProgressDialogAndExtractAll(extDir.getPath(), cacheDir, extName);
+
+										} catch (Exception e) {
+											updateText("解压失败，已停止解压\n" + e);
+										}
+									}
+								}).create().show();
+					});
 				} catch (Exception e) {
-					updateText("解压失败，已停止解压\n" + e.toString());
+					updateText("解压失败，已停止解压\n" + e);
 				}
 			}
 		}.start();

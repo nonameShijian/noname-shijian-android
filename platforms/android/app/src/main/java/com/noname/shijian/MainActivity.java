@@ -80,7 +80,7 @@ public class MainActivity extends CordovaActivity {
             String readFile = intent.getStringExtra("readFile");
             Scanner scanner = null;
             try {
-                path = path.replace("com.noname.shijian", getExternalFilesDir(null).getParentFile().getPath());
+                path = path.replace(getPackageName(), getExternalFilesDir(null).getParentFile().getPath());
                 StringBuilder string = new StringBuilder();
                 File file = new File(path);
                 boolean isDirectory = file.isDirectory();
