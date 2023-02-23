@@ -52,6 +52,7 @@ public class MainActivity extends CordovaActivity {
 
         WebView.setWebContentsDebuggingEnabled(true);
         // SystemWebView wv = (SystemWebView) appView.getView();
+
         // Set by <content src="index.html" /> in config.xml
         loadUrl(launchUrl);
     }
@@ -72,6 +73,7 @@ public class MainActivity extends CordovaActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        /*
         // 判断code
         if (requestCode == 2 && resultCode == 3) {
             // 从data中取出数据
@@ -98,6 +100,7 @@ public class MainActivity extends CordovaActivity {
                 if (scanner != null) scanner.close();
             }
         }
+        */
 
         // 请求权限
         if (requestCode == 10085) {

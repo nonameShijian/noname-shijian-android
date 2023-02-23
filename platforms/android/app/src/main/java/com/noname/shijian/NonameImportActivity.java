@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -22,8 +23,8 @@ import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -181,9 +182,21 @@ public class NonameImportActivity extends Activity {
 			loadUri(getIntent().getData());
 		} else if (getSharedPreferences("nonameshijian", MODE_PRIVATE).getLong("version",10000) < VERSION) {
 			updateText("检测到您是首次安装或是升级了app，将自动为您解压内置资源");
-			loadAssetZip();
+			try {
+				InputStream inputStream = getAssets().open("www/app/noname.zip");
+				inputStream.close();
+				loadAssetZip();
+			} catch (IOException e) {
+				loadAssetExt();
+			}
 		} else if (getIntent() != null && getIntent().getExtras() != null && "true".equals(getIntent().getExtras().getString("unzip"))) {
-			loadAssetZip();
+			try {
+				InputStream inputStream = getAssets().open("www/app/noname.zip");
+				inputStream.close();
+				loadAssetZip();
+			} catch (IOException e) {
+				loadAssetExt();
+			}
 		} else {
 			// ToastUtils.show(NonameImportActivity.this, "未通过无名杀打开zip");
 			Intent intent = new Intent(this, MainActivity.class);
@@ -393,6 +406,26 @@ public class NonameImportActivity extends Activity {
 				}
 			}
 		}.start();
+	}
+
+	private void loadAssetExt() {
+		String[] strings = new String[] {
+				"extension.js",
+				"extension.css",
+		};
+		for (String s : strings) {
+			File result =  Utils.assetToFile("www/SJSettings/" + s,this,"extension/SJ Settings/" + s);
+			if (result == null) {
+				updateText(s + "添加失败");
+			}
+		}
+		// 储存版本号
+		getSharedPreferences("nonameshijian", MODE_PRIVATE)
+				.edit()
+				.putLong("version",VERSION)
+				.apply();
+
+		afterFinishImportExtension();
 	}
 
 	private void importExtension() throws Exception {
@@ -937,7 +970,7 @@ public class NonameImportActivity extends Activity {
 		try {
 			List<FileHeader> fileHeaders = zipFile.getFileHeaders();
 			int size = fileHeaders.size();
-			runOnUiThread(() -> {
+			new Handler(Looper.getMainLooper()).post(() -> {
 				dialog.setMax(size);
 				dialog.show();
 			});
@@ -949,20 +982,62 @@ public class NonameImportActivity extends Activity {
 				String extractedFile = getFileName(v);
 				// 但是原本的没变，需要改名
 				if (!v.getFileName().equals(extractedFile)) {
+					Log.e("renameFile", v.getFileName() + " to " + extractedFile);
 					zipFile.renameFile(v, extractedFile);
 				}
 				try {
 					zipFile.extractFile(v, filePath, extractedFile);
 				} catch (ZipException e) {
+					String message = e.getMessage().contains("Wrong password!") ? "压缩包密码错误，请重新解压" : e.getMessage();
+
 					Log.e("解压失败", "filePath: " + filePath);
 					Log.e("解压失败", extractedFile + "(" + (i + 1) + "/" + size + ")");
-					Log.e("解压失败", e.getMessage());
+					Log.e("解压失败", message);
 					Log.e("解压失败", "——————————");
-					updateText("解压失败: " + extractedFile + "(" + (i + 1) + "/" + size + "): " + e.getMessage());
-					hasError = true;
-					dialog.dismiss();
-					clearCache(cacheDir);
-					return;
+					updateText("解压失败: " + extractedFile + "(" + (i + 1) + "/" + size + "): " + message);
+
+					if (e.getMessage().contains("Wrong password!")) {
+						hasError = true;
+						dialog.dismiss();
+						clearCache(cacheDir);
+						return;
+					}
+
+					// 尝试换个编码，先换成utf8
+					String oldName = v.getFileName();
+					updateText("尝试更换编码解压: utf-8");
+					extractedFile = getFileName(v, "utf-8");
+					Log.e("renameFile", oldName + " to " + extractedFile);
+					zipFile.renameFile(v, extractedFile);
+					try {
+						if (isMessyCode(extractedFile)) throw new ZipException("文件名为乱码: " + extractedFile);
+						zipFile.extractFile(v, filePath, extractedFile);
+						updateText("解压" + extractedFile + "成功");
+						Log.e("utf-8解压成功", "——————————");
+					} catch (ZipException err) {
+						Log.e("utf-8解压失败", e.getMessage());
+						Log.e("utf-8解压失败", "——————————");
+						updateText("解压失败: " + e.getMessage());
+						updateText("尝试更换编码解压: gbk");
+						zipFile.renameFile(v, oldName);
+						extractedFile = getFileName(v, "gbk");
+						Log.e("renameFile", oldName + " to " + extractedFile);
+						zipFile.renameFile(v, extractedFile);
+						try {
+							if (isMessyCode(extractedFile)) throw new ZipException("文件名为乱码: " + extractedFile);
+							zipFile.extractFile(v, filePath, extractedFile);
+							updateText("解压" + extractedFile + "成功");
+							Log.e("gbk解压成功", "——————————");
+						} catch (ZipException error) {
+							Log.e("gbk解压失败", e.getMessage());
+							Log.e("gbk解压失败", "——————————");
+							updateText("解压失败: " + e.getMessage());
+							hasError = true;
+							dialog.dismiss();
+							clearCache(cacheDir);
+							return;
+						}
+					}
 				}
 				// updateText("解压成功 ：" + extractedFile + "(" + (i + 1) + "/" + size + ")");
 				Message msg = handler.obtainMessage(0x0001);
@@ -987,31 +1062,53 @@ public class NonameImportActivity extends Activity {
 		}
 	}
 
-	// 解析乱码文件名
-	public static String getFileName(FileHeader fileHeader) {
+	/** 解析乱码文件名 */
+	public String getFileName(FileHeader fileHeader) {
 		String name = fileHeader.getFileName();
 		boolean imc = isMessyCode(name);
 		Log.e("name", name);
 		Log.e("isMessyCode", String.valueOf(imc));
+		String name_utf8 = name;
+		String name_gbk = name;
 		try {
-			Log.e("name-utf8", new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_UTF_8.name()));
-			Log.e("name-gbk", new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_GBK.name()));
+			name_utf8 = new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_UTF_8.name());
+			name_gbk = new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_GBK.name());
+			Log.e("name-utf8", name_utf8);
+			Log.e("name-gbk", name_gbk);
 			Log.e("name", "——————————");
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			Log.e("getFileName", e.getMessage());
+		}
 		if (!imc) {
 			return name;
 		}
-		try {
-			// 目前压缩包主要是两种来源WINdows和Linux
-			if (fileHeader.isFileNameUTF8Encoded()) {
-				return new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_UTF_8.name());
-			} else {
-				return new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_GBK.name());
-			}
-		} catch (UnsupportedEncodingException e) {
-			Log.e("文件名解析错误", e.getMessage());
+		// 目前压缩包主要是两种来源WINdows和Linux
+		if (fileHeader.isFileNameUTF8Encoded()) {
+			return name_utf8;
+		} else {
+			return name_gbk;
 		}
-		return name;
+	}
+
+	/** 对FileHeader指定编码 */
+	public String getFileName(FileHeader fileHeader, String charset) {
+		String name = fileHeader.getFileName();
+		String name_utf8 = name;
+		String name_gbk = name;
+		try {
+			name_utf8 = new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_UTF_8.name());
+			name_gbk = new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_GBK.name());
+		} catch (Exception e) {
+			Log.e("getFileName2", e.getMessage());
+		}
+
+		if ("utf-8".equals(charset)) {
+			return name_utf8;
+		} else if ("gbk".equals(charset)) {
+			return name_gbk;
+		} else {
+			return name;
+		}
 	}
 
 	// 显示解压进度条并解压文件

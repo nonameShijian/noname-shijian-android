@@ -256,19 +256,19 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
       ]
     },
     {
-      "id": "cordova-plugin-websocket-server.WebSocketServer",
-      "file": "plugins/cordova-plugin-websocket-server/www/wsserver.js",
-      "pluginId": "cordova-plugin-websocket-server",
-      "clobbers": [
-        "cordova.plugins.wsserver"
-      ]
-    },
-    {
       "id": "cordova-plugin-android-permissions.Permissions",
       "file": "plugins/cordova-plugin-android-permissions/www/permissions.js",
       "pluginId": "cordova-plugin-android-permissions",
       "clobbers": [
         "cordova.plugins.permissions"
+      ]
+    },
+    {
+      "id": "cordova-plugin-file-opener2.FileOpener2",
+      "file": "plugins/cordova-plugin-file-opener2/www/plugins.FileOpener2.js",
+      "pluginId": "cordova-plugin-file-opener2",
+      "clobbers": [
+        "cordova.plugins.fileOpener2"
       ]
     }
   ];
@@ -281,8 +281,7 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
     "cordova-plugin-whitelist": "1.3.4",
     "cordova-plugin-dialogs": "2.0.2",
     "cordova-plugin-websocket": "0.12.2",
-    "cordova-plugin-add-swift-support": "2.0.2",
-    "cordova-plugin-websocket-server": "1.6.0",
-    "cordova-plugin-android-permissions": "1.1.3"
+    "cordova-plugin-android-permissions": "1.1.3",
+    "cordova-plugin-file-opener2": "3.0.5"
   };
 });

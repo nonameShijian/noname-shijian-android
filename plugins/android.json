@@ -19,20 +19,18 @@
     "cordova-plugin-websocket": {
       "PACKAGE_NAME": "com.noname.shijian"
     },
-    "cordova-plugin-websocket-server": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
     "cordova-plugin-whitelist": {
       "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-android-permissions": {
       "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-file-opener2": {
+      "ANDROID_SUPPORT_V4_VERSION": "27.+",
+      "PACKAGE_NAME": "com.noname.shijian"
     }
   },
   "dependent_plugins": {
-    "cordova-plugin-add-swift-support": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
     "cordova-plugin-badge": {
       "PACKAGE_NAME": "com.noname.shijian"
     },

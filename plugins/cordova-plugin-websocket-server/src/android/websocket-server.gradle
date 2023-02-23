@@ -1,6 +1,0 @@
-repositories {
-    jcenter()
-}
-dependencies {
-    implementation 'org.java-websocket:Java-WebSocket:1.4.0'
-}

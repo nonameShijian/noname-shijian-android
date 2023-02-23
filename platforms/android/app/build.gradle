@@ -46,8 +46,8 @@ buildscript {
 
     repositories {
         mavenCentral()
-        google()
-        jcenter()
+        maven{ url 'https://maven.aliyun.com/repository/public' }
+        maven{ url 'https://maven.aliyun.com/repository/google' }
     }
 
     dependencies {
@@ -84,7 +84,7 @@ buildscript {
 allprojects {
     repositories {
         mavenCentral()
-        jcenter()
+        mavenCentral { url 'https://maven.aliyun.com/repository/public' }
     }
 }
 
@@ -147,9 +147,8 @@ ext {
 }
 
 // PLUGIN GRADLE EXTENSIONS START
-apply from: "../cordova-plugin-badge/xuanwu-badge.gradle"
-apply from: "../cordova-plugin-local-notification/xuanwu-localnotification.gradle"
-apply from: "../cordova-plugin-websocket-server/xuanwu-websocket-server.gradle"
+apply from: "../cordova-plugin-badge/shijian-badge.gradle"
+apply from: "../cordova-plugin-local-notification/shijian-localnotification.gradle"
 // PLUGIN GRADLE EXTENSIONS END
 
 def hasBuildExtras1 = file('build-extras.gradle').exists()
@@ -346,6 +345,7 @@ android {
 
 
 dependencies {
+    //noinspection GradleCompatible
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     implementation files('src/main/libs/zip4j-2.9.0.jar', 'src/main/libs/hutool-core-5.8.5.jar')
@@ -357,7 +357,8 @@ dependencies {
 
     // SUB-PROJECT DEPENDENCIES START
     implementation(project(path: ":CordovaLib"))
-    implementation "com.android.support:support-v4:26.+"
+    implementation "com.android.support:support-v4:26.0.0"
+    implementation "com.android.support:support-v4:27.0.0"
     // SUB-PROJECT DEPENDENCIES END
 }
 

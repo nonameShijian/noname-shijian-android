@@ -63,14 +63,6 @@
     "is_top_level": true,
     "variables": {}
   },
-  "cordova-plugin-websocket-server": {
-    "source": {
-      "type": "registry",
-      "id": "cordova-plugin-websocket-server"
-    },
-    "is_top_level": true,
-    "variables": {}
-  },
   "cordova-plugin-add-swift-support": {
     "source": {
       "type": "registry",
@@ -83,6 +75,14 @@
     "source": {
       "type": "registry",
       "id": "cordova-plugin-android-permissions@^1.1.3"
+    },
+    "is_top_level": true,
+    "variables": {}
+  },
+  "cordova-plugin-file-opener2": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-file-opener2@3.0.5"
     },
     "is_top_level": true,
     "variables": {}
