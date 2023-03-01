@@ -126,7 +126,7 @@ public class NonameImportActivity extends Activity {
         super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_begin);
 		messageTextView = findViewById(R.id.messages);
-		updateText("Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
+		// updateText("Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 		ToastUtils.show(NonameImportActivity.this, "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 
 		if(Build.VERSION.SDK_INT < 30) {
@@ -186,16 +186,20 @@ public class NonameImportActivity extends Activity {
 				InputStream inputStream = getAssets().open("www/app/noname.zip");
 				inputStream.close();
 				loadAssetZip();
+				ToastUtils.show(NonameImportActivity.this, "正在解压内置资源包");
 			} catch (IOException e) {
 				loadAssetExt();
+				ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
 			}
 		} else if (getIntent() != null && getIntent().getExtras() != null && "true".equals(getIntent().getExtras().getString("unzip"))) {
 			try {
 				InputStream inputStream = getAssets().open("www/app/noname.zip");
 				inputStream.close();
 				loadAssetZip();
+				ToastUtils.show(NonameImportActivity.this, "正在解压内置资源包");
 			} catch (IOException e) {
 				loadAssetExt();
+				ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
 			}
 		} else {
 			// ToastUtils.show(NonameImportActivity.this, "未通过无名杀打开zip");

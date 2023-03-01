@@ -366,7 +366,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                         return;
                     } else _status.isGettingExtensions = true;
                     /** 扩展下载地址 */
-                    const my_ext_site = 'https://raw.fastgit.org/nonameShijian/noname-android-extension/main/';
+                    const my_ext_site = 'https://nonameShijian.unitedrhythmized.club/noname-android-extension/main/';
+                    // const my_ext_site = 'https://raw.fastgit.org/nonameShijian/noname-android-extension/main/';
                     function getExtensions() {
                         navigator.notification.activityStart('正在获取扩展', '请稍候...');
                         fetch(my_ext_site + 'update.js')
@@ -420,6 +421,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                         function compareVersion(v1 = '', v2 = '') {
                             // 相等版本
                             if (v1 === v2) return 'equal';
+                            const _v1 = Number(v1), _v2 = Number(v2);
+                            if (!isNaN(_v1) && !isNaN(_v2)) {
+                                if (_v1 > _v2) return false;
+                                else if (_v1 < _v2) return true;
+                                else return 'equal';
+                            }
                             let version_1 = v1.split('.').map(item => Number(item) || 0);
                             let version_2 = v2.split('.').map(item => Number(item) || 0);
                             // 现有版本: 无
@@ -433,8 +440,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                                 for (let i = 0; i < version_1.length && i < version_2.length; i++) {
                                     version_1[i] = version_1[i] || 0;
                                     version_2[i] = version_2[i] || 0;
-                                    if (version_2[i] > version_1[i]) return true;
                                     if (version_1[i] > version_2[i]) return false;
+                                    if (version_2[i] > version_1[i]) return true;
                                 }
                             }
                         };
@@ -724,7 +731,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             author: "诗笺",
             diskURL: "",
             forumURL: "",
-            version: "1.42",
+            version: "1.4204",
         }
     };
 });
