@@ -327,12 +327,226 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
             if (!window.noname_shijianInterfaces.environment && !_status.openTools && game.getExtensionConfig('SJ Settings', 'openTools')) {
                 _status.openTools = true;
+                // @ts-ignore
                 eruda.init();
             }
 
             if (!lib.config.new_tutorial) {
                 if (confirm('是否查看“无名杀全教程.pdf”?')) noname_shijianInterfaces.openAssetFile("noname_tutorial.pdf", "application/pdf");
             }
+            
+            // 拦截重置游戏，并添加功能去除安卓版本号储存，让内置资源再次解压
+            // @ts-ignore
+            lib.configMenu.others.config.reset_game.onclick = function() {
+                var node = this;
+                if (node._clearing) {
+                    // var noname_inited = localStorage.getItem('noname_inited');
+                    var onlineKey = localStorage.getItem(lib.configprefix + 'key');
+                    localStorage.clear();
+                    /*if (noname_inited) {
+                        localStorage.setItem('noname_inited', noname_inited);
+                    }*/
+                    if (onlineKey) {
+                        localStorage.setItem(lib.configprefix + 'key', onlineKey);
+                    }
+                    game.deleteDB('config');
+                    game.deleteDB('data');
+                    game.reload();
+                    // 重置安卓版本号设置
+                    cordova.exec(game.reload, game.reload, 'FinishImport', 'resetGame', []);
+                    return;
+                }
+                node._clearing = true;
+                // @ts-ignore
+                node.firstChild.innerHTML = '单击以确认 (3)';
+                setTimeout(function () {
+                    // @ts-ignore
+                    node.firstChild.innerHTML = '单击以确认 (2)';
+                    setTimeout(function () {
+                        // @ts-ignore
+                        node.firstChild.innerHTML = '单击以确认 (1)';
+                        setTimeout(function () {
+                            // @ts-ignore
+                            node.firstChild.innerHTML = '重置游戏设置';
+                            // @ts-ignore
+                            delete node._clearing;
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            };
+            
+            // 拦截重置游戏，并添加功能去除安卓版本号储存，让内置资源再次解压
+            window.onkeydown = function (e) {
+                if (!ui.menuContainer || !ui.menuContainer.classList.contains('hidden')) {
+                    if (e.keyCode == 116 || ((e.ctrlKey || e.metaKey) && e.keyCode == 82)) {
+                        if (e.shiftKey) {
+                            if (confirm('是否重置游戏？')) {
+                                // var noname_inited = localStorage.getItem('noname_inited');
+                                var onlineKey = localStorage.getItem(lib.configprefix + 'key');
+                                localStorage.clear();
+                                /*if (noname_inited) {
+                                    localStorage.setItem('noname_inited', noname_inited);
+                                }*/
+                                if (onlineKey) {
+                                    localStorage.setItem(lib.configprefix + 'key', onlineKey);
+                                }
+                                if (indexedDB) indexedDB.deleteDatabase(lib.configprefix + 'data');
+                                // 重置安卓版本号设置
+                                cordova.exec(game.reload, game.reload, 'FinishImport', 'resetGame', []);
+                                return;
+                            }
+                        }
+                        else {
+                            game.reload();
+                        }
+                    }
+                    else if (e.keyCode == 83 && (e.ctrlKey || e.metaKey)) {
+                        if (window.saveNonameInput) {
+                            window.saveNonameInput();
+                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    else if (e.keyCode == 74 && (e.ctrlKey || e.metaKey) && lib.node) {
+                        lib.node.debug();
+                    }
+                }
+                else {
+                    game.closePopped();
+                    var dialogs = document.querySelectorAll('#window>.dialog.popped:not(.static)');
+                    for (var i = 0; i < dialogs.length; i++) {
+                        // @ts-ignore
+                        dialogs[i].delete();
+                    }
+                    if (e.keyCode == 32) {
+                        var node = ui.window.querySelector('pausedbg');
+                        if (node) {
+                            // @ts-ignore
+                            node.click();
+                        }
+                        else {
+                            ui.click.pause();
+                        }
+                    }
+                    else if (e.keyCode == 65) {
+                        if (ui.auto) ui.auto.click();
+                    }
+                    else if (e.keyCode == 87) {
+                        if (ui.wuxie && ui.wuxie.style.display != 'none') {
+                            ui.wuxie.classList.toggle('glow')
+                        }
+                        else if (ui.tempnowuxie) {
+                            ui.tempnowuxie.classList.toggle('glow')
+                        }
+                    }
+                    else if (e.keyCode == 116 || ((e.ctrlKey || e.metaKey) && e.keyCode == 82)) {
+                        if (e.shiftKey) {
+                            if (confirm('是否重置游戏？')) {
+                                // var noname_inited = localStorage.getItem('noname_inited');
+                                var onlineKey = localStorage.getItem(lib.configprefix + 'key');
+                                localStorage.clear();
+                                /*if (noname_inited) {
+                                    localStorage.setItem('noname_inited', noname_inited);
+                                }*/
+                                if (onlineKey) {
+                                    localStorage.setItem(lib.configprefix + 'key', onlineKey);
+                                }
+                                if (indexedDB) indexedDB.deleteDatabase(lib.configprefix + 'data');
+                                // 重置安卓版本号设置
+                                cordova.exec(game.reload, game.reload, 'FinishImport', 'resetGame', []);
+                                return;
+                            }
+                        }
+                        else {
+                            game.reload();
+                        }
+                    }
+                    else if (e.keyCode == 83 && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    else if (e.keyCode == 74 && (e.ctrlKey || e.metaKey) && lib.node) {
+                        lib.node.debug();
+                    }
+                    // else if(e.keyCode==27){
+                    // 	if(!ui.arena.classList.contains('paused')) ui.click.config();
+                    // }
+                }
+            };
+
+            // 拦截重置游戏，并添加功能去除安卓版本号储存，让内置资源再次解压
+            lib.init.reset = function() {
+                if (window.inSplash) return;
+                if (window.resetExtension) {
+                    if (confirm('游戏似乎未正常载入，是否禁用扩展并重新打开？')) {
+                        window.resetExtension();
+                        window.location.reload();
+                    }
+                }
+                else {
+                    if (lib.device) {
+                        if (navigator.notification) {
+                            navigator.notification.confirm(
+                                '游戏似乎未正常载入，是否重置游戏？',
+                                function (index) {
+                                    if (index == 2) {
+                                        localStorage.removeItem('noname_inited');
+                                        window.location.reload();
+                                    }
+                                    else if (index == 3) {
+                                        // var noname_inited = localStorage.getItem('noname_inited');
+                                        var onlineKey = localStorage.getItem(lib.configprefix + 'key');
+                                        localStorage.clear();
+                                        /*if (noname_inited) {
+                                            localStorage.setItem('noname_inited', noname_inited);
+                                        }*/
+                                        if (onlineKey) {
+                                            localStorage.setItem(lib.configprefix + 'key', onlineKey);
+                                        }
+                                        if (indexedDB) indexedDB.deleteDatabase(lib.configprefix + 'data');
+                                        /*setTimeout(function () {
+                                            window.location.reload();
+                                        }, 200);*/
+                                        var reload = () => {
+                                            window.location.reload();
+                                        };
+                                        // 重置安卓版本号设置
+                                        cordova.exec(reload, reload, 'FinishImport', 'resetGame', []);
+                                    }
+                                },
+                                '确认退出',
+                                ['取消', '重新下载', '重置设置']
+                            );
+                        }
+                        else {
+                            if (confirm('游戏似乎未正常载入，是否重置游戏？')) {
+                                localStorage.removeItem('noname_inited');
+                                // window.location.reload();
+                                var reload = () => {
+                                    window.location.reload();
+                                };
+                                // 重置安卓版本号设置
+                                cordova.exec(reload, reload, 'FinishImport', 'resetGame', []);
+                            }
+                        }
+                    }
+                    else {
+                        if (confirm('游戏似乎未正常载入，是否重置游戏？')) {
+                            var onlineKey = localStorage.getItem(lib.configprefix + 'key');
+                            localStorage.clear();
+                            if (onlineKey) {
+                                localStorage.setItem(lib.configprefix + 'key', onlineKey);
+                            }
+                            if (indexedDB) indexedDB.deleteDatabase(lib.configprefix + 'data');
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 200);
+                        }
+                    }
+                }
+            };
         },
         config: {
             tutorialapk: {
@@ -731,7 +945,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             author: "诗笺",
             diskURL: "",
             forumURL: "",
-            version: "1.4204",
+            version: "1.4216",
         }
     };
 });

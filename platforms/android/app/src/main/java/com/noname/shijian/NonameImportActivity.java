@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -31,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -79,8 +81,11 @@ public class NonameImportActivity extends Activity {
 		}
 	};
 
-	// 解压有错误不能进入游戏
+	/** 解压有错误不能进入游戏 */
 	private boolean hasError = false;
+
+	/** 是否是解压的内置资源包 */
+	private boolean isAssetZip = false;
 
 	public static class ExtensionNameException extends Exception {
 		public ExtensionNameException() {
@@ -315,7 +320,7 @@ public class NonameImportActivity extends Activity {
 					}
 
 					updateText("压缩包识别失败，请手动选择目录导入");
-					ToastUtils.show(NonameImportActivity.this,  "压缩包识别失败，请手动选择目录导入");
+					// ToastUtils.show(NonameImportActivity.this.getApplicationContext(),  "压缩包识别失败，请手动选择目录导入");
 
 					// 手动选择目录
 					Intent ListViewIntent = new Intent(NonameImportActivity.this, ListViewActivity.class);
@@ -348,6 +353,7 @@ public class NonameImportActivity extends Activity {
 
 					if (zipFile.getFileHeader("game/game.js") != null) {
 						updateText("压缩包被识别成游戏主文件包");
+						isAssetZip = true;
 						importPackage();
 						return;
 					} else {
@@ -393,6 +399,7 @@ public class NonameImportActivity extends Activity {
 							}
 							String rootPath = path.substring(0, path.indexOf("game/game.js"));
 							// updateText("rootPath: " + rootPath);
+							isAssetZip = true;
 							importPackage(rootPath);
 							return;
 						}
@@ -418,7 +425,7 @@ public class NonameImportActivity extends Activity {
 				"extension.css",
 		};
 		for (String s : strings) {
-			File result =  Utils.assetToFile("www/SJSettings/" + s,this,"extension/SJ Settings/" + s);
+			File result = Utils.assetToFile("www/SJSettings/" + s,this,"extension/SJ Settings/" + s);
 			if (result == null) {
 				updateText(s + "添加失败");
 			}
@@ -605,18 +612,6 @@ public class NonameImportActivity extends Activity {
 
 		if (hasError) return;
 
-		/*
-		Intent intent;
-		// 如果是导入离线包就用活动，扩展就唤起应用
-		if (extname.equals("importPackage"))  {
-			intent = new Intent(this, MainActivity.class);
-		} else {
-			PackageManager packageManager = this.getPackageManager();
-			intent = packageManager.getLaunchIntentForPackage(getPackageName());
-			intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-		}
-		*/
-
 		PackageManager packageManager = this.getPackageManager();
 		Intent intent = packageManager.getLaunchIntentForPackage(getPackageName());
 		intent.setPackage(null);
@@ -719,20 +714,47 @@ public class NonameImportActivity extends Activity {
 			}
 		}
 
-		updateText("正在为你启动无名杀。");
-		Timer timer = new Timer();
-		timer.schedule(new TimerTask(){
-			public void run(){
-				timer.cancel();
-				startActivity(intent);
-				finish();
-			}
-		}, 1500);
+		File file = Utils.assetToFile("www/app/app-release.apk",this,"cache/app-release.apk");
+		if (file == null || !isAssetZip) {
+			Log.e("install", "file is null");
+			updateText("正在为你启动无名杀。");
+			Timer timer = new Timer();
+			timer.schedule(new TimerTask(){
+				public void run(){
+					timer.cancel();
+					startActivity(intent);
+					finish();
+				}
+			}, 1500);
+		} else {
+			runOnUiThread(() -> {
+				final TextView textView = new TextView(this);
+				textView.setText("注: 此过程不消耗流量，且点击确定后将自动关闭本界面");
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setTitle("解压完内置资源后，是否覆盖安装没有资源的apk以节省资源？");
+				builder.setView(textView);
+				// builder.setIcon(R.mipmap.ic_launcher);
+				builder.setPositiveButton("确定", (dialog, which) -> {
+					installApk(file);
+				});
+				builder.setNegativeButton("取消", (dialog, which) -> {
+					updateText("正在为你启动无名杀。");
+					Timer timer = new Timer();
+					timer.schedule(new TimerTask(){
+						public void run(){
+							timer.cancel();
+							startActivity(intent);
+							finish();
+						}
+					}, 1500);
+				});
+				builder.create().show();
+			});
+		}
 	}
 
 	/** 不延时进入游戏 */
 	private void afterFinishImportExtension() {
-		updateText("正在为你启动无名杀");
 		if (dialog != null) {
 			// 关闭对话框
 			dialog.dismiss();
@@ -740,13 +762,43 @@ public class NonameImportActivity extends Activity {
 
 		if (hasError) return;
 
-		//Intent intent = new Intent(this, MainActivity.class);
-		PackageManager packageManager = this.getPackageManager();
-		Intent intent = packageManager.getLaunchIntentForPackage(getPackageName());
-		intent.setPackage(null);
-		intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-		startActivity(intent);
-		finish();
+		File file = Utils.assetToFile("www/app/app-release.apk",this,"cache/app-release.apk");
+		if (file == null || !isAssetZip) {
+			Log.e("install", "file is null");
+			updateText("正在为你启动无名杀");
+
+			//Intent intent = new Intent(this, MainActivity.class);
+			PackageManager packageManager = this.getPackageManager();
+			Intent intent = packageManager.getLaunchIntentForPackage(getPackageName());
+			intent.setPackage(null);
+			intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+			startActivity(intent);
+			finish();
+		} else {
+			runOnUiThread(() -> {
+				final TextView textView = new TextView(this);
+				textView.setText("注: 此过程不消耗流量，点击确定后将自动关闭本界面");
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setTitle("解压完内置资源后，是否覆盖安装没有资源的apk以节省资源？");
+				builder.setView(textView);
+				// builder.setIcon(R.mipmap.ic_launcher);
+				builder.setPositiveButton("确定", (dialog, which) -> {
+					installApk(file);
+				});
+				builder.setNegativeButton("取消", (dialog, which) -> {
+					updateText("正在为你启动无名杀");
+
+					//Intent intent = new Intent(this, MainActivity.class);
+					PackageManager packageManager = this.getPackageManager();
+					Intent intent = packageManager.getLaunchIntentForPackage(getPackageName());
+					intent.setPackage(null);
+					intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+					startActivity(intent);
+					finish();
+				});
+				builder.create().show();
+			});
+		}
 	}
 
 	private File getExtensionFile(String extname) {
@@ -957,6 +1009,7 @@ public class NonameImportActivity extends Activity {
 					updateText("这个文件需要密码");
 					setPassword(3, path);
 				} else {
+					isAssetZip = true;
 					showProgressDialogAndExtractAll(finalPath, null, null);
 				}
 			} catch (ZipException e) {
@@ -1171,6 +1224,36 @@ public class NonameImportActivity extends Activity {
 			cacheFile.delete();
 		} catch (Exception e) {
 			updateText("删除cache/currentLoadFile.zip失败: " + e.getMessage());
+		}
+	}
+
+	// 安装解压完懒人包后，是否覆盖安装apk以节省资源
+	private void installApk(File file) {
+		if (file == null) {
+			Log.e("install", "file is null");
+			return;
+		}
+
+		try {
+			//这里有文件流的读写，需要处理一下异常
+			Intent intent = new Intent(Intent.ACTION_VIEW);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+			Uri uri;
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+				//如果SDK版本 =24，即：Build.VERSION.SDK_INT  = 24
+				String packageName = getApplicationContext().getPackageName();
+				String authority = new StringBuilder(packageName).append(".fileProvider").toString();
+				uri = FileProvider.getUriForFile(this, authority, file);
+				intent.setDataAndType(uri, "application/vnd.android.package-archive");
+			} else{
+				uri = Uri.fromFile(file);
+				intent.setDataAndType(uri, "application/vnd.android.package-archive");
+			}
+			startActivity(intent);
+			finish();
+		} catch (Exception e) {
+			Log.e("install", Objects.requireNonNull(e.getMessage()));
 		}
 	}
 

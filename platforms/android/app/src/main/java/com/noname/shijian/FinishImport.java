@@ -89,6 +89,9 @@ public class FinishImport extends CordovaPlugin {
                 callbackContext.success();
                 return true;
             }
+            case "resetGame": {
+                cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).edit().putLong("version", 10000).apply();
+            }
             /*case "requestPermission" : {
                 try {
                     Uri uri1 = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata");
