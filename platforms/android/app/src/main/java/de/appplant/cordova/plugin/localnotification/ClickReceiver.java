@@ -22,7 +22,7 @@
 package de.appplant.cordova.plugin.localnotification;
 
 import android.os.Bundle;
-import android.support.v4.app.RemoteInput;
+import androidx.core.app.RemoteInput;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,8 +30,11 @@ import org.json.JSONObject;
 import de.appplant.cordova.plugin.notification.Notification;
 import de.appplant.cordova.plugin.notification.receiver.AbstractClickReceiver;
 
-import static de.appplant.cordova.plugin.notification.Options.EXTRA_LAUNCH;
-import static de.appplant.cordova.plugin.notification.Request.EXTRA_LAST;
+
+import de.appplant.cordova.plugin.notification.Options;
+import de.appplant.cordova.plugin.notification.Request;
+// import static de.appplant.cordova.plugin.notification.Options.EXTRA_LAUNCH;
+// import static de.appplant.cordova.plugin.notification.Request.EXTRA_LAST;
 
 /**
  * The receiver activity is triggered when a notification is clicked by a user.
@@ -89,7 +92,7 @@ public class ClickReceiver extends AbstractClickReceiver {
      * Launch app if requested by user.
      */
     private void launchAppIf() {
-        boolean doLaunch = getIntent().getBooleanExtra(EXTRA_LAUNCH, true);
+        boolean doLaunch = getIntent().getBooleanExtra(Options.EXTRA_LAUNCH, true);
 
         if (!doLaunch)
             return;
@@ -101,7 +104,7 @@ public class ClickReceiver extends AbstractClickReceiver {
      * If the notification was the last scheduled one by request.
      */
     private boolean isLast() {
-        return getIntent().getBooleanExtra(EXTRA_LAST, false);
+        return getIntent().getBooleanExtra(Request.EXTRA_LAST, false);
     }
 
 }

@@ -27,9 +27,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationCompat.MessagingStyle.Message;
-import android.support.v4.media.app.NotificationCompat.MediaStyle;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationCompat.MessagingStyle.Message;
+//import android.support.v4.media.app.NotificationCompat.MediaStyle;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import java.util.List;
@@ -39,7 +39,8 @@ import de.appplant.cordova.plugin.notification.action.Action;
 
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
-import static de.appplant.cordova.plugin.notification.Notification.EXTRA_UPDATE;
+import de.appplant.cordova.plugin.notification.Notification;
+// import static de.appplant.cordova.plugin.notification.Notification.EXTRA_UPDATE;
 
 /**
  * Builder class for local notifications. Build fully configured local
@@ -293,9 +294,9 @@ public final class Builder {
      */
     private void applyMediaStyle(NotificationCompat.Builder builder,
                                  MediaSessionCompat.Token token) {
-        MediaStyle style;
+        androidx.media.app.NotificationCompat.MediaStyle style;
 
-        style = new MediaStyle(builder)
+        style = new androidx.media.app.NotificationCompat.MediaStyle(builder)
                 .setMediaSession(token)
                 .setShowActionsInCompactView(1);
 
@@ -403,7 +404,7 @@ public final class Builder {
      * @return true in case of an updated version.
      */
     private boolean isUpdate() {
-        return extras != null && extras.getBoolean(EXTRA_UPDATE, false);
+        return extras != null && extras.getBoolean(Notification.EXTRA_UPDATE, false);
     }
 
     /**

@@ -35,7 +35,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             lib.init.css(layoutPath, 'extension');
 
             // 导入配置
-            noname_shijianInterfaces.importConfigData = data => {
+            window.noname_shijianInterfaces.importConfigData = data => {
                 if (!data) return;
                 const extensions = lib.config.extensions;
                 try {
@@ -92,7 +92,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 game.reload();
             };
 
-            noname_shijianInterfaces.openAssetFile = (name, type) => {
+            window.noname_shijianInterfaces.openAssetFile = (name, type) => {
                 /** 读取app的资源目录(在安卓是file:///android_asset/) */
                 window.resolveLocalFileSystemURL(cordova.file.applicationDirectory,
                     /** @param { DirectoryEntry } entry */
@@ -125,7 +125,25 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                             alert('www文件夹不存在: ' + error.code);
                         });
                     });
-            }
+            };
+
+            window.noname_shijianInterfaces.chooseZipFileCallBack = function() {
+                const fileToLoad = this.previousElementSibling.files[0];
+                console.log(fileToLoad);
+                if (fileToLoad) {
+                    navigator.notification.activityStart('正在获取扩展', '请稍候...');
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        navigator.notification.activityStop();
+                        const base64 = event.target.result.split(',')[1];
+                        window.noname_shijianInterfaces.unzipFromBase64(fileToLoad.name, base64);
+                    };
+                    reader.onerror = function() {
+                        navigator.notification.activityStop();
+                    };
+                    reader.readAsDataURL(fileToLoad);
+                }
+            };
 
             /** 修改游戏导入设置 */
             const changeImportData = setInterval(() => {
@@ -571,8 +589,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 },
             },
             getExtensions: {
-                name: '<button>点击获取扩展</button>',
-                intro: '点击获取扩展',
+                name: '<button>点击在线获取扩展</button>',
+                intro: '点击在线获取扩展',
                 clear: true,
                 onclick() {
                     if (_status.isGettingExtensions || _status.isDownloadingExtensions || !navigator.onLine) {
@@ -929,7 +947,18 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     noname_shijianInterfaces.openAssetFile("noname_tutorial.pdf", "application/pdf");
                 }
             },
-            /*requestPermission: {
+            /*importExtension: {
+            	name: `<span>导入本地扩展</span><br/>
+            	<div class="new_character export import" style="margin-left: 5px; margin-top: 5px; margin-bottom: 5px; width: 100%; text-align: left;">
+            		<div>
+            			<input type="file" accept="application/zip" style="width:153px">
+            			<button onclick="window.noname_shijianInterfaces.chooseZipFileCallBack.call(this)">确定</button>
+            			</div>
+            		</div>`,
+            	intro: '导入本地扩展',
+            	clear: true,
+            }
+            requestPermission: {
                 name: '<button>请求Android/data权限</button>',
                 intro: '请求Android/data权限',
                 clear: true,
@@ -945,7 +974,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             author: "诗笺",
             diskURL: "",
             forumURL: "",
-            version: "1.4216",
+            version: "1.4221",
         }
     };
 });

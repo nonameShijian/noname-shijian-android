@@ -27,7 +27,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.service.notification.StatusBarNotification;
-import android.support.v4.app.NotificationManagerCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,9 +41,10 @@ import de.appplant.cordova.plugin.badge.BadgeImpl;
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.M;
 import static android.os.Build.VERSION_CODES.O;
-import static android.support.v4.app.NotificationManagerCompat.IMPORTANCE_DEFAULT;
-import static de.appplant.cordova.plugin.notification.Notification.PREF_KEY_ID;
-import static de.appplant.cordova.plugin.notification.Notification.Type.TRIGGERED;
+import static androidx.core.app.NotificationManagerCompat.IMPORTANCE_DEFAULT;
+import de.appplant.cordova.plugin.notification.Notification;
+// import static de.appplant.cordova.plugin.notification.Notification.PREF_KEY_ID;
+// import static de.appplant.cordova.plugin.notification.Notification.Type.TRIGGERED;
 
 /**
  * Central way to access all or single local notifications set by specific
@@ -160,7 +161,7 @@ public final class Manager {
      * Clear all local notifications.
      */
     public void clearAll () {
-        List<Notification> toasts = getByType(TRIGGERED);
+        List<Notification> toasts = getByType(Notification.Type.TRIGGERED);
 
         for (Notification toast : toasts) {
             toast.clear();
@@ -234,7 +235,7 @@ public final class Manager {
             activeIds.add(toast.getId());
         }
 
-        if (type == TRIGGERED)
+        if (type == Notification.Type.TRIGGERED)
             return activeIds;
 
         List<Integer> ids = getIds();
@@ -396,7 +397,7 @@ public final class Manager {
      * Shared private preferences for the application.
      */
     private SharedPreferences getPrefs () {
-        return context.getSharedPreferences(PREF_KEY_ID, Context.MODE_PRIVATE);
+        return context.getSharedPreferences(Notification.PREF_KEY_ID, Context.MODE_PRIVATE);
     }
 
     /**

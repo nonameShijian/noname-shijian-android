@@ -23,6 +23,7 @@ buildscript {
     repositories {
         maven{ url 'https://maven.aliyun.com/repository/public' }
         maven{ url 'https://maven.aliyun.com/repository/google' }
+        google()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.0'
@@ -38,6 +39,7 @@ allprojects {
         maven{ url 'https://maven.aliyun.com/repository/public' }
         maven{ url 'https://maven.aliyun.com/repository/google' }
         maven{ url 'https://maven.aliyun.com/repository/jcenter' }
+        google()
     }
 
     //This replaces project.properties w.r.t. build settings

@@ -30,6 +30,10 @@
     <feature name="Badge">
         <param name="android-package" value="de.appplant.cordova.plugin.badge.Badge" />
     </feature>
+    <feature name="Insomnia">
+        <param name="android-package" value="nl.xservices.plugins.Insomnia" />
+        <param name="onload" value="true" />
+    </feature>
     <feature name="FinishImport">
         <param name="android-package" value="com.noname.shijian.FinishImport" />
     </feature>
@@ -74,5 +78,8 @@
     <preference name="SplashScreenDelay" value="1500" />
     <feature name="FileOpener2">
         <param name="android-package" value="io.github.pwlin.cordova.plugins.fileopener2.FileOpener2" />
+    </feature>
+    <feature name="InAppBrowser">
+        <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
     </feature>
 </widget>

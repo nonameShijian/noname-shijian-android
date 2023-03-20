@@ -22,12 +22,10 @@ package com.noname.shijian;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import org.apache.cordova.*;
-
-import java.io.File;
-import java.util.Scanner;
 
 public class MainActivity extends CordovaActivity {
     @Override
@@ -51,10 +49,18 @@ public class MainActivity extends CordovaActivity {
         }
 
         WebView.setWebContentsDebuggingEnabled(true);
-        // SystemWebView wv = (SystemWebView) appView.getView();
 
         // Set by <content src="index.html" /> in config.xml
         loadUrl(launchUrl);
+
+        WebView webview = (WebView) appView.getView();
+        WebSettings settings = webview.getSettings();
+        int textZoom = settings.getTextZoom();
+        Log.e("textZoom", "WebView当前的字体变焦百分比是: " + textZoom + "%");
+        settings.setTextZoom(100);
+        String userAgent = settings.getUserAgentString();
+        settings.setUserAgentString(userAgent + " WebViewFontSize/100% 无名杀诗笺版/" + FinishImport.getAppVersion(this));
+        webview.addJavascriptInterface(new JavaScriptInterface(this, MainActivity.this, webview) , "noname_shijianInterfaces");
     }
 
     @Override

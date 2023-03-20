@@ -18,6 +18,7 @@
 			}
 		},
 		onDeviceReady() {
+		    if (window.eruda) eruda.init();
 			/** 如果导入了完整包，就直接进入游戏 */
 			const getImportPackage = function () {
 				window.cordova && cordova.exec(result => {
@@ -490,8 +491,9 @@
 					<ol>
 						<li>访问
 						<a href="https://hub.fgit.ml/libccy/noname/archive/refs/heads/master.zip">网址1</a>，
-						下载zip文件，或者通过其他方式(比如QQ群)下载最新的“无名杀完整包”。
+						下载zip文件，或者通过其他方式(比如QQ群,QQ频道,微信公众号)下载最新的“无名杀完整包”。
 						<li>使用QQ或者文件管理器选择zip文件,然后用其他方式-无名杀导入(诗笺版)进行导入
+						<li>完成上述步骤后，<a href="javascript:localStorage.setItem(\'noname_inited\',window.tempSetNoname);window.location.reload()">点击此处</a></div>
 					</ol>
 				</div>`;
 		},

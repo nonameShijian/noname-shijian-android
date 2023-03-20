@@ -28,6 +28,12 @@
     "cordova-plugin-file-opener2": {
       "ANDROID_SUPPORT_V4_VERSION": "27.+",
       "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-insomnia": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-inappbrowser": {
+      "PACKAGE_NAME": "com.noname.shijian"
     }
   },
   "dependent_plugins": {
