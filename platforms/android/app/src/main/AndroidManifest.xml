@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<manifest android:hardwareAccelerated="true" android:versionCode="14221" android:versionName="1.4.2.2.1" package="com.noname.shijian" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+<manifest android:hardwareAccelerated="true" android:versionCode="14241" android:versionName="1.5.0.0.0" package="com.noname.shijian" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <queries>
         <package android:name="com.noname.shijian" />
         <package android:name="com.noname.xuanwu" />
@@ -12,8 +12,11 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <application android:debuggable="true" android:exported="true" android:hardwareAccelerated="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:largeHeap="true" android:launchMode="singleTop" android:requestLegacyExternalStorage="true" android:supportsRtl="true" android:usesCleartextTraffic="true" tools:ignore="HardcodedDebugMode">
-        <activity android:launchMode="singleTop" android:name=".NonameImportActivity" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar">
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <application android:debuggable="true" android:exported="true" android:hardwareAccelerated="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:largeHeap="true" android:launchMode="singleTop" android:requestLegacyExternalStorage="true" android:supportsRtl="true" android:usesCleartextTraffic="true" android:allowAudioPlaybackCapture="true" tools:ignore="HardcodedDebugMode"
+        tools:targetApi="q">
+        <activity android:launchMode="singleTask" android:name=".NonameImportActivity" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter android:label="@string/noname_import" tools:ignore="AppLinkUrlError">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -41,14 +44,14 @@
         <provider android:authorities="${applicationId}.fileOpener2.provider" android:exported="false" android:grantUriPermissions="true" android:name="io.github.pwlin.cordova.plugins.fileopener2.FileProvider">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/opener_paths" />
         </provider>
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileProvider"
-            android:exported="false"
-            android:grantUriPermissions="true" >
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/opener_paths" />
+        <provider android:authorities="${applicationId}.fileProvider" android:exported="false" android:grantUriPermissions="true" android:name="androidx.core.content.FileProvider">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/opener_paths" />
         </provider>
+        <service
+            android:name=".ScreenRecordingService"
+            android:enabled="true"
+            android:foregroundServiceType="mediaProjection"
+            android:exported="true"
+            />
     </application>
 </manifest>

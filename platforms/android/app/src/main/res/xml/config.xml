@@ -76,6 +76,7 @@
     <preference name="Orientation" value="landscape" />
     <preference name="Fullscreen" value="true" />
     <preference name="SplashScreenDelay" value="1500" />
+    <preference name="DisallowOverscroll" value="true" />
     <feature name="FileOpener2">
         <param name="android-package" value="io.github.pwlin.cordova.plugins.fileopener2.FileOpener2" />
     </feature>

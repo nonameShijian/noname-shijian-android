@@ -1,5 +1,6 @@
 /// <reference path="../../typings/index.d.ts" />
 /// <reference path="./typings/index.d.ts" />
+/// <reference path="../在线更新/typings/index.d.ts" />
 "use strict";
 game.import("extension", function (lib, game, ui, get, ai, _status) {
     let exts;
@@ -127,24 +128,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     });
             };
 
-            window.noname_shijianInterfaces.chooseZipFileCallBack = function() {
-                const fileToLoad = this.previousElementSibling.files[0];
-                console.log(fileToLoad);
-                if (fileToLoad) {
-                    navigator.notification.activityStart('正在获取扩展', '请稍候...');
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        navigator.notification.activityStop();
-                        const base64 = event.target.result.split(',')[1];
-                        window.noname_shijianInterfaces.unzipFromBase64(fileToLoad.name, base64);
-                    };
-                    reader.onerror = function() {
-                        navigator.notification.activityStop();
-                    };
-                    reader.readAsDataURL(fileToLoad);
-                }
-            };
-
             /** 修改游戏导入设置 */
             const changeImportData = setInterval(() => {
                 if (!ui.import_data_button) return;
@@ -172,7 +155,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
             // 下载进度
             // @ts-ignore
-            game.shijianCreateProgress = game.shijianCreateProgress || ((title, max, fileName, value) => {
+            game.shijianCreateProgress = game.shijianCreateProgress || function (title, max, fileName, value) {
                 /** @type { progress } */
                 // @ts-ignore
                 const parent = ui.create.div(ui.window, {
@@ -185,7 +168,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     zIndex: '10',
                     boxShadow: 'rgb(0 0 0 / 40 %) 0 0 0 1px, rgb(0 0 0 / 20 %) 0 3px 10px',
                     backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    overflow: 'hidden scroll'
                 });
 
                 // 可拖动
@@ -234,15 +218,26 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 progress.setAttribute('max', max);
 
                 parent.getTitle = () => caption.innerText;
-                parent.setTitle = (title) => caption.innerText = title;
+                parent.setTitle = title => caption.innerHTML = title;
                 parent.getFileName = () => file.innerText;
-                parent.setFileName = (name) => file.innerText = name;
+                parent.setFileName = name => file.innerHTML = name;
                 parent.getProgressValue = () => progress.value;
-                parent.setProgressValue = (value) => progress.value = index.innerText = value;
+                parent.setProgressValue = value => progress.value = index.innerHTML = value;
                 parent.getProgressMax = () => progress.max;
-                parent.setProgressMax = (max) => progress.max = maxSpan.innerText = max;
+                parent.setProgressMax = max => progress.max = maxSpan.innerHTML = max;
+                parent.autoSetFileNameFromArray = fileNameList => {
+                    if (fileNameList.length > 2) {
+                        parent.setFileName(fileNameList.slice(0, 2).concat(`......等${fileNameList.length - 2}个文件`).join('<br/>'));
+                    } else if (fileNameList.length == 2) {
+                        parent.setFileName(fileNameList.join('<br/>'));
+                    } else if (fileNameList.length == 1) {
+                        parent.setFileName(fileNameList[0]);
+                    } else {
+                        parent.setFileName('当前没有正在下载的文件');
+                    }
+                };
                 return parent;
-            });
+            };
 
             // 修改window.onerror
             window.onerror = function (msg, src, line, column, err) {
@@ -302,10 +297,83 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     game.loop();
                 }
             };
-
         },
         precontent: function () {
             const emptyFun = () => { };
+            
+            if (!Array.isArray(lib.updateReady)) lib.updateReady = [];
+            if (!Array.isArray(lib.updateAssetReady)) lib.updateAssetReady = [];
+
+            /**
+             * @param { DirectoryEntry } [entry] 
+             * @param { string } [name] 
+             * @return { Promise<DirectoryEntry | FileEntry> }
+             */
+            function getEntry(entry, name) {
+                return new Promise((resolve, reject) => {
+                    if (!entry) {
+                        window.resolveLocalFileSystemURL(lib.assetURL,
+                            /** @param { DirectoryEntry } entry */
+                            entry => resolve(entry)
+                        );
+                    } else if (typeof name == 'string') {
+                        entry.getFile(name, { create: true }, e => resolve(e), e => reject(e));
+                    } else {
+                        resolve(entry);
+                    }
+                });
+            }
+            /**
+             * 
+             * @param { FileEntry } entry 
+             * @returns { Promise<ArrayBuffer> }
+             */
+            function readFile(entry) {
+                return new Promise((resolve, reject) => {
+                    entry.file(file => {
+                        let fileReader = new FileReader();
+                        // @ts-ignore
+                        fileReader.onload = e => resolve(e.target.result);
+                        fileReader.onerror = reject;
+                        fileReader.readAsArrayBuffer(file);
+                    }, reject);
+                });
+            }
+            /**
+             * 
+             * @param { FileEntry } entry 
+             * @param { ArrayBuffer } arrayBuffer 
+             * @returns 
+             */
+            function writeToFile(entry, arrayBuffer) {
+                return new Promise((resolve, reject) => {
+                    entry.createWriter(writer => {
+                        writer.onwriteend = () => resolve(null);
+                        writer.onerror = e => reject(e);
+                        writer.write(arrayBuffer);
+                    });
+                });
+            }
+
+            /**
+             * @param {{ [key: string]: string; }[]} arr
+             */
+            async function rewrite(arr) {
+                for (let obj of arr) {
+                    for (const [from, to] of Object.entries(obj)) {
+                        /** @type { DirectoryEntry } */
+                        // @ts-ignore
+                        const root = await getEntry();
+                        /** @type { FileEntry } */
+                        // @ts-ignore
+                        const file = await getEntry(root, from);
+                        /** @type { FileEntry } */
+                        // @ts-ignore
+                        const targetFile = await getEntry(root, to);
+                        await writeToFile(targetFile, await readFile(file));
+                    }
+                }
+            }
 
             document.addEventListener('deviceready', () => {
                 // @ts-ignore
@@ -319,16 +387,18 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 }, emptyFun);
 
                 const getImportExtension = function () {
-                    cordova.exec(result => {
+                    cordova.exec(async result => {
                         if (result && result.type == 'extension') {
                             const name = result.message;
                             lib.config.extensions.add(name);
                             game.saveConfigValue('extensions');
                             game.saveConfig('extension_' + name + "_enable", true);
-                            alert("扩展" + name + "导入完成。正在重新启动。");
+                            alert("扩展" + name + "导入完成，正在重新启动。");
                             cordova.exec(game.reload, game.reload, 'FinishImport', 'importReceived', []);
                         } else if (result && result.type == 'package') {
                             localStorage.setItem('noname_inited', result.message);
+                            await rewrite(lib.updateReady);
+                            await rewrite(lib.updateAssetReady);
                             cordova.exec(game.reload, game.reload, 'FinishImport', 'importReceived', []);
                         }
                     }, () => {
@@ -341,6 +411,39 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 document.addEventListener('visibilitychange', () => {
                     if (document.hidden == false) getImportExtension();
                 });
+
+                function requestMediaRecord() {
+                    const RECORD_AUDIO = permissions['RECORD_AUDIO'];
+                    permissions.checkPermission(RECORD_AUDIO, (status) => {
+                        if (!status.hasPermission) {
+                            permissions.requestPermission(RECORD_AUDIO, () => {
+                                cordova.exec(emptyFun, (msg) => {
+                                    console.log(msg);
+                                }, 'FinishImport', 'requestMediaRecord', []);
+                            }, () => {
+                                alert('请求权限失败');
+                            });
+                        } else {
+                            cordova.exec(emptyFun, (msg) => {
+                                console.log(msg);
+                            }, 'FinishImport', 'requestMediaRecord', []);
+                        }
+                    }, emptyFun);
+                }
+
+                if (game.getExtensionConfig('SJ Settings', 'enable') && game.getExtensionConfig('SJ Settings', 'requestMediaRecord')) {
+                    if (lib.arenaReady) {
+                        lib.arenaReady.push(requestMediaRecord);
+                    } else {
+                        requestMediaRecord();
+                    }
+                    lib.onover.push(() => {
+                        setTimeout(() => {
+                            cordova.exec(emptyFun, emptyFun, 'FinishImport', 'stopMediaRecord', []);
+                        }, 1500);
+                    });
+                }
+
             }, false);
 
             if (!window.noname_shijianInterfaces.environment && !_status.openTools && game.getExtensionConfig('SJ Settings', 'openTools')) {
@@ -567,6 +670,15 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             };
         },
         config: {
+            requestMediaRecord: {
+                init: false,
+                name: '对局录屏',
+                intro: '游戏加载完成后提示是否开始录屏，游戏结束后自动停止录屏。应用进入后台时，录屏将停止并且不生成视频文件，',
+                onclick(item) {
+                     game.saveExtensionConfig('SJ Settings', 'requestMediaRecord', item);
+                     alert('重启游戏后生效');
+                }
+            },
             tutorialapk: {
                 name: '查看apk使用教程',
                 intro: '查看apk使用教程',
@@ -577,7 +689,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             },
             openTools: {
                 init: false,
-                name: '启用控制台',
+                name: '启用eruda控制台',
                 intro: '启用eruda控制台',
                 onclick(item) {
                     if (!window.noname_shijianInterfaces.environment && item && !_status.openTools) {
@@ -944,37 +1056,40 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 intro: '查看无名杀教程',
                 clear: true,
                 onclick() {
-                    noname_shijianInterfaces.openAssetFile("noname_tutorial.pdf", "application/pdf");
+                    window.noname_shijianInterfaces.openAssetFile("noname_tutorial.pdf", "application/pdf");
                 }
             },
-            /*importExtension: {
-            	name: `<span>导入本地扩展</span><br/>
-            	<div class="new_character export import" style="margin-left: 5px; margin-top: 5px; margin-bottom: 5px; width: 100%; text-align: left;">
-            		<div>
-            			<input type="file" accept="application/zip" style="width:153px">
-            			<button onclick="window.noname_shijianInterfaces.chooseZipFileCallBack.call(this)">确定</button>
-            			</div>
-            		</div>`,
+            importZip: {
+            	name: '<button>导入本地Zip文件</button>',
             	intro: '导入本地扩展',
             	clear: true,
-            }
-            requestPermission: {
-                name: '<button>请求Android/data权限</button>',
-                intro: '请求Android/data权限',
+            	onclick() {
+            	    window.noname_shijianInterfaces.selectZipToExtract();
+            	}
+            },
+            shareExtension: {
+                name: '<button>压缩并分享扩展</button>',
+                intro: '压缩并分享扩展',
                 clear: true,
                 onclick() {
-                    const emptyFun = () => {};
-                    // 请求访问Android/data
-                    cordova.exec(emptyFun, console.error, 'FinishImport', 'requestPermission', []);
+                    const extName = prompt("请输入扩展名");
+                    if (!extName) return;
+                    const pwd = prompt("请输入压缩包密码，不设密码直接点确定");
+                    let result;
+                    if (pwd === '' || pwd === null) {
+                        window.noname_shijianInterfaces.shareExtensionAsync(extName);
+                    } else {
+                        window.noname_shijianInterfaces.shareExtensionWithPassWordAsync(extName, pwd);
+                    }
                 }
-            },*/
+            }
         },
         package: {
             intro: "本扩展的功能是导入\"从其他应用使用无名杀打开的扩展包\"，请勿删除",
             author: "诗笺",
             diskURL: "",
             forumURL: "",
-            version: "1.4221",
+            version: "1.5",
         }
     };
 });

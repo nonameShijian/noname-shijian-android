@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.provider.DocumentsContract;
 import android.util.Log;
@@ -92,23 +93,30 @@ public class FinishImport extends CordovaPlugin {
             case "resetGame": {
                 cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).edit().putLong("version", 10000).apply();
             }
-            /*case "requestPermission" : {
-                try {
-                    Uri uri1 = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata");
-                    Intent intent1 = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                    intent1.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                            | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-                    intent1.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri1);
-                    cordova.getActivity().startActivityForResult(intent1, 10085);
-                    callbackContext.success();
-                } catch (Exception e) {
-                    Log.e("requestPermission", e.getMessage());
-                    callbackContext.error(e.getMessage());
+            case "requestMediaRecord": {
+                MainActivity activity = (MainActivity) cordova.getActivity();
+                if (activity != null) {
+                    try {
+                        // 初始化
+                        activity.startService(new Intent(activity, ScreenRecordingService.class));
+                        MainActivity.mProjectionManager = (MediaProjectionManager) activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                        // 执行
+                        activity.startActivityForResult(MainActivity.mProjectionManager.createScreenCaptureIntent(), MainActivity.MediaRecord_REQUEST_CODE);
+                        callbackContext.success();
+                    } catch (Exception e) {
+                        callbackContext.error(e.getMessage());
+                    }
+                } else {
+                    Log.e("requestMediaRecord", "未获取到activity实例");
+                    callbackContext.error("未获取到activity实例");
                 }
                 return true;
-            }*/
+            }
+            case "stopMediaRecord": {
+                MainActivity.stopRecording(true);
+                callbackContext.success();
+                return true;
+            }
         }
 
         return super.execute(action, args, callbackContext);

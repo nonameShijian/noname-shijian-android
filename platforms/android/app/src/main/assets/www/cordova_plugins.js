@@ -284,8 +284,8 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
       "file": "plugins/cordova-plugin-insomnia/www/Insomnia.js",
       "pluginId": "cordova-plugin-insomnia",
       "clobbers": [
-         "window.plugins.insomnia"
-       ]
+        "window.plugins.insomnia"
+      ]
     }
   ];
   module.exports.metadata = {
@@ -300,6 +300,6 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
     "cordova-plugin-android-permissions": "1.1.3",
     "cordova-plugin-file-opener2": "3.0.5",
     "cordova-plugin-inappbrowser": "5.0.0",
-    "cordova-plugin-insomnia": "4.3.0"
+    "cordova-plugin-insomnia": "4.3.0",
   };
 });

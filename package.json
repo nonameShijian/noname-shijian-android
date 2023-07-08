@@ -30,7 +30,8 @@
       "cordova-plugin-dialogs": {},
       "cordova-plugin-websocket": {},
       "cordova-plugin-android-permissions": {},
-      "cordova-plugin-file-opener2": {}
+      "cordova-plugin-file-opener2": {},
+      "cordova-plugin-document-viewer": {}
     },
     "platforms": []
   },

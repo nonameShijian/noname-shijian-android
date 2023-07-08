@@ -1,3 +1,5 @@
+/*
 window.noname_shijianInterfaces = {
 
 };
+*/

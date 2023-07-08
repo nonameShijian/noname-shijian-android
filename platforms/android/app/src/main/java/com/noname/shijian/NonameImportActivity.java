@@ -3,8 +3,11 @@ package com.noname.shijian;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -44,6 +47,8 @@ import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.AbstractFileHeader;
 import net.lingala.zip4j.model.FileHeader;
+
+import org.apache.cordova.LOG;
 
 import cn.hutool.core.util.CharsetUtil;
 
@@ -129,10 +134,11 @@ public class NonameImportActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_begin);
+
 		messageTextView = findViewById(R.id.messages);
-		// updateText("Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
+
 		ToastUtils.show(NonameImportActivity.this, "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 
 		if(Build.VERSION.SDK_INT < 30) {
@@ -734,7 +740,6 @@ public class NonameImportActivity extends Activity {
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 				builder.setTitle("解压完内置资源后，是否覆盖安装没有资源的apk以节省资源？");
 				builder.setView(textView);
-				// builder.setIcon(R.mipmap.ic_launcher);
 				builder.setPositiveButton("确定", (dialog, which) -> {
 					installApk(file);
 				});
@@ -782,14 +787,12 @@ public class NonameImportActivity extends Activity {
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 				builder.setTitle("解压完内置资源后，是否覆盖安装没有资源的apk以节省资源？");
 				builder.setView(textView);
-				// builder.setIcon(R.mipmap.ic_launcher);
 				builder.setPositiveButton("确定", (dialog, which) -> {
 					installApk(file);
 				});
 				builder.setNegativeButton("取消", (dialog, which) -> {
 					updateText("正在为你启动无名杀");
 
-					//Intent intent = new Intent(this, MainActivity.class);
 					PackageManager packageManager = this.getPackageManager();
 					Intent intent = packageManager.getLaunchIntentForPackage(getPackageName());
 					intent.setPackage(null);
@@ -1240,17 +1243,10 @@ public class NonameImportActivity extends Activity {
 			Intent intent = new Intent(Intent.ACTION_VIEW);
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-			Uri uri;
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-				//如果SDK版本 =24，即：Build.VERSION.SDK_INT  = 24
-				String packageName = getApplicationContext().getPackageName();
-				String authority = new StringBuilder(packageName).append(".fileProvider").toString();
-				uri = FileProvider.getUriForFile(this, authority, file);
-				intent.setDataAndType(uri, "application/vnd.android.package-archive");
-			} else{
-				uri = Uri.fromFile(file);
-				intent.setDataAndType(uri, "application/vnd.android.package-archive");
-			}
+			String packageName = getApplicationContext().getPackageName();
+			String authority = packageName + ".fileProvider";
+			Uri uri = FileProvider.getUriForFile(this, authority, file);
+			intent.setDataAndType(uri, "application/vnd.android.package-archive");
 			startActivity(intent);
 			finish();
 		} catch (Exception e) {
