@@ -3,11 +3,8 @@ package com.noname.shijian;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -47,14 +44,47 @@ import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.AbstractFileHeader;
 import net.lingala.zip4j.model.FileHeader;
-
-import org.apache.cordova.LOG;
+import net.lingala.zip4j.progress.ProgressMonitor;
 
 import cn.hutool.core.util.CharsetUtil;
 
 public class NonameImportActivity extends Activity {
 	/** 储存app版本号 */
 	public static long VERSION = 10000L;
+
+	public static final String[] WAITING_MESSAGES = {
+			"无名杀的创造者是水乎，也叫村长。",
+			"苏婆玛丽奥是无名杀的现任更新者。",
+			"GPLv3协议提倡开源与共享，是无名杀代码的基础协议。",
+			"原生的换肤功能不好用？装个千幻聆音扩展试试吧！可以语音图片一起换哦！",
+			"在线更新扩展能避免更新时崩溃导致需要重装游戏的问题。",
+			"萌新记着要看公告和教程哦，不要频繁提问，大佬很忙的。",
+			"诗笺版无名杀的前身是玄武版，现在已经光荣退役了。",
+			"诗笺的第二个字念“jiān”，是“信纸”的意思，不要念错了。",
+			"十周年UI扩展，是短歌制作的优秀的无名杀美化扩展。",
+			"玄武江湖扩展，是原创世界观故事的武侠扩展，有独特的内力值玩法。",
+			"时空枢纽扩展，是原创世界观故事的奇幻扩展，讲述了发生在奇幻世界的冒险故事。",
+			"导入很慢吗？不要急，好饭不怕晚。",
+			"无名杀的代码是用JavaScript写成的。",
+			"阳光包，是优秀的武将扩展，由大佬阳光微凉设计开发。",
+			"千幻聆音扩展的换肤换音功能，是可以让其它扩展接入并自定义的。",
+			"我知道你很急，但是你先别急。",
+			"无名杀扩展内置的导入键并不好用，不建议使用。",
+			"无名杀的外壳和本体代码是分开的，目前本体仓库在GitHub上由苏婆进行更新维护。",
+			"代码混淆的扩展有一定的风险，请谨慎甄别发布者。",
+			"不要退出，你也不想导入出问题吧？",
+			"请不要拿无名杀去别的圈子招仇恨，这种行为并不会显得你很智慧。",
+			"写扩展，最好学会手动编辑文件。内置的编辑器太坑啦！",
+			"无名杀的所有扩展，都有遵守GPLv3协议的义务。",
+			"写扩展不是为了竞争武将强度的，孙悟空可以三棒槌打死鲁智深，但那并没啥意思。",
+			"如果碰到错误弹窗，请滑动截取完整的弹窗信息再去询问作者。不然他也看不明白什么情况。",
+			"越开放的扩展，在传播上有更多的优势。",
+			"熟练掌握万能导入法，防止一切崩溃问题。",
+			"强中更有强中手，一山更比一山高。",
+			"在官服，联机情况下，是不能使用扩展的。",
+			"关于无名杀的种种问题，牢记别人帮你是情分，别人不帮你是本分。",
+			"广告位招租！不要money交个朋友！",
+	};
 
 	/** 是否取得权限 */
 	// private boolean hasPermissions = true;
@@ -74,6 +104,10 @@ public class NonameImportActivity extends Activity {
 	/** 进度条 */
 	private ProgressDialog dialog;
 
+	private int currentWaiting = 0;
+
+	private long lastWaitingTime = 0;
+
 	@SuppressLint("HandlerLeak")
 	private final Handler handler = new Handler() {
 		@Override
@@ -83,6 +117,7 @@ public class NonameImportActivity extends Activity {
 			if (msg.what == MSG_PROGRESS) {
 				int progress = msg.arg1;
 				dialog.setProgress(progress);
+				dialog.setMessage(getWaitingMessage());
 			}
 		}
 	};
@@ -134,13 +169,11 @@ public class NonameImportActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_begin);
-
 		messageTextView = findViewById(R.id.messages);
-
+		// updateText("Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 		ToastUtils.show(NonameImportActivity.this, "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
-
 		if(Build.VERSION.SDK_INT < 30) {
 			/** 要申请的权限列表 */
 			ArrayList<String> permissions = new ArrayList<>();
@@ -226,12 +259,17 @@ public class NonameImportActivity extends Activity {
 		new Thread(){
 			public void run(){
 				//ToastUtils.show(NonameImportActivity.this, "正在加载压缩包文件");
-				updateText("正在加载压缩包文件");
+				updateText("正在加载压缩包文件...");
 				try {
 					// 把文件写入cache/currentLoadFile.zip
 					InputStream inputStream = getContentResolver().openInputStream(uri);
 					cacheFile = new File(getExternalCacheDir(), "currentLoadFile.zip");
-					Utils.inputStreamToFile(inputStream, cacheFile);
+					Utils.inputStreamToFile(inputStream, cacheFile, 1024 * 1024 *100, new Utils.ByteCallback() {
+						@Override
+						public void onProgress(long bytes) {
+							updateText("已读取"+(bytes/(1024*1024))+"MB，请稍候");
+						}
+					});
 					zipFile = new ZipFile(cacheFile);
 
 
@@ -740,6 +778,7 @@ public class NonameImportActivity extends Activity {
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 				builder.setTitle("解压完内置资源后，是否覆盖安装没有资源的apk以节省资源？");
 				builder.setView(textView);
+				// builder.setIcon(R.mipmap.ic_launcher);
 				builder.setPositiveButton("确定", (dialog, which) -> {
 					installApk(file);
 				});
@@ -787,12 +826,14 @@ public class NonameImportActivity extends Activity {
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 				builder.setTitle("解压完内置资源后，是否覆盖安装没有资源的apk以节省资源？");
 				builder.setView(textView);
+				// builder.setIcon(R.mipmap.ic_launcher);
 				builder.setPositiveButton("确定", (dialog, which) -> {
 					installApk(file);
 				});
 				builder.setNegativeButton("取消", (dialog, which) -> {
 					updateText("正在为你启动无名杀");
 
+					//Intent intent = new Intent(this, MainActivity.class);
 					PackageManager packageManager = this.getPackageManager();
 					Intent intent = packageManager.getLaunchIntentForPackage(getPackageName());
 					intent.setPackage(null);
@@ -1024,15 +1065,72 @@ public class NonameImportActivity extends Activity {
 		}
 	}
 
+	private void clearMessy(){
+		updateText("正在清除文件乱码");
+		HashMap<String,String> renames = new HashMap<>();
+		try {
+			List<FileHeader> fileHeaders = zipFile.getFileHeaders();
+			int total = fileHeaders.size();
+			new Handler(Looper.getMainLooper()).post(() -> {
+				dialog.setTitle("正在扫描乱码文件");
+				dialog.setMax(total);
+				dialog.setProgress(0);
+				dialog.setMessage(getWaitingMessage());
+				dialog.show();
+			});
+			int p = 0;
+			for (FileHeader fileHeader : fileHeaders) {
+				String extractedFile = getFileName(fileHeader);
+				if(!fileHeader.getFileName().equals(extractedFile)){
+					renames.put(fileHeader.getFileName(),extractedFile);
+				}
+				p++;
+				final int p2 = p;
+				new Handler(Looper.getMainLooper()).post(() -> {
+					dialog.setProgress(p2);
+					dialog.setMessage(getWaitingMessage());
+					dialog.show();
+				});
+			}
+			updateText("检测到"+renames.size()+"个文件乱码，正在恢复，恢复时间较长，请耐心等待");
+			zipFile.setRunInThread(true);
+			new Handler(Looper.getMainLooper()).post(() -> {
+				dialog.setTitle("正在修复乱码文件");
+				dialog.setMax(1000);
+				dialog.setProgress(0);
+				dialog.setMessage(getWaitingMessage());
+				dialog.show();
+			});
+			zipFile.renameFiles(renames);
+			ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
+			while (progressMonitor.getState() == ProgressMonitor.State.BUSY){
+				Thread.sleep(100);
+				int value = (int)((progressMonitor.getWorkCompleted()/(double)progressMonitor.getTotalWork())*1000);
+				new Handler(Looper.getMainLooper()).post(() -> {
+					dialog.setProgress(value);
+					dialog.setMessage(getWaitingMessage());
+				});
+			}
+			updateText("乱码修复完成！");
+			zipFile.setRunInThread(false);
+		}catch (Throwable e){
+
+		}
+	}
+
 	// 解压文件
 	private void extractAll(String filePath, File cacheDir, String extName) {
 		zipFile.setCharset(StandardCharsets.UTF_8);
 		updateText("Charset: UTF_8");
 		try {
 			List<FileHeader> fileHeaders = zipFile.getFileHeaders();
+			clearMessy();
 			int size = fileHeaders.size();
 			new Handler(Looper.getMainLooper()).post(() -> {
+				dialog.setTitle("正在解压");
 				dialog.setMax(size);
+				dialog.setProgress(0);
+				dialog.setMessage(getWaitingMessage());
 				dialog.show();
 			});
 			updateText("开始解压zip(共" + size + "个文件)\n若其中有文件名乱码将会自动识别，会增加解压时间，请耐心等待");
@@ -1040,12 +1138,13 @@ public class NonameImportActivity extends Activity {
 				FileHeader v = fileHeaders.get(i);
 				if (v.isDirectory()) continue;
 				// 解决乱码后文件路径
-				String extractedFile = getFileName(v);
+				String extractedFile = v.getFileName();
 				// 但是原本的没变，需要改名
+				/*
 				if (!v.getFileName().equals(extractedFile)) {
 					Log.e("renameFile", v.getFileName() + " to " + extractedFile);
 					zipFile.renameFile(v, extractedFile);
-				}
+				}*/
 				try {
 					zipFile.extractFile(v, filePath, extractedFile);
 				} catch (ZipException e) {
@@ -1212,6 +1311,26 @@ public class NonameImportActivity extends Activity {
 		file.delete();
 	}
 
+	private String getWaitingMessage(){
+		if(currentWaiting % WAITING_MESSAGES.length == 0){
+			for(int i=0;i<WAITING_MESSAGES.length;i++){
+				String a = WAITING_MESSAGES[i];
+				int random = (int)(Math.random() * WAITING_MESSAGES.length);
+				String b = WAITING_MESSAGES[random];
+				WAITING_MESSAGES[i] = b;
+				WAITING_MESSAGES[random] = a;
+			}
+			currentWaiting += 1;
+		}
+		String ret = WAITING_MESSAGES[currentWaiting % WAITING_MESSAGES.length];
+		long ct = System.currentTimeMillis();
+		if(ct - lastWaitingTime >= 3500){
+			lastWaitingTime = ct;
+			currentWaiting += 1;
+		}
+		return "小提示："+ret;
+	}
+
 	// 删除缓存
 	private void clearCache(File cacheDir) {
 		if (cacheDir != null) {
@@ -1243,10 +1362,17 @@ public class NonameImportActivity extends Activity {
 			Intent intent = new Intent(Intent.ACTION_VIEW);
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-			String packageName = getApplicationContext().getPackageName();
-			String authority = packageName + ".fileProvider";
-			Uri uri = FileProvider.getUriForFile(this, authority, file);
-			intent.setDataAndType(uri, "application/vnd.android.package-archive");
+			Uri uri;
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+				//如果SDK版本 =24，即：Build.VERSION.SDK_INT  = 24
+				String packageName = getApplicationContext().getPackageName();
+				String authority = new StringBuilder(packageName).append(".fileProvider").toString();
+				uri = FileProvider.getUriForFile(this, authority, file);
+				intent.setDataAndType(uri, "application/vnd.android.package-archive");
+			} else{
+				uri = Uri.fromFile(file);
+				intent.setDataAndType(uri, "application/vnd.android.package-archive");
+			}
 			startActivity(intent);
 			finish();
 		} catch (Exception e) {
@@ -1297,5 +1423,10 @@ public class NonameImportActivity extends Activity {
 				|| ub == Character.UnicodeBlock.GENERAL_PUNCTUATION
 				|| ub == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
 				|| ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS;
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
 	}
 }
