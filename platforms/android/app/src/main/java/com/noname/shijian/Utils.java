@@ -8,6 +8,10 @@ import java.io.InputStream;
 
 public class Utils {
 
+    public interface ByteCallback{
+        void onProgress(long bytes);
+    }
+
     public static String getRandomString(int length){
         String pool = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         char[] cs = new char[length];
@@ -15,6 +19,30 @@ public class Utils {
             cs[i] = pool.charAt((int)(Math.random()*pool.length()));
         }
         return new String(cs);
+    }
+
+    public static void inputStreamToFile(InputStream inputStream,File file,long unit,ByteCallback callback) throws Exception{
+        if(file.exists()){
+            file.delete();
+        }
+        byte[] buffer = new byte[4096];
+        int readLength = -1;
+        FileOutputStream fos = new FileOutputStream(file);
+        long totalLength = 0;
+        long part = 0;
+        while ((readLength = inputStream.read(buffer))!=-1){
+            fos.write(buffer,0,readLength);
+            totalLength += readLength;
+            long newPart = totalLength/unit;
+            if(newPart != part){
+                part = newPart;
+                if(callback!=null){
+                    callback.onProgress(totalLength);
+                }
+            }
+        }
+        fos.close();
+        inputStream.close();
     }
 
     public static void inputStreamToFile(InputStream inputStream,File file) throws Exception{
