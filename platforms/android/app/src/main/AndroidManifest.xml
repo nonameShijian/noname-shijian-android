@@ -23,11 +23,6 @@
                 <data android:host="*" android:mimeType="application/zip" android:scheme="content" />
             </intent-filter>
         </activity>
-        <service android:name=".ScreenRecordingService"
-            android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="mediaProjection"
-        />
         <activity android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode" android:label="@string/activity_name" android:launchMode="singleTop" android:name=".MainActivity" android:screenOrientation="sensorLandscape" android:theme="@android:style/Theme.DeviceDefault.NoActionBar" android:windowSoftInputMode="adjustResize">
             <intent-filter android:label="@string/launcher_name">
                 <action android:name="android.intent.action.MAIN" />
