@@ -30,6 +30,7 @@ import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioPlaybackCaptureConfiguration;
 import android.media.AudioRecord;
+import android.media.MediaFormat;
 import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
@@ -50,6 +51,7 @@ import androidx.core.content.ContextCompat;
 import org.apache.cordova.*;
 import org.apache.cordova.engine.SystemWebView;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -57,6 +59,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
 
 public class MainActivity extends CordovaActivity {
     public final static int FILE_CHOOSER_RESULT_CODE = 1;
@@ -90,6 +93,9 @@ public class MainActivity extends CordovaActivity {
 
     // 录音的工作线程
     public static Thread recordingAudioThread;
+
+    private PcmToWavUtil pcmToWavUtil = new PcmToWavUtil(SAMPLE_RATE_INHZ, CHANNEL_CONFIG, AUDIO_FORMAT);
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -196,133 +202,169 @@ public class MainActivity extends CordovaActivity {
         super.onActivityResult(requestCode, resultCode, intent);
     }
 
+    private static volatile boolean recordingThreadNotRun = true;
+
     /** 开始录屏 */
     private void startRecording() {
-        setFileName();
-        mMediaRecorder = new MediaRecorder();
-        mMediaProjection = mProjectionManager.getMediaProjection(Activity.RESULT_OK, mResultData);
+        try {
+            setFileName();
+            mMediaRecorder = new MediaRecorder();
+            mMediaProjection = mProjectionManager.getMediaProjection(Activity.RESULT_OK, mResultData);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            AudioRecord.Builder builder = new AudioRecord.Builder();
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                AudioRecord.Builder builder = new AudioRecord.Builder();
 
-            builder.setAudioFormat(new AudioFormat.Builder()
-                            .setSampleRate(SAMPLE_RATE_INHZ)
-                            .setChannelMask(CHANNEL_CONFIG)
-                            .setEncoding(AUDIO_FORMAT)
-                            .build())
-                    .setBufferSizeInBytes(minBufferSize);
+                builder.setAudioFormat(new AudioFormat.Builder()
+                        .setSampleRate(SAMPLE_RATE_INHZ)
+                        .setChannelMask(CHANNEL_CONFIG)
+                        .setEncoding(AUDIO_FORMAT)
+                        .build())
+                        .setBufferSizeInBytes(minBufferSize);
 
-            AudioPlaybackCaptureConfiguration config = new AudioPlaybackCaptureConfiguration.Builder(mMediaProjection)
+                AudioPlaybackCaptureConfiguration config = new AudioPlaybackCaptureConfiguration.Builder(mMediaProjection)
                         .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
                         .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN)
                         .addMatchingUsage(AudioAttributes.USAGE_GAME)
                         .build();
 
-            builder.setAudioPlaybackCaptureConfig(config);
+                builder.setAudioPlaybackCaptureConfig(config);
 
-            try {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    audioRecord = builder.build();
-                    int state = audioRecord.getState();
-                    if (AudioRecord.STATE_INITIALIZED != state) {
-                        audioRecord = null;
-                        throw new Exception("AudioRecord无法初始化，请检查录制权限或者是否其他app没有释放录音器");
-                    }
-                }
-            } catch (Exception e) {
-                Log.e("录音器错误", "录音器初始化失败");
-            }
-        } else {
-            Toast.makeText(this, "System Audio Capture is not Supported on this Device", Toast.LENGTH_LONG).show();
-        }
-
-        DisplayMetrics metrics = getResources().getDisplayMetrics();
-        int screenWidth = metrics.widthPixels;
-        int screenHeight = metrics.heightPixels;
-        int screenDensity = metrics.densityDpi;
-        // mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.REMOTE_SUBMIX);
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-       //  mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setVideoSize(getScreenWidth(this), getScreenHeight(this));
-        mMediaRecorder.setVideoFrameRate(80);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mMediaRecorder.setOutputFile(videoFile); // 文件路径
-        } else {
-            ParcelFileDescriptor fd = null;
-            try {
-                fd = ParcelFileDescriptor.open(videoFile, ParcelFileDescriptor.MODE_READ_WRITE);
-                mMediaRecorder.setOutputFile(ParcelFileDescriptor.fromFd(fd.getFd()).getFileDescriptor());
-            } catch (IOException e) {
-                Log.e("setOutputFile", String.valueOf(e));
-            } finally {
-                if (fd != null) {
-                    try {
-                        fd.close();
-                    } catch (IOException e) {
-                        Log.e("fd.close", String.valueOf(e));
-                    }
-                }
-            }
-        }
-        // mMediaRecorder.setAudioEncodingBitRate(5 * 1024 * 1024);
-        mMediaRecorder.setVideoEncodingBitRate(5 * 1024 * 1024); //设置编码比特率
-        mMediaRecorder.setMaxDuration(1000 * 60 * 60); // 最长录制一小时
-        try {
-            mMediaRecorder.prepare();
-            mVirtualDisplay = mMediaProjection.createVirtualDisplay("ScreenCapture",
-                    screenWidth, screenHeight, screenDensity,
-                    DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                    mMediaRecorder.getSurface(), null, null);
-        } catch (IOException e) {
-            Log.e("mMediaRecorder.prepare", String.valueOf(e));
-        }
-
-        mMediaRecorder.start();
-
-        if (audioRecord != null) {
-            audioRecord.startRecording();
-            recordingAudioThread = new Thread(() -> {
-                if (audioRecord == null) return;
-                FileOutputStream fos = null;
                 try {
-                    fos = new FileOutputStream(audioFile);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    Log.e(TAG, "临时缓存文件未找到");
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                        audioRecord = builder.build();
+                        int state = audioRecord.getState();
+                        if (AudioRecord.STATE_INITIALIZED != state) {
+                            audioRecord = null;
+                            throw new Exception("AudioRecord无法初始化，请检查录制权限或者是否其他app没有释放录音器");
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e("录音器错误", "录音器初始化失败");
                 }
-                if (fos == null) {
-                    return;
-                }
+            } else {
+                Toast.makeText(this, "System Audio Capture is not Supported on this Device", Toast.LENGTH_LONG).show();
+            }
 
-                byte[] data = new byte[minBufferSize];
-                int read;
-                while (isRecording && recordingAudioThread != null && !recordingAudioThread.isInterrupted()) {
-                    if (audioRecord != null) {
-                        read = audioRecord.read(data, 0, minBufferSize);
-                        if (AudioRecord.ERROR_INVALID_OPERATION != read) {
-                            try {
-                                fos.write(data);
-                                Log.i("audioRecordTest", "写录音数据->" + read);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+            DisplayMetrics metrics = getResources().getDisplayMetrics();
+            int screenWidth = metrics.widthPixels;
+            int screenHeight = metrics.heightPixels;
+            int screenDensity = metrics.densityDpi;
+            // mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.REMOTE_SUBMIX);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            //  mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+            mMediaRecorder.setVideoSize(getScreenWidth(this), getScreenHeight(this));
+            mMediaRecorder.setVideoFrameRate(80);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                mMediaRecorder.setOutputFile(videoFile); // 文件路径
+            } else {
+                ParcelFileDescriptor fd = null;
+                try {
+                    fd = ParcelFileDescriptor.open(videoFile, ParcelFileDescriptor.MODE_READ_WRITE);
+                    mMediaRecorder.setOutputFile(ParcelFileDescriptor.fromFd(fd.getFd()).getFileDescriptor());
+                } catch (IOException e) {
+                    Log.e("setOutputFile", String.valueOf(e));
+                } finally {
+                    if (fd != null) {
+                        try {
+                            fd.close();
+                        } catch (IOException e) {
+                            Log.e("fd.close", String.valueOf(e));
                         }
                     }
                 }
+            }
+            // mMediaRecorder.setAudioEncodingBitRate(5 * 1024 * 1024);
+            mMediaRecorder.setVideoEncodingBitRate(5 * 1024 * 1024); //设置编码比特率
+            mMediaRecorder.setMaxDuration(1000 * 60 * 60); // 最长录制一小时
+            try {
+                mMediaRecorder.prepare();
+                mVirtualDisplay = mMediaProjection.createVirtualDisplay("ScreenCapture",
+                        screenWidth, screenHeight, screenDensity,
+                        DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                        mMediaRecorder.getSurface(), null, null);
+            } catch (IOException e) {
+                Log.e("mMediaRecorder.prepare", String.valueOf(e));
+            }
 
-                try {
-                    // 关闭数据流
-                    fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+            mMediaRecorder.start();
+
+            if (audioRecord != null) {
+                recordingAudioThread = new Thread(() -> {
+                    if (audioRecord == null) return;
+                    recordingThreadNotRun = false;
+                    FileOutputStream fos = null;
+                    try {
+                        fos = new FileOutputStream(audioFile);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "临时缓存文件未找到");
+                    }
+                    if (fos == null) {
+                        recordingThreadNotRun = true;
+                        return;
+                    }
+                    byte[] data = new byte[minBufferSize];
+                    int read;
+                    audioRecord.startRecording();
+                    final FileOutputStream ffos = fos;
+                    PCMEncoderAAC pcmEncoderAAC = new PCMEncoderAAC(SAMPLE_RATE_INHZ, new PCMEncoderAAC.EncoderListener() {
+                        @Override
+                        public void encodeAAC(byte[] data) {
+                            try {
+                                ffos.write(data);
+                            }catch (Throwable e){
+
+                            }
+                        }
+                    });
+                    while (isRecording && recordingAudioThread != null) {
+                        if (audioRecord != null) {
+                            read = audioRecord.read(data, 0, minBufferSize);
+                            if (read > 0) {
+                                /*
+                                try {
+                                    fos.write(data,0,read);
+                                    fos.flush();
+                                    Log.i("audioRecordTest", "写录音数据->" + read);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                } catch (Throwable e){
+                                    Log.e("audioRecordTest","",e);
+                                    e.printStackTrace();
+                                }*/
+                                pcmEncoderAAC.encodeData(data);
+                            }
+                        }
+                    }
+                    if(audioRecord!=null) {
+                        audioRecord.stop();
+                        audioRecord.release();
+                        audioRecord = null;
+                    }
+
+                    try {
+                        // 关闭数据流
+                        fos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    recordingThreadNotRun = true;
+                });
+
+                recordingAudioThread.start();
+            }
+            isRecording = true;
+        }catch (Throwable e){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this,"error:"+e.getMessage(),Toast.LENGTH_SHORT).show();
                 }
             });
-
-            recordingAudioThread.start();
         }
-        isRecording = true;
     }
 
     /** 停止录屏 */
@@ -344,6 +386,7 @@ public class MainActivity extends CordovaActivity {
             mMediaProjection = null;
         }
 
+        /*
         if (audioRecord != null) {
             audioRecord.stop();
             audioRecord.release();
@@ -352,10 +395,10 @@ public class MainActivity extends CordovaActivity {
             if (audioFile.exists()) {
                 audioFile.delete();
             }
-        }
+        }*/
 
         if (recordingAudioThread != null) {
-            recordingAudioThread.interrupt();
+            //recordingAudioThread.interrupt();
             recordingAudioThread = null;
         }
 
@@ -385,6 +428,9 @@ public class MainActivity extends CordovaActivity {
 
         Thread thread = new Thread(){
             public void run() {
+                while (!recordingThreadNotRun){
+                    Log.e("mergeAudioAndVideo","waiting");
+                }
                 MergeMovieAndVoiceUtil.mergeAudio(audioFile.getAbsolutePath()/*.replace("pcm", "mp3")*/, videoFile.getAbsolutePath(), movieDirPath + "/对局录像.mp4");
                 //MergeMovieAndVoiceUtil.muxVideoAudio(audioFile.getAbsolutePath(), videoFile.getAbsolutePath(), movieDirPath + "/对局录像.mp4");
                 Log.e("mergeAudioAndVideo", movieDirPath + "/对局录像.mp4");
@@ -399,7 +445,7 @@ public class MainActivity extends CordovaActivity {
                 videoFile = null;
                 audioFile = null;
 
-                this.interrupt();
+                //this.interrupt();
             }
         };
 
@@ -411,7 +457,7 @@ public class MainActivity extends CordovaActivity {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         String currentTime = formatter.format(new Date());
         String fileName = "video_" + currentTime + ".mp4";
-        String fileName2 = "audio_" + currentTime + ".pcm";
+        String fileName2 = "audio_" + currentTime + ".aac";
 
         videoFile = new File(movieDirPath, fileName);
 

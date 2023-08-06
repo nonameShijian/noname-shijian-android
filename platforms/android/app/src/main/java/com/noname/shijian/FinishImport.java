@@ -6,6 +6,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.DocumentsContract;
 import android.util.Log;
 
@@ -98,7 +99,11 @@ public class FinishImport extends CordovaPlugin {
                 if (activity != null) {
                     try {
                         // 初始化
-                        activity.startService(new Intent(activity, ScreenRecordingService.class));
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            activity.startForegroundService(new Intent(activity, ScreenRecordingService.class));
+                        }else{
+                            activity.startService(new Intent(activity, ScreenRecordingService.class));
+                        }
                         MainActivity.mProjectionManager = (MediaProjectionManager) activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
                         // 执行
                         activity.startActivityForResult(MainActivity.mProjectionManager.createScreenCaptureIntent(), MainActivity.MediaRecord_REQUEST_CODE);
