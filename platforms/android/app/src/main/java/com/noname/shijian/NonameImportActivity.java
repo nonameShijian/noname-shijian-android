@@ -27,6 +27,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,7 +146,7 @@ public class NonameImportActivity extends Activity {
 		}
 
 		public ExtensionNameException(String message, Throwable cause, boolean enableSuppression,
-				boolean writableStackTrace) {
+									  boolean writableStackTrace) {
 			super(message, cause, enableSuppression, writableStackTrace);
 		}
 	}
@@ -167,9 +168,9 @@ public class NonameImportActivity extends Activity {
 		return true;
 	}
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_begin);
 		messageTextView = findViewById(R.id.messages);
 		// updateText("Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
@@ -196,13 +197,13 @@ public class NonameImportActivity extends Activity {
 		} else {
 			afterHasPermissions();
 		}
-    }
+	}
 
 	@Override
 	/** 权限请求回调 */
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 999) {
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		if (requestCode == 999) {
 			for (int ret : grantResults) {
 				if (ret != PackageManager.PERMISSION_GRANTED) {
 					AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -216,8 +217,8 @@ public class NonameImportActivity extends Activity {
 				}
 			}
 			afterHasPermissions();
-        }
-    }
+		}
+	}
 
 	/** 成功申请后 */
 	private void afterHasPermissions() {
@@ -341,12 +342,12 @@ public class NonameImportActivity extends Activity {
 								return;
 							}
 							Object[] paths = list.stream()
-								.filter(fileHeader -> {
-									String fileName = fileHeader.getFileName();
-									return fileName.endsWith("/extension.js");
-								})
-								.map(AbstractFileHeader::getFileName)
-								.toArray();
+									.filter(fileHeader -> {
+										String fileName = fileHeader.getFileName();
+										return fileName.endsWith("/extension.js");
+									})
+									.map(AbstractFileHeader::getFileName)
+									.toArray();
 							// 取最短的路径
 							String path = "";
 							int strLen = -1;
@@ -971,6 +972,8 @@ public class NonameImportActivity extends Activity {
 		}.start();
 	}
 
+	private char[] password;
+
 	private void setPassword(int method, String rootPath) {
 		runOnUiThread(() -> {
 			final EditText editText = new EditText(NonameImportActivity.this);
@@ -986,6 +989,7 @@ public class NonameImportActivity extends Activity {
 							setPassword(method, rootPath);
 						} else {
 							char[] password = editText.getText().toString().toCharArray();
+							this.password = password;
 							zipFile.setPassword(password);
 							try {
 								if (method == 1) {
@@ -1065,67 +1069,44 @@ public class NonameImportActivity extends Activity {
 		}
 	}
 
-	private void clearMessy(){
-		updateText("正在清除文件乱码");
-		HashMap<String,String> renames = new HashMap<>();
-		try {
-			List<FileHeader> fileHeaders = zipFile.getFileHeaders();
-			int total = fileHeaders.size();
-			new Handler(Looper.getMainLooper()).post(() -> {
-				dialog.setTitle("正在扫描乱码文件");
-				dialog.setMax(total);
-				dialog.setProgress(0);
-				dialog.setMessage(getWaitingMessage());
-				dialog.show();
-			});
-			int p = 0;
-			for (FileHeader fileHeader : fileHeaders) {
-				String extractedFile = getFileName(fileHeader);
-				if(!fileHeader.getFileName().equals(extractedFile)){
-					renames.put(fileHeader.getFileName(),extractedFile);
-				}
-				p++;
-				final int p2 = p;
-				new Handler(Looper.getMainLooper()).post(() -> {
-					dialog.setProgress(p2);
-					dialog.setMessage(getWaitingMessage());
-					dialog.show();
-				});
+	private String getCharset(ZipFile zipFile)throws ZipException{
+		String[] charsets = new String[]{"utf-8","gbk","gb2312"};
+		for(String c:charsets){
+			updateText("正在检查文件编码是否为"+c);
+			ZipFile z = new ZipFile(zipFile.getFile());
+			z.setCharset(Charset.forName(c));
+			if(!hasMessy(z)){
+				updateText("编码确认为："+c);
+				return c;
 			}
-			updateText("检测到"+renames.size()+"个文件乱码，正在恢复，恢复时间较长，请耐心等待");
-			zipFile.setRunInThread(true);
-			new Handler(Looper.getMainLooper()).post(() -> {
-				dialog.setTitle("正在修复乱码文件");
-				dialog.setMax(1000);
-				dialog.setProgress(0);
-				dialog.setMessage(getWaitingMessage());
-				dialog.show();
-			});
-			zipFile.renameFiles(renames);
-			ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
-			while (progressMonitor.getState() == ProgressMonitor.State.BUSY){
-				Thread.sleep(100);
-				int value = (int)((progressMonitor.getWorkCompleted()/(double)progressMonitor.getTotalWork())*1000);
-				new Handler(Looper.getMainLooper()).post(() -> {
-					dialog.setProgress(value);
-					dialog.setMessage(getWaitingMessage());
-				});
-			}
-			updateText("乱码修复完成！");
-			zipFile.setRunInThread(false);
-		}catch (Throwable e){
-
 		}
+		updateText("无法确认文件编码，选择默认GBK");
+		return "gbk";
+	}
+
+	private boolean hasMessy(ZipFile zipFile) throws ZipException{
+		for (FileHeader fh : zipFile.getFileHeaders()) {
+			if (isMessyCode(fh.getFileName())) {
+				updateText("发现乱码文件："+fh.getFileName());
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// 解压文件
 	private void extractAll(String filePath, File cacheDir, String extName) {
-		zipFile.setCharset(StandardCharsets.UTF_8);
-		updateText("Charset: UTF_8");
+		//zipFile = new ZipFile(zipFile.getFile());
+		//zipFile.setPassword(this.password);
 		try {
-			List<FileHeader> fileHeaders = zipFile.getFileHeaders();
-			clearMessy();
-			int size = fileHeaders.size();
+			String charset = getCharset(zipFile);
+			updateText("Charset is:"+charset);
+			zipFile = new ZipFile(zipFile.getFile());
+			zipFile.setPassword(this.password);
+			zipFile.setCharset(Charset.forName(charset));
+			//clearMessy();
+			//List<FileHeader> fileHeaders = zipFile.getFileHeaders();
+			int size = zipFile.getFileHeaders().size();
 			new Handler(Looper.getMainLooper()).post(() -> {
 				dialog.setTitle("正在解压");
 				dialog.setMax(size);
@@ -1135,10 +1116,10 @@ public class NonameImportActivity extends Activity {
 			});
 			updateText("开始解压zip(共" + size + "个文件)\n若其中有文件名乱码将会自动识别，会增加解压时间，请耐心等待");
 			for (int i = 0; i < size; i++) {
-				FileHeader v = fileHeaders.get(i);
+				FileHeader v = zipFile.getFileHeaders().get(i);
 				if (v.isDirectory()) continue;
 				// 解决乱码后文件路径
-				String extractedFile = v.getFileName();
+				String extractedFile = getFileName(v);//v.getFileName();
 				// 但是原本的没变，需要改名
 				/*
 				if (!v.getFileName().equals(extractedFile)) {
@@ -1146,7 +1127,8 @@ public class NonameImportActivity extends Activity {
 					zipFile.renameFile(v, extractedFile);
 				}*/
 				try {
-					zipFile.extractFile(v, filePath, extractedFile);
+					zipFile.extractFile(v.getFileName(),filePath,extractedFile);
+					//zipFile.extractFile(v, filePath, extractedFile);
 				} catch (ZipException e) {
 					String message = e.getMessage().contains("Wrong password!") ? "压缩包密码错误，请重新解压" : e.getMessage();
 
@@ -1171,7 +1153,7 @@ public class NonameImportActivity extends Activity {
 					zipFile.renameFile(v, extractedFile);
 					try {
 						if (isMessyCode(extractedFile)) throw new ZipException("文件名为乱码: " + extractedFile);
-						zipFile.extractFile(v, filePath, extractedFile);
+						zipFile.extractFile(v.getFileName(), filePath, extractedFile);
 						updateText("解压" + extractedFile + "成功");
 						Log.e("utf-8解压成功", "——————————");
 					} catch (ZipException err) {
@@ -1185,7 +1167,7 @@ public class NonameImportActivity extends Activity {
 						zipFile.renameFile(v, extractedFile);
 						try {
 							if (isMessyCode(extractedFile)) throw new ZipException("文件名为乱码: " + extractedFile);
-							zipFile.extractFile(v, filePath, extractedFile);
+							zipFile.extractFile(v.getFileName(), filePath, extractedFile);
 							updateText("解压" + extractedFile + "成功");
 							Log.e("gbk解压成功", "——————————");
 						} catch (ZipException error) {
@@ -1225,6 +1207,19 @@ public class NonameImportActivity extends Activity {
 	/** 解析乱码文件名 */
 	public String getFileName(FileHeader fileHeader) {
 		String name = fileHeader.getFileName();
+		/*
+		try {
+			if (Charset.forName("gbk").newEncoder().canEncode(name)) {
+				return new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_GBK.name());
+			} else if (Charset.forName("gb2312").newEncoder().canEncode(name)) {
+				return new String(name.getBytes("Cp437"), Charset.forName("gb2312"));
+			} else {
+				return new String(name.getBytes("Cp437"), CharsetUtil.CHARSET_UTF_8.name());
+			}
+		}catch (Exception e){
+			return name;
+		}*/
+
 		boolean imc = isMessyCode(name);
 		Log.e("name", name);
 		Log.e("isMessyCode", String.valueOf(imc));
@@ -1242,12 +1237,22 @@ public class NonameImportActivity extends Activity {
 		if (!imc) {
 			return name;
 		}
+		if(!isMessyCode(name_utf8)){
+			updateText("use utf8 "+name+" "+name_utf8);
+			return name_utf8;
+		}else if(!isMessyCode(name_gbk)){
+			updateText("use gbk "+name+" "+name_gbk);
+			return name_gbk;
+		}
+		//updateText("not compact with:"+name);
 		// 目前压缩包主要是两种来源WINdows和Linux
+		return name;
+		/*
 		if (fileHeader.isFileNameUTF8Encoded()) {
 			return name_utf8;
 		} else {
 			return name_gbk;
-		}
+		}*/
 	}
 
 	/** 对FileHeader指定编码 */
@@ -1382,12 +1387,12 @@ public class NonameImportActivity extends Activity {
 
 	/**
 	 * 判断字符串是否包含乱码
-	 * @param strText  需要判断的字符串
+	 * @param strName  需要判断的字符串
 	 * @return 字符串包含乱码则返回true, 字符串不包含乱码则返回false
 	 */
-	private static boolean isMessyCode(String strText) {
+	public static boolean isMessyCode(String strName) {
 		Pattern p = Pattern.compile("\\s*|\t*|\r*|\n*");
-		Matcher m = p.matcher(strText);
+		Matcher m = p.matcher(strName);
 		String after = m.replaceAll("");
 		String temp = after.replaceAll("\\p{P}", "");
 		char[] ch = temp.trim().toCharArray();
@@ -1417,12 +1422,15 @@ public class NonameImportActivity extends Activity {
 	 */
 	private static boolean isChinese(char c) {
 		Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
-		return ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+		if (ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
 				|| ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
 				|| ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
 				|| ub == Character.UnicodeBlock.GENERAL_PUNCTUATION
 				|| ub == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
-				|| ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS;
+				|| ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS) {
+			return true;
+		}
+		return false;
 	}
 
 	@Override
