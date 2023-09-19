@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -32,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -229,6 +232,7 @@ public class NonameImportActivity extends Activity {
 			loadUri(getIntent().getData());
 		} else if (getSharedPreferences("nonameshijian", MODE_PRIVATE).getLong("version",10000) < VERSION) {
 			updateText("检测到您是首次安装或是升级了app，将自动为您解压内置资源");
+			fixCharSet = "utf-8";
 			try {
 				InputStream inputStream = getAssets().open("www/app/noname.zip");
 				inputStream.close();
@@ -1071,28 +1075,74 @@ public class NonameImportActivity extends Activity {
 	}
 
 	private String getCharset(ZipFile zipFile)throws ZipException{
+		if(!TextUtils.isEmpty(fixCharSet)){
+			updateText("使用选定的编码"+fixCharSet);
+			return fixCharSet;
+		}
 		String[] charsets = new String[]{"utf-8","gbk","gb2312"};
 		for(String c:charsets){
 			updateText("正在检查文件编码是否为"+c);
 			ZipFile z = new ZipFile(zipFile.getFile());
 			z.setCharset(Charset.forName(c));
-			if(!hasMessy(z)){
+			if(!hasMessy(z,c)){
 				updateText("编码确认为："+c);
 				return c;
 			}
 		}
-		updateText("无法确认文件编码，选择默认GBK");
-		return "gbk";
+		updateText("无法确认文件编码");
+		return null;
 	}
 
-	private boolean hasMessy(ZipFile zipFile) throws ZipException{
+	private HashMap<String,String> messyCodeMap = new HashMap<>();
+
+	private String fixCharSet = null;
+
+	private boolean hasMessy(ZipFile zipFile,String charset) throws ZipException{
 		for (FileHeader fh : zipFile.getFileHeaders()) {
 			if (isMessyCode(fh.getFileName())) {
-				updateText("发现乱码文件："+fh.getFileName());
+				updateText("发现疑似乱码文件："+fh.getFileName());
+				messyCodeMap.put(charset,fh.getFileName());
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private void chooseCharsetAndExtractAll(String filePath,File cacheDir,String extName){
+		if(messyCodeMap.size() == 0){
+			extractAll(filePath,cacheDir,extName);
+			return;
+		}
+		List<CharSequence> list = new ArrayList<>();
+		List<String> keys = new ArrayList<>();
+		for(Map.Entry<String,String> entry:messyCodeMap.entrySet()){
+			list.add(entry.getValue());
+			keys.add(entry.getKey());
+		}
+		CharSequence[] items = list.toArray(new CharSequence[messyCodeMap.size()]);
+		AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+		alertBuilder.setTitle("请选择以下不为乱码的一项");
+		fixCharSet = keys.get(0);
+		alertBuilder.setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialogInterface, int i) {
+				fixCharSet = keys.get(i);
+			}
+		});
+		alertBuilder.setIcon(R.mipmap.ic_launcher);
+		alertBuilder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialogInterface, int i) {
+				dialogInterface.dismiss();
+				new Thread(){
+					@Override
+					public void run() {
+						extractAll(filePath,cacheDir,extName);
+					}
+				}.start();
+			}
+		});
+		alertBuilder.create().show();
 	}
 
 	// 解压文件
@@ -1101,6 +1151,15 @@ public class NonameImportActivity extends Activity {
 		//zipFile.setPassword(this.password);
 		try {
 			String charset = getCharset(zipFile);
+			if(charset == null){
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						chooseCharsetAndExtractAll(filePath,cacheDir,extName);
+					}
+				});
+				return;
+			}
 			updateText("Charset is:"+charset);
 			zipFile = new ZipFile(zipFile.getFile());
 			zipFile.setPassword(this.password);
