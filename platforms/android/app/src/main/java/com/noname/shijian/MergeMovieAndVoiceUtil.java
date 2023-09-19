@@ -71,7 +71,7 @@ public class MergeMovieAndVoiceUtil {
 
             // 定义一些变量，用于读取和写入音频和视频数据
             MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo(); // 用于存储媒体数据的元信息，如时间戳，大小，偏移量等
-            int bufferSize = 256 * 1024; // 设置缓冲区的大小，根据需要调整
+            int bufferSize = /*256 * 1024*/1024 * 1024; // 设置缓冲区的大小，根据需要调整
             ByteBuffer buffer = ByteBuffer.allocate(bufferSize); // 创建一个字节缓冲区，用于存储媒体数据
             boolean isAudioDone = false; // 标记音频是否读取完毕
             boolean isVideoDone = false; // 标记视频是否读取完毕

@@ -232,6 +232,11 @@ task cdvPrintProps {
     }
 }
 
+//构建时间
+def generateTime() {
+    return new Date().format("yyyy-MM-dd")
+}
+
 android {
     defaultConfig {
         versionCode cdvVersionCode ?: new BigInteger("" + privateHelpers.extractIntFromManifest("versionCode"))
@@ -334,6 +339,14 @@ android {
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    android.applicationVariants.all {
+        variant ->
+            variant.outputs.all {
+                //在这里修改apk文件名
+                outputFileName = "无名杀诗笺版(安卓)v${variant.versionName}(${generateTime()}).apk"
+            }
     }
 }
 

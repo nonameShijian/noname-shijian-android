@@ -135,7 +135,6 @@ public class MainActivity extends CordovaActivity {
         //mProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
         movieDirPath = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
-        // movieDirPath = getExternalFilesDir(null).getAbsolutePath();
     }
 
     @Override
@@ -164,7 +163,7 @@ public class MainActivity extends CordovaActivity {
         }
         // 停止录屏并销毁文件
         if (isRecording) {
-            stopRecording(false);
+            stopRecording(false, null);
         }
         super.onDestroy();
     }
@@ -175,7 +174,7 @@ public class MainActivity extends CordovaActivity {
 
         // 停止录屏并销毁文件
         if (isRecording) {
-            stopRecording(false);
+            stopRecording(false, null);
         }
     }
 
@@ -368,7 +367,9 @@ public class MainActivity extends CordovaActivity {
     }
 
     /** 停止录屏 */
-    public static void stopRecording(boolean keepFile) {
+    public static void stopRecording(boolean keepFile, String fileName) {
+        if (!isRecording) return;
+
         if (mMediaRecorder != null) {
             mMediaRecorder.stop();
             mMediaRecorder.reset();
@@ -386,19 +387,7 @@ public class MainActivity extends CordovaActivity {
             mMediaProjection = null;
         }
 
-        /*
-        if (audioRecord != null) {
-            audioRecord.stop();
-            audioRecord.release();
-            audioRecord = null;
-        } else {
-            if (audioFile.exists()) {
-                audioFile.delete();
-            }
-        }*/
-
         if (recordingAudioThread != null) {
-            //recordingAudioThread.interrupt();
             recordingAudioThread = null;
         }
 
@@ -426,26 +415,25 @@ public class MainActivity extends CordovaActivity {
             Log.e("stopRecording", "文件保存在：" + audioFile.getAbsolutePath());
         }
 
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Log.e("mergeAudioAndVideo",fileName);
+
         Thread thread = new Thread(){
             public void run() {
                 while (!recordingThreadNotRun){
                     Log.e("mergeAudioAndVideo","waiting");
                 }
-                MergeMovieAndVoiceUtil.mergeAudio(audioFile.getAbsolutePath()/*.replace("pcm", "mp3")*/, videoFile.getAbsolutePath(), movieDirPath + "/对局录像.mp4");
-                //MergeMovieAndVoiceUtil.muxVideoAudio(audioFile.getAbsolutePath(), videoFile.getAbsolutePath(), movieDirPath + "/对局录像.mp4");
-                Log.e("mergeAudioAndVideo", movieDirPath + "/对局录像.mp4");
-
-//                    if (videoFile.exists()) {
-//                        videoFile.delete();
-//                    }
-//                    if (audioFile.exists()) {
-//                        audioFile.delete();
-//                    }
-
+                String currentTime = formatter.format(new Date());
+                MergeMovieAndVoiceUtil.mergeAudio(audioFile.getAbsolutePath(), videoFile.getAbsolutePath(), movieDirPath + "/" + fileName + "-" + currentTime + ".mp4");
+                Log.e("mergeAudioAndVideo", movieDirPath + "/" + fileName + "-" + currentTime + ".mp4");
+                if (videoFile != null && videoFile.exists()) {
+                    videoFile.delete();
+                }
                 videoFile = null;
+                if (audioFile != null && audioFile.exists()) {
+                    audioFile.delete();
+                }
                 audioFile = null;
-
-                //this.interrupt();
             }
         };
 

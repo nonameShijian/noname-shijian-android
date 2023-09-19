@@ -60,7 +60,7 @@ public class NonameImportActivity extends Activity {
 			"原生的换肤功能不好用？装个千幻聆音扩展试试吧！可以语音图片一起换哦！",
 			"在线更新扩展能避免更新时崩溃导致需要重装游戏的问题。",
 			"萌新记着要看公告和教程哦，不要频繁提问，大佬很忙的。",
-			"诗笺版无名杀的前身是玄武版，现在已经光荣退役了。",
+			"诗笺版无名杀的前身是玄武版，现在玄武版已经光荣退役了。",
 			"诗笺的第二个字念“jiān”，是“信纸”的意思，不要念错了。",
 			"十周年UI扩展，是短歌制作的优秀的无名杀美化扩展。",
 			"玄武江湖扩展，是原创世界观故事的武侠扩展，有独特的内力值玩法。",
@@ -84,6 +84,7 @@ public class NonameImportActivity extends Activity {
 			"强中更有强中手，一山更比一山高。",
 			"在官服，联机情况下，是不能使用扩展的。",
 			"关于无名杀的种种问题，牢记别人帮你是情分，别人不帮你是本分。",
+			"无名杀不排斥开发自己的版本，但是必须遵守GPL协议。",
 			"广告位招租！不要money交个朋友！",
 	};
 
@@ -1422,15 +1423,12 @@ public class NonameImportActivity extends Activity {
 	 */
 	private static boolean isChinese(char c) {
 		Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
-		if (ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+		return ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
 				|| ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
 				|| ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
 				|| ub == Character.UnicodeBlock.GENERAL_PUNCTUATION
 				|| ub == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
-				|| ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS) {
-			return true;
-		}
-		return false;
+				|| ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS;
 	}
 
 	@Override

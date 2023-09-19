@@ -27,6 +27,7 @@ public class FinishImport extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         LOG.e("ready", "触发ready: " + action);
+        LOG.e("ready", "args: " + args);
         switch (action) {
             case "importReady": {
                 Map<String, String> data = this.importReady();
@@ -40,10 +41,11 @@ public class FinishImport extends CordovaPlugin {
                 }
                 return true;
             }
-            case "importReceived":
+            case "importReceived": {
                 ext = null;
                 callbackContext.success();
                 return true;
+            }
             case "environment": {
                 // 是否是测试环境
                 Map<String, String> data = new HashMap<String, String>();
@@ -118,7 +120,9 @@ public class FinishImport extends CordovaPlugin {
                 return true;
             }
             case "stopMediaRecord": {
-                MainActivity.stopRecording(true);
+                String fileName = args.getString(0);
+                Log.e("FinishImport", fileName);
+                MainActivity.stopRecording(true, fileName);
                 callbackContext.success();
                 return true;
             }

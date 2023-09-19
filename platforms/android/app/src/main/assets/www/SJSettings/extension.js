@@ -35,6 +35,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             let layoutPath = lib.assetURL + 'extension/SJ Settings';
             lib.init.css(layoutPath, 'extension');
 
+            if (!window.noname_shijianInterfaces) window.noname_shijianInterfaces = {};
+
             // 导入配置
             window.noname_shijianInterfaces.importConfigData = data => {
                 if (!data) return;
@@ -245,7 +247,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 str += '\n' + `行号: ${line}`;
                 str += '\n' + `列号: ${column}`;
                 let print = false;
-                if (window._status && _status.event) {
+                if (_status.event) {
                     let evt = _status.event;
                     str += `\nevent.name: ${evt.name}\nevent.step: ${evt.step}`;
                     if (evt.parent) str += `\nevent.parent.name: ${evt.parent.name}\nevent.parent.step: ${evt.parent.step}`;
@@ -299,7 +301,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             };
         },
         precontent: function () {
-            const emptyFun = () => { };
+            const emptyFun = () => {};
             
             if (!Array.isArray(lib.updateReady)) lib.updateReady = [];
             if (!Array.isArray(lib.updateAssetReady)) lib.updateAssetReady = [];
@@ -431,7 +433,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     }, emptyFun);
                 }
 
-                if (game.getExtensionConfig('SJ Settings', 'enable') && game.getExtensionConfig('SJ Settings', 'requestMediaRecord')) {
+                if (false && game.getExtensionConfig('SJ Settings', 'enable') && game.getExtensionConfig('SJ Settings', 'requestMediaRecord')) {
                     if (lib.arenaReady) {
                         lib.arenaReady.push(requestMediaRecord);
                     } else {
@@ -439,7 +441,21 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     }
                     lib.onover.push(() => {
                         setTimeout(() => {
-                            cordova.exec(emptyFun, emptyFun, 'FinishImport', 'stopMediaRecord', []);
+                            navigator.notification.activityStart('正在合成录屏文件', '请稍候...');
+                            const stop = (e) => {
+                                navigator.notification.activityStop();
+                                if (e) {
+                                    console.log(e);
+                                }
+                            };
+                            let name = lib.translate[game.me.name || game.me.name1];
+                            if (game.me.name2) {
+                                name += "&&" + lib.translate[game.me.name2];
+                            }
+                            if (lib.translate[get.mode()]) {
+                                name += "——" + lib.translate[get.mode()] + "模式";
+                            }
+                            cordova.exec(stop, stop, 'FinishImport', 'stopMediaRecord', [name]);
                         }, 1500);
                     });
                 }
@@ -670,15 +686,15 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             };
         },
         config: {
-            requestMediaRecord: {
-                init: false,
-                name: '对局录屏',
-                intro: '游戏加载完成后提示是否开始录屏，游戏结束后自动停止录屏。应用进入后台时，录屏将停止并且不生成视频文件，',
-                onclick(item) {
-                     game.saveExtensionConfig('SJ Settings', 'requestMediaRecord', item);
-                     alert('重启游戏后生效');
-                }
-            },
+            // requestMediaRecord: {
+            //     init: false,
+            //     name: '对局录屏',
+            //     intro: '游戏加载完成后提示是否开始录屏，游戏结束后自动停止录屏。应用进入后台时，录屏将停止并且不生成视频文件，',
+            //     onclick(item) {
+            //          game.saveExtensionConfig('SJ Settings', 'requestMediaRecord', item);
+            //          alert('重启游戏后生效');
+            //     }
+            // },
             tutorialapk: {
                 name: '查看apk使用教程',
                 intro: '查看apk使用教程',
