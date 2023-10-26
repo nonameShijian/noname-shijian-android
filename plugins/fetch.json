@@ -102,21 +102,5 @@
     },
     "is_top_level": true,
     "variables": {}
-  },
-  "cordova-plugin-document-viewer": {
-    "source": {
-      "type": "registry",
-      "id": "cordova-plugin-document-viewer@0.9.13"
-    },
-    "is_top_level": true,
-    "variables": {}
-  },
-  "cordova-plugin-crosswalk-webview-v3": {
-    "source": {
-      "type": "registry",
-      "id": "cordova-plugin-crosswalk-webview-v3@^3.0.4"
-    },
-    "is_top_level": true,
-    "variables": {}
   }
 }

@@ -47,38 +47,6 @@
             {
               "xml": "<feature name=\"FileOpener2\"><param name=\"android-package\" value=\"io.github.pwlin.cordova.plugins.fileopener2.FileOpener2\" /></feature>",
               "count": 1
-            },
-            {
-              "xml": "<feature name=\"SitewaertsDocumentViewer\"><param name=\"android-package\" value=\"de.sitewaerts.cordova.documentviewer.DocumentViewerPlugin\" /></feature>",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"webView\" value=\"org.crosswalk.engine.XWalkWebViewEngine\" />",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"xwalkVersion\" value=\"23+\" />",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"xwalkLiteVersion\" value=\"xwalk_core_library_canary:17+\" />",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"xwalkCommandLine\" value=\"--disable-pull-to-refresh-effect\" />",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"xwalkMode\" value=\"embedded\" />",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"xwalkMultipleApk\" value=\"true\" />",
-              "count": 1
-            },
-            {
-              "xml": "<preference name=\"android-minSdkVersion\" value=\"16\" />",
-              "count": 1
             }
           ]
         }
@@ -126,10 +94,6 @@
             },
             {
               "xml": "<activity android:exported=\"false\" android:launchMode=\"singleInstance\" android:name=\"de.appplant.cordova.plugin.localnotification.ClickReceiver\" android:theme=\"@android:style/Theme.Translucent\" />",
-              "count": 1
-            },
-            {
-              "xml": "<provider android:authorities=\"com.noname.shijian.DocumentViewerPlugin.fileprovider\" android:exported=\"false\" android:grantUriPermissions=\"true\" android:name=\"de.sitewaerts.cordova.documentviewer.FileProvider\"><meta-data android:name=\"android.support.FILE_PROVIDER_PATHS\" android:resource=\"@xml/documentviewer_file_paths\" /></provider>",
               "count": 1
             }
           ],
@@ -193,17 +157,6 @@
     },
     "cordova-plugin-file-opener2": {
       "ANDROID_SUPPORT_V4_VERSION": "27.+",
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
-    "cordova-plugin-document-viewer": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
-    "cordova-plugin-crosswalk-webview-v3": {
-      "XWALK_VERSION": "17.46.448.10",
-      "XWALK_LITEVERSION": "xwalk_core_library_canary:17+",
-      "XWALK_COMMANDLINE": "--disable-pull-to-refresh-effect",
-      "XWALK_MODE": "embedded",
-      "XWALK_MULTIPLEAPK": "false",
       "PACKAGE_NAME": "com.noname.shijian"
     }
   },
@@ -491,7 +444,6 @@
     "cordova-plugin-dialogs": "2.0.2",
     "cordova-plugin-websocket": "0.12.2",
     "cordova-plugin-android-permissions": "1.1.3",
-    "cordova-plugin-file-opener2": "3.0.5",
-    "cordova-plugin-crosswalk-webview-v3": "3.0.4"
+    "cordova-plugin-file-opener2": "3.0.5"
   }
 }
