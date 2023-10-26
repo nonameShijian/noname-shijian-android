@@ -4,6 +4,7 @@ import static android.content.Context.MODE_PRIVATE;
 
 import static com.noname.shijian.MainActivity.FILE_CHOOSER_RESULT_CODE;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -20,6 +21,7 @@ import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
+import org.jeremyup.cordova.x5engine.X5WebView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,13 +34,23 @@ import io.github.pwlin.cordova.plugins.fileopener2.FileProvider;
 public class JavaScriptInterface {
 
     private final Context context;
-    private final MainActivity activity;
+    private final Activity activity;
     private final WebView webview;
+    private final X5WebView x5webView;
 
-    public JavaScriptInterface(Context context, MainActivity activity, WebView webview) {
+    public JavaScriptInterface(Context context, Activity activity, WebView webview) {
         this.context = context;
         this.activity = activity;
         this.webview = webview;
+        this.x5webView = null;
+        Log.e("new-JavaScriptInterface", String.valueOf(webview));
+    }
+
+    public JavaScriptInterface(Context context, Activity activity, X5WebView webview) {
+        this.context = context;
+        this.activity = activity;
+        this.webview = null;
+        this.x5webView = webview;
         Log.e("new-JavaScriptInterface", String.valueOf(webview));
     }
 
@@ -145,8 +157,6 @@ public class JavaScriptInterface {
         File shareFile = new File(context.getExternalCacheDir(), zipName);
         if (shareFile.exists()) shareFile.delete();
         try {
-            // webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
-
             Log.e("shareExtension", "shareFile.getPath(): " + shareFile.getPath());
             // 压缩文件
             ZipFile zipFile = new ZipFile(shareFile);
@@ -163,8 +173,6 @@ public class JavaScriptInterface {
             }
 
             zipFile.close();
-            // webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();"));
-
             Intent share = new Intent(Intent.ACTION_SEND);
             share.putExtra(
                 Intent.EXTRA_STREAM,
@@ -179,7 +187,11 @@ public class JavaScriptInterface {
             return true;
         } catch (Exception e) {
             Log.e("shareExtension", String.valueOf(e));
-            webview.post(() -> webview.loadUrl("javascript:alert('" + e + "')"));
+            if (webview != null) {
+                webview.post(() -> webview.loadUrl("javascript:alert('" + e + "')"));
+            } else if (x5webView != null) {
+                x5webView.post(() -> x5webView.loadUrl("javascript:alert('" + e + "')"));
+            }
             return false;
         }
     }
@@ -248,7 +260,11 @@ public class JavaScriptInterface {
             return true;
         } catch (Exception e) {
             Log.e("shareExtension", String.valueOf(e));
-            webview.post(() -> webview.loadUrl("javascript:alert('" + e + "')"));
+            if (webview != null) {
+                webview.post(() -> webview.loadUrl("javascript:alert('" + e + "')"));
+            } else if (x5webView != null) {
+                x5webView.post(() -> x5webView.loadUrl("javascript:alert('" + e + "')"));
+            }
             return false;
         }
     }
@@ -280,7 +296,11 @@ public class JavaScriptInterface {
         File shareFile = new File(context.getExternalCacheDir(), zipName);
         if (shareFile.exists()) shareFile.delete();
 
-        webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
+        if (webview != null) {
+            webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
+        } else if (x5webView != null) {
+            x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
+        }
         Log.e("shareExtension", "shareFile.getPath(): " + shareFile.getPath());
         new Thread(() -> {
             try {
@@ -299,8 +319,11 @@ public class JavaScriptInterface {
                 }
 
                 zipFile.close();
-                webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();"));
-
+                if (webview != null) {
+                    webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();"));
+                } else if (x5webView != null) {
+                    x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStop();"));
+                }
                 Intent share = new Intent(Intent.ACTION_SEND);
                 share.putExtra(
                     Intent.EXTRA_STREAM,
@@ -313,7 +336,11 @@ public class JavaScriptInterface {
                 share.setType("application/zip");
                 context.startActivity(Intent.createChooser(share, "分享扩展压缩包"));
             } catch (Exception e) {
-                webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
+                if (webview != null) {
+                    webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
+                } else if (x5webView != null) {
+                    x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
+                }
                 Log.e("shareExtension", String.valueOf(e));
             }
         }).start();
@@ -345,8 +372,11 @@ public class JavaScriptInterface {
         String zipName = extName + "(密码: " + pwd + ")" + ".zip";
         File shareFile = new File(context.getExternalCacheDir(), zipName);
         if (shareFile.exists()) shareFile.delete();
-
-        webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
+        if (webview != null) {
+            webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
+        } else if (x5webView != null) {
+            x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
+        }
         Log.e("shareExtension", "shareFile.getPath(): " + shareFile.getPath());
         new Thread(() -> {
             try {
@@ -369,8 +399,11 @@ public class JavaScriptInterface {
                 }
 
                 zipFile.close();
-                webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();"));
-
+                if (webview != null) {
+                    webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();"));
+                } else if (x5webView != null) {
+                    x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStop();"));
+                }
                 Intent share = new Intent(Intent.ACTION_SEND);
                 share.putExtra(
                     Intent.EXTRA_STREAM,
@@ -383,7 +416,11 @@ public class JavaScriptInterface {
                 share.setType("application/zip");
                 context.startActivity(Intent.createChooser(share, "分享扩展压缩包"));
             } catch (Exception e) {
-                webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
+                if (webview != null) {
+                    webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
+                } else if (x5webView != null) {
+                    x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
+                }
                 Log.e("shareExtension", String.valueOf(e));
             }
         }).start();

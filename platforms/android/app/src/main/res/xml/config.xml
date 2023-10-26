@@ -83,4 +83,12 @@
     <feature name="InAppBrowser">
         <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
     </feature>
+<!--    <preference name="webView" value="org.crosswalk.engine.XWalkWebViewEngine" />-->
+<!--    <preference name="xwalkVersion" value="23+" />-->
+    <preference name="xwalkVersion" value="17.46.448.10" />
+    <preference name="xwalkLiteVersion" value="xwalk_core_library_canary:17+" />
+    <preference name="xwalkCommandLine" value="--disable-pull-to-refresh-effect" />
+    <preference name="xwalkMode" value="embedded" />
+    <preference name="xwalkMultipleApk" value="false" />
+<!--    <preference name="android-minSdkVersion" value="16" />-->
 </widget>

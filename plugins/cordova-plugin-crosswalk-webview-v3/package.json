@@ -1,0 +1,50 @@
+{
+  "name": "cordova-plugin-crosswalk-webview-v3",
+  "version": "3.0.4",
+  "description": "Changes the default WebView to CrossWalk",
+  "cordova": {
+    "id": "cordova-plugin-crosswalk-webview-v3",
+    "platforms": [
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ardabeyazoglu/cordova-plugin-crosswalk-webview-v3"
+  },
+  "keywords": [
+    "cordova",
+    "chromium",
+    "crosswalk",
+    "webview",
+    "engine",
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "engines": {
+    "cordovaDependencies": {
+      "2.0.0": {
+        "cordova": ">=5.2.0",
+        "cordova-android": "4 - 5"
+      },
+      "2.1.0": {
+        "cordova": ">=5.2.0",
+        "cordova-android": "4 - 5"
+      },
+      "2.2.0": {
+        "cordova": ">=5.2.0",
+        "cordova-android": ">=6"
+      },
+      "3.0.0": {
+        "cordova": ">=8.0.0",
+        "cordova-android": ">=7"
+      }
+    }
+  },
+  "author": "",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/ardabeyazoglu/cordova-plugin-crosswalk-webview-v3/issues"
+  },
+  "homepage": "https://github.com/ardabeyazoglu/cordova-plugin-crosswalk-webview-v3"
+}

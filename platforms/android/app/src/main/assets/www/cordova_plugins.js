@@ -271,22 +271,6 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
         "cordova.plugins.fileOpener2"
       ]
     },
-    {
-      "id": "cordova-plugin-inappbrowser.inappbrowser",
-      "file": "plugins/cordova-plugin-inappbrowser/www/inappbrowser.js",
-      "pluginId": "cordova-plugin-inappbrowser",
-      "clobbers": [
-        "cordova.InAppBrowser.open"
-      ]
-    },
-    {
-      "id": "cordova-plugin-insomnia",
-      "file": "plugins/cordova-plugin-insomnia/www/Insomnia.js",
-      "pluginId": "cordova-plugin-insomnia",
-      "clobbers": [
-        "window.plugins.insomnia"
-      ]
-    }
   ];
   module.exports.metadata = {
     "cordova-plugin-file": "6.0.2",
@@ -298,8 +282,6 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
     "cordova-plugin-dialogs": "2.0.2",
     "cordova-plugin-websocket": "0.12.2",
     "cordova-plugin-android-permissions": "1.1.3",
-    "cordova-plugin-file-opener2": "3.0.5",
-    "cordova-plugin-inappbrowser": "5.0.0",
-    "cordova-plugin-insomnia": "4.3.0",
+    "cordova-plugin-file-opener2": "3.0.5"
   };
 });

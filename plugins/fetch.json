@@ -110,5 +110,13 @@
     },
     "is_top_level": true,
     "variables": {}
+  },
+  "cordova-plugin-crosswalk-webview-v3": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-crosswalk-webview-v3@^3.0.4"
+    },
+    "is_top_level": true,
+    "variables": {}
   }
 }

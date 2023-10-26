@@ -51,6 +51,34 @@
             {
               "xml": "<feature name=\"SitewaertsDocumentViewer\"><param name=\"android-package\" value=\"de.sitewaerts.cordova.documentviewer.DocumentViewerPlugin\" /></feature>",
               "count": 1
+            },
+            {
+              "xml": "<preference name=\"webView\" value=\"org.crosswalk.engine.XWalkWebViewEngine\" />",
+              "count": 1
+            },
+            {
+              "xml": "<preference name=\"xwalkVersion\" value=\"23+\" />",
+              "count": 1
+            },
+            {
+              "xml": "<preference name=\"xwalkLiteVersion\" value=\"xwalk_core_library_canary:17+\" />",
+              "count": 1
+            },
+            {
+              "xml": "<preference name=\"xwalkCommandLine\" value=\"--disable-pull-to-refresh-effect\" />",
+              "count": 1
+            },
+            {
+              "xml": "<preference name=\"xwalkMode\" value=\"embedded\" />",
+              "count": 1
+            },
+            {
+              "xml": "<preference name=\"xwalkMultipleApk\" value=\"true\" />",
+              "count": 1
+            },
+            {
+              "xml": "<preference name=\"android-minSdkVersion\" value=\"16\" />",
+              "count": 1
             }
           ]
         }
@@ -72,6 +100,14 @@
             },
             {
               "xml": "<uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\" />",
+              "count": 1
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />",
+              "count": 1
+            },
+            {
+              "xml": "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />",
               "count": 1
             }
           ],
@@ -129,28 +165,28 @@
   },
   "installed_plugins": {
     "cordova-plugin-file": {
-      "PACKAGE_NAME": "com.noname.xuanwu"
+      "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-file-transfer": {
-      "PACKAGE_NAME": "com.noname.xuanwu"
+      "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-device": {
-      "PACKAGE_NAME": "com.noname.xuanwu"
+      "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-badge": {
-      "PACKAGE_NAME": "com.noname.xuanwu"
+      "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-local-notification": {
-      "PACKAGE_NAME": "com.noname.xuanwu"
+      "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-whitelist": {
-      "PACKAGE_NAME": "com.noname.xuanwu"
+      "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-dialogs": {
-      "PACKAGE_NAME": "com.noname.xuanwu"
+      "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-websocket": {
-      "PACKAGE_NAME": "com.noname.xuanwu"
+      "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-android-permissions": {
       "PACKAGE_NAME": "com.noname.shijian"
@@ -160,6 +196,14 @@
       "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-document-viewer": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-crosswalk-webview-v3": {
+      "XWALK_VERSION": "17.46.448.10",
+      "XWALK_LITEVERSION": "xwalk_core_library_canary:17+",
+      "XWALK_COMMANDLINE": "--disable-pull-to-refresh-effect",
+      "XWALK_MODE": "embedded",
+      "XWALK_MULTIPLEAPK": "false",
       "PACKAGE_NAME": "com.noname.shijian"
     }
   },
@@ -435,15 +479,6 @@
       "clobbers": [
         "cordova.plugins.fileOpener2"
       ]
-    },
-    {
-      "id": "cordova-plugin-document-viewer.SitewaertsDocumentViewer",
-      "file": "plugins/cordova-plugin-document-viewer/www/sitewaertsdocumentviewer.js",
-      "pluginId": "cordova-plugin-document-viewer",
-      "clobbers": [
-        "cordova.plugins.SitewaertsDocumentViewer",
-        "SitewaertsDocumentViewer"
-      ]
     }
   ],
   "plugin_metadata": {
@@ -457,6 +492,6 @@
     "cordova-plugin-websocket": "0.12.2",
     "cordova-plugin-android-permissions": "1.1.3",
     "cordova-plugin-file-opener2": "3.0.5",
-    "cordova-plugin-document-viewer": "1.0.2"
+    "cordova-plugin-crosswalk-webview-v3": "3.0.4"
   }
 }
