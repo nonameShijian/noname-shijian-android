@@ -26,9 +26,11 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
+import android.util.Log;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -42,7 +44,12 @@ import org.apache.cordova.PluginManager;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.Objects;
 
 
 /**
@@ -346,6 +353,36 @@ public class SystemWebViewClient extends WebViewClient {
             // Results in a 404.
             return new WebResourceResponse("text/plain", "UTF-8", null);
         }
+    }
+
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        String url = request.getUrl().toString();
+        String method = request.getMethod();
+        Map<String, String> headers = request.getRequestHeaders();
+        Log.e("Request", method + "  " + url + "  " + headers);
+
+        if (url.startsWith("file://") && !url.contains("/app_webview/") && !url.contains("/app_xwalkcore/")) {
+            // 是否是模块请求
+            if (headers != null
+                    && headers.containsKey("Origin")
+                    && Objects.equals(headers.get("Origin"), "file://")
+                    // 非兼容版可能没有这个属性
+                    // 但是华为webview可能会失败
+                    && (!headers.containsKey("Sec-Fetch-Mode") || Objects.equals(headers.get("Sec-Fetch-Mode"), "cors"))
+            ) {
+                try {
+                    URL Url = new URL(url);
+                    URLConnection connection = Url.openConnection();
+                    InputStream data = Url.openStream();
+                    return new WebResourceResponse(connection.getContentType(), "utf-8", data);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return shouldInterceptRequest(view, url);
     }
 
     private static boolean needsContentUrlFix(Uri uri) {
