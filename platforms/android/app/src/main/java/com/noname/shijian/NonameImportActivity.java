@@ -61,6 +61,7 @@ public class NonameImportActivity extends Activity {
 
 	public static final String[] WAITING_MESSAGES = {
 			"无名杀的创造者是水乎，也叫村长。",
+			"最好不要在扩展文件里包含除英文字母和英文标点之外的任何符号，防止导入的时候麻烦。",
 			"苏婆玛丽奥是无名杀的现任更新者。",
 			"GPLv3协议提倡开源与共享，是无名杀代码的基础协议。",
 			"原生的换肤功能不好用？装个千幻聆音扩展试试吧！可以语音图片一起换哦！",
@@ -1119,7 +1120,7 @@ public class NonameImportActivity extends Activity {
 		List<CharSequence> list = new ArrayList<>();
 		List<String> keys = new ArrayList<>();
 		for(Map.Entry<String,String> entry:messyCodeMap.entrySet()){
-			list.add(entry.getValue());
+			list.add("["+entry.getKey()+"编码]:"+entry.getValue());
 			keys.add(entry.getKey());
 		}
 		CharSequence[] items = list.toArray(new CharSequence[messyCodeMap.size()]);
@@ -1406,13 +1407,15 @@ public class NonameImportActivity extends Activity {
 		}
 	}
 
+	private static Pattern messyFilterPattern = Pattern.compile("\\s*|\t*|\r*|\n*");
+
 	/**
 	 * 判断字符串是否包含乱码
 	 * @param strName  需要判断的字符串
 	 * @return 字符串包含乱码则返回true, 字符串不包含乱码则返回false
 	 */
 	public static boolean isMessyCode(String strName) {
-		Pattern p = Pattern.compile("\\s*|\t*|\r*|\n*");
+		Pattern p = messyFilterPattern;
 		Matcher m = p.matcher(strName);
 		String after = m.replaceAll("");
 		String temp = after.replaceAll("\\p{P}", "");
@@ -1429,16 +1432,12 @@ public class NonameImportActivity extends Activity {
 			}
 		}
 		float result = count / chLength ;
-		if (result > 0.4) {
-			return true;
-		} else {
-			return false;
-		}
+		return result > 0.4;
 	}
 
 	private static boolean isCertainlyNotMessyCode(char c){
 		if(Character.isLetterOrDigit(c))return true;
-		return "!@#$%^&*()_+/`~\\|[]{};:\",.<>/".contains(c+"");
+		return "!@#$%^&*()-_+/`~\\|[]{};:\",.<>/".contains(c+"");
 	}
 
 	/**
