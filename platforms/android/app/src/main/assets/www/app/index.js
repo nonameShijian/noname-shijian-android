@@ -80,7 +80,8 @@
 							const zipDataDiv = document.getElementById('changesite');
 							zipDataDiv.innerText = '内置zip资源存在';
 							// 跳转到java解压
-							cordova.exec(() => { }, () => { }, 'FinishImport', 'assetZip', []);
+							if (confirm('检测到内置压缩包存在，是否解压？')) cordova.exec(() => { }, () => { }, 'FinishImport', 'assetZip', []);
+							else checkConnection();
 						}, error => {
 							navigator.notification.activityStop();
 							console.error('www/app/noname.zip不存在: ' + error.code);
@@ -223,8 +224,19 @@
 				}
 			});
 
-			/** GitHub Proxy更新源 */
-			const site_c = 'https://ghproxy.com/https://raw.githubusercontent.com/libccy/noname/master/';
+			const importdata = createElement('div', {
+				id: 'importdata',
+				innerHTML: '导入数据文件',
+				parentNode: document.body,
+			});
+
+			const importselect = createElement('select', {
+				id: 'importselect',
+				parentNode: document.body,
+			});
+
+			/** FASTGIT更新源 */
+			const site_c = 'https://raw.fgit.cf/libccy/noname/master/';
 			/** URC更新源 */
 			const site_urc = 'https://unitedrhythmized.club/libccy/noname/master/';
 			/** 现在使用的更新源 */
@@ -233,48 +245,328 @@
 			/**
 			 * @description 请求指定网址的js文件并执行
 			 * @param { string } url 请求指定网址的js文件
-			 * @param { (target?: string, result?: any) => void } onload 请求成功后执行回调
-			 * @param { VoidFunction } onerror 请求失败后执行回调
+			 * @param { (target?: string, result?: any) => void } onLoad 请求成功后执行回调
+			 * @param { VoidFunction } onError 请求失败后执行回调
 			 * @param { string } [target] 用window[target]是否存在来判断js是否加载成功
 			 */
-			const req = (url, onload, onerror, target) => {
-				if (target) {
-					delete window[target];
+			const req = async (url, onLoad, onError, target) => {
+				if (!onLoad) return;
+
+				try {
+					eval(await (await fetch(url, {
+						referrerPolicy: 'no-referrer'
+					})).text());
+
+					if (target) {
+						if (!window[target]) throw new ReferenceError();
+
+						await onLoad();
+
+						delete window[target];
+					} else await onLoad();
+				} catch {
+					if (onError) await onError();
 				}
-				fetch(url)
-					.then(res => {
-						return res.text();
-					})
-					.then(responseText => {
-						eval(responseText);
-						if (target && !window[target]) {
-							throw ('err');
-						}
-						onload();
-					})
-					.catch(onerror);
-			};
+			}
 
 			/** @type { string } 应用文件夹 **/
 			let dir;
 			const ua = navigator.userAgent.toLowerCase();
-			if (ua.indexOf('android') != -1) {
-				dir = cordova.file.externalApplicationStorageDirectory;
-			} else if (ua.indexOf('iphone') != -1 || ua.indexOf('ipad') != -1) {
-				dir = cordova.file.documentsDirectory;
+			if (ua.includes('android')) dir = cordova.file.externalApplicationStorageDirectory;
+			else if (ua.includes('iphone') || ua.includes('ipad')) dir = cordova.file.documentsDirectory;
+
+			var game = {
+				putDB: (storeName, idbValidKey, value, onSuccess, onError) => {
+					if (!lib.db) return Promise.resolve(value);
+					return new Promise((resolve, reject) => {
+						const record = lib.db.transaction([storeName], 'readwrite').objectStore(storeName).put(value, idbValidKey);
+						record.onerror = event => {
+							if (typeof onError == 'function') {
+								onError(event);
+								resolve(null);
+							}
+							else {
+								reject(event);
+							}
+						};
+						record.onsuccess = event => {
+							if (typeof onSuccess == 'function') {
+								onSuccess(event);
+							}
+							resolve(event);
+						};
+					});
+				}
+			};
+			var lib = {
+				configprefix: 'noname_0.9_',
+				init: {
+					decode: function (str) {
+						var strUtf = atob(str);
+						var strUni = strUtf.replace(
+							/[\u00e0-\u00ef][\u0080-\u00bf][\u0080-\u00bf]/g, function (c) {
+								var cc = ((c.charCodeAt(0) & 0x0f) << 12) | ((c.charCodeAt(1) & 0x3f) << 6) | (c.charCodeAt(2) & 0x3f);
+								return String.fromCharCode(cc);
+							});
+						strUni = strUni.replace(
+							/[\u00c0-\u00df][\u0080-\u00bf]/g, function (c) {
+								var cc = (c.charCodeAt(0) & 0x1f) << 6 | c.charCodeAt(1) & 0x3f;
+								return String.fromCharCode(cc);
+							});
+						return strUni;
+					}
+				}
+			};
+
+			if (typeof __dirname === 'string' && __dirname.length) {
+				var dirsplit = __dirname.split('/');
+				for (var i = 0; i < dirsplit.length; i++) {
+					if (dirsplit[i]) {
+						var c = dirsplit[i][0];
+						lib.configprefix += /[A-Z]|[a-z]/.test(c) ? c : '_';
+					}
+				}
+				lib.configprefix += '_';
 			}
+
+			var index = window.location.href.indexOf('index.html?server=');
+			if (index != -1) {
+				window.isNonameServer = window.location.href.slice(index + 18);
+				window.nodb = true;
+			}
+			if (localStorage.getItem(`${lib.configprefix}nodb`)) window.nodb = true;
 
 			if (window.FileTransfer) {
 				// @ts-ignore
 				window.tempSetNoname = dir;
+
+				game.getFileList = (_dir, success, failure) => {
+					var files = [], folders = [];
+					window.resolveLocalFileSystemURL(dir + _dir, entry => {
+						var dirReader = entry.createReader();
+						var entries = [];
+						var readEntries = () => {
+							dirReader.readEntries(results => {
+								if (!results.length) {
+									entries.sort();
+									for (var i = 0; i < entries.length; i++) {
+										if (entries[i].isDirectory) {
+											folders.push(entries[i].name);
+										}
+										else {
+											files.push(entries[i].name);
+										}
+									}
+									success(folders, files);
+								}
+								else {
+									entries = entries.concat(Array.from(results));
+									readEntries();
+								}
+							}, failure);
+						};
+						readEntries();
+					}, failure);
+				};
+
+				game.readFileAsText = function (filename, callback, onerror) {
+					window.resolveLocalFileSystemURL(dir, function (entry) {
+						entry.getFile(filename, {}, function (fileEntry) {
+							fileEntry.file(function (fileToLoad) {
+								var fileReader = new FileReader();
+								fileReader.onload = function (e) {
+									callback(e.target.result);
+								};
+								fileReader.readAsText(fileToLoad, "UTF-8");
+							}, onerror);
+						}, onerror);
+					}, onerror);
+				};
 			}
 			else {
 				window.tempSetNoname = 'nodejs';
+
+				game.getFileList = (dir, success, failure) => {
+					var files = [], folders = [];
+					dir = __dirname + '/' + dir;
+					if (typeof failure == "undefined") {
+						failure = err => {
+							throw err;
+						};
+					}
+					else if (failure == null) {
+						failure = () => { };
+					}
+					try {
+						require('fs').readdir(dir, (err, filelist) => {
+							if (err) {
+								failure(err);
+								return;
+							}
+							for (var i = 0; i < filelist.length; i++) {
+								if (filelist[i][0] != '.' && filelist[i][0] != '_') {
+									if (require('fs').statSync(dir + '/' + filelist[i]).isDirectory()) {
+										folders.push(filelist[i]);
+									}
+									else {
+										files.push(filelist[i]);
+									}
+								}
+							}
+							success(folders, files);
+						});
+					}
+					catch (e) {
+						failure(e);
+					}
+				};
+
+				game.readFileAsText = function (filename, callback, onerror) {
+					require('fs').readFile(__dirname + '/' + filename, 'utf-8', function (err, data) {
+						if (err) {
+							onerror(err);
+						}
+						else {
+							callback(data);
+						}
+					});
+				};
 			}
+
+			function addOption(name) {
+				var option = document.createElement('option');
+				option.value = name;
+				option.innerHTML = name;
+				importselect.appendChild(option);
+				return option;
+			}
+
+			addOption('默认');
+			addOption('选择系统文件');
+
+			game.getFileList('files/', (_, files) => {
+				files.filter(fileName => fileName.startsWith('无名杀 - 数据 -')).forEach(v => {
+					addOption(v);
+				});
+			}, error => {
+				console.error('读取无名杀数据文件失败: ' + error);
+			});
+
+			importselect.onchange = function (e) {
+				if (importselect.value == '默认') return;
+				if (confirm(`是否从“${importselect.value}”导入无名杀数据？`)) {
+					new Promise((resolve, reject) => {
+						if (lib.db || window.nodb) return resolve(null);
+						const idbOpenDBRequest = window.indexedDB.open(`${lib.configprefix}data`);
+						idbOpenDBRequest.onerror = reject;
+						idbOpenDBRequest.onsuccess = resolve;
+						idbOpenDBRequest.onupgradeneeded = idbVersionChangeEvent => {
+							const idbDatabase = idbVersionChangeEvent.target.result;
+							if (!idbDatabase.objectStoreNames.contains('video')) idbDatabase.createObjectStore('video', {
+								keyPath: 'time'
+							});
+							if (!idbDatabase.objectStoreNames.contains('image')) idbDatabase.createObjectStore('image');
+							if (!idbDatabase.objectStoreNames.contains('audio')) idbDatabase.createObjectStore('audio');
+							if (!idbDatabase.objectStoreNames.contains('config')) idbDatabase.createObjectStore('config');
+							if (!idbDatabase.objectStoreNames.contains('data')) idbDatabase.createObjectStore('data');
+						};
+					}).then(event => {
+						if (!lib.db && !window.nodb) lib.db = event.target.result;
+						return new Promise((resolve, reject) => {
+							if (importselect.value != '选择系统文件') {
+								game.readFileAsText('files/' + importselect.value, data => {
+									if (!data) return reject('no data');
+									try {
+										data = JSON.parse(lib.init.decode(data));
+										if (!data || typeof data != 'object') {
+											throw ('err');
+										}
+										if (lib.db && (!data.config || !data.data)) {
+											throw ('err');
+										}
+									}
+									catch (e) {
+										return reject(e);
+									}
+									return resolve(data);
+								}, reject);
+							} else {
+								if (document.getElementById("fileNameInput")) {
+									document.body.removeChild(document.getElementById("fileNameInput"));
+								}
+								var inputObj = document.createElement('input');
+								inputObj.setAttribute('id', 'fileNameInput');
+								inputObj.setAttribute('type', 'file');
+								inputObj.setAttribute('name', 'fileNameInput');
+								inputObj.setAttribute("style", 'visibility:hidden');
+								document.body.appendChild(inputObj);
+								inputObj.value;
+								inputObj.click();
+								inputObj.addEventListener('change', e => {
+									if (!inputObj.files) return;
+									var fileToLoad = inputObj.files[0];
+									if (fileToLoad) {
+										var fileReader = new FileReader();
+										fileReader.onload = function (fileLoadedEvent) {
+											var data = fileLoadedEvent.target.result;
+											if (!data) return reject('no data');
+											try {
+												data = JSON.parse(lib.init.decode(data));
+												if (!data || typeof data != 'object') {
+													throw ('err');
+												}
+												if (lib.db && (!data.config || !data.data)) {
+													throw ('err');
+												}
+											}
+											catch (e) {
+												return reject(e);
+											}
+											return resolve(data);
+										};
+										fileReader.readAsText(fileToLoad, "UTF-8");
+									}
+								});
+							}
+						});
+					}).then(async data => {
+						if (!lib.db) {
+							var noname_inited = localStorage.getItem('noname_inited');
+							var onlineKey = localStorage.getItem(lib.configprefix + 'key');
+							localStorage.clear();
+							if (noname_inited) {
+								localStorage.setItem('noname_inited', noname_inited);
+							}
+							if (onlineKey) {
+								localStorage.setItem(lib.configprefix + 'key', onlineKey);
+							}
+							for (var i in data) {
+								localStorage.setItem(i, data[i]);
+							}
+						}
+						else {
+							for (var i in data.config) {
+								await game.putDB('config', i, data.config[i]);
+							}
+							for (var i in data.data) {
+								await game.putDB('data', i, data.data[i]);
+							}
+						}
+						localStorage.setItem('noname_inited', window.tempSetNoname);
+						alert('导入成功');
+						setTimeout(() => {
+							window.location.reload();
+						}, 1000);
+					}).catch(error => {
+						alert('导入失败: ' + error);
+						console.error(error);
+					})
+				}
+			};
 
 			/** 点击更新源按钮后根据req的结果更改显示文字 */
 			function checkConnection() {
-				zipDataDiv.innerHTML = `更新源: ${ site == site_c ? 'GitHub Proxy' : 'URC' }(点击此处更换更新源)`;
+				zipDataDiv.innerHTML = `更新源: ${ site == site_c ? 'FAST GIT' : 'URC' }(点击此处更换更新源)`;
 				// 赋值更换更新源的点击事件
 				zipDataDiv.onclick = function() {
 					if (this.classList.toggle('bluetext')) {
@@ -326,7 +618,7 @@
 				button.innerHTML = '获取下载文件';
 				button.classList.add('disabled');
 				version.innerHTML = '';
-				req(site + 'game/source.js', () => {
+				req(`${ site }v${ version }game/source.js`, () => {
 					button.remove();
 					zipDataDiv.remove();
 					help.remove();
@@ -490,7 +782,7 @@
 				`<div>
 					<ol>
 						<li>访问
-						<a href="https://hub.fgit.ml/libccy/noname/archive/refs/heads/master.zip">网址1</a>，
+						<a href="https://github.com/libccy/noname/releases/latest">网址1</a>，
 						下载zip文件，或者通过其他方式(比如QQ群,QQ频道,微信公众号)下载最新的“无名杀完整包”。
 						<li>使用QQ或者文件管理器选择zip文件,然后用其他方式-无名杀导入(诗笺版)进行导入
 						<li>完成上述步骤后，<a href="javascript:localStorage.setItem(\'noname_inited\',window.tempSetNoname);window.location.reload()">点击此处</a></div>

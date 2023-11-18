@@ -237,27 +237,52 @@ public class NonameImportActivity extends Activity {
 		} else if (getSharedPreferences("nonameshijian", MODE_PRIVATE).getLong("version",10000) < VERSION) {
 			updateText("检测到您是首次安装或是升级了app，将自动为您解压内置资源");
 			fixCharSet = "utf-8";
-			try {
-				InputStream inputStream = getAssets().open("www/app/noname.zip");
-				inputStream.close();
-				loadAssetZip();
-				ToastUtils.show(NonameImportActivity.this, "正在解压内置资源包");
-			} catch (IOException e) {
-				loadAssetExt();
-				ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
-			}
+			AlertDialog dialog = new AlertDialog.Builder(this)
+					.setIcon(R.mipmap.ic_banner_foreground)
+					.setTitle("请选择是否解压")
+					.setMessage("检测到您是首次安装或是升级了app,是否解压内置资源？否则仅更新SJ Settings扩展")
+					.setNegativeButton("取消", (dialogInterface, i) -> {
+						dialogInterface.dismiss();
+						loadAssetExt();
+						ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
+					})
+					.setPositiveButton("确定", (dialog1, which) -> {
+						dialog1.dismiss();
+						try {
+							InputStream inputStream = getAssets().open("www/app/noname.zip");
+							inputStream.close();
+							loadAssetZip();
+							ToastUtils.show(NonameImportActivity.this, "正在解压内置资源包");
+						} catch (IOException e) {
+							loadAssetExt();
+							ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
+						}
+					}).create();
+			dialog.show();
 		} else if (getIntent() != null && getIntent().getExtras() != null && "true".equals(getIntent().getExtras().getString("unzip"))) {
-			try {
-				InputStream inputStream = getAssets().open("www/app/noname.zip");
-				inputStream.close();
-				loadAssetZip();
-				ToastUtils.show(NonameImportActivity.this, "正在解压内置资源包");
-			} catch (IOException e) {
-				loadAssetExt();
-				ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
-			}
+			AlertDialog dialog = new AlertDialog.Builder(this)
+					.setIcon(R.mipmap.ic_banner_foreground)
+					.setTitle("请选择是否解压")
+					.setMessage("是否解压内置资源？否则仅更新SJ Settings扩展")
+					.setNegativeButton("取消", (dialogInterface, i) -> {
+						dialogInterface.dismiss();
+						loadAssetExt();
+						ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
+					})
+					.setPositiveButton("确定", (dialog1, which) -> {
+						dialog1.dismiss();
+						try {
+							InputStream inputStream = getAssets().open("www/app/noname.zip");
+							inputStream.close();
+							loadAssetZip();
+							ToastUtils.show(NonameImportActivity.this, "正在解压内置资源包");
+						} catch (IOException e) {
+							loadAssetExt();
+							ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
+						}
+					}).create();
+			dialog.show();
 		} else {
-			// ToastUtils.show(NonameImportActivity.this, "未通过无名杀打开zip");
 			Intent intent = new Intent(this, MainActivity.class);
 			startActivity(intent);
 			this.finish();
