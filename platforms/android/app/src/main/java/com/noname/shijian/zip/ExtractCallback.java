@@ -7,6 +7,7 @@ import android.util.Log;
 import net.sf.sevenzipjbinding.ExtractAskMode;
 import net.sf.sevenzipjbinding.ExtractOperationResult;
 import net.sf.sevenzipjbinding.IArchiveExtractCallback;
+import net.sf.sevenzipjbinding.ICryptoGetTextPassword;
 import net.sf.sevenzipjbinding.IInArchive;
 import net.sf.sevenzipjbinding.ISequentialOutStream;
 import net.sf.sevenzipjbinding.PropID;
@@ -22,7 +23,7 @@ import java.util.HashSet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public abstract class ExtractCallback implements IArchiveExtractCallback {
+public abstract class ExtractCallback implements IArchiveExtractCallback, ICryptoGetTextPassword {
 
     private static final String TAG = "ExtractCallback";
 
@@ -36,14 +37,19 @@ public abstract class ExtractCallback implements IArchiveExtractCallback {
 
     private HashSet<String> extracted = new HashSet<>();
 
-    public ExtractCallback(IInArchive inArchive, String extractPath,String charset) {
+    private String password;
+
+    public ExtractCallback(IInArchive inArchive, String extractPath,String charset,String password) {
         this.inArchive = inArchive;
         if (!extractPath.endsWith("/") && !extractPath.endsWith("\\")) {
             extractPath += File.separator;
         }
+        this.password = password;
         this.charset = charset;
         this.extractPath = extractPath;
     }
+
+    abstract void onError(String filePath,Exception e);
 
     @Override
     public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException {
@@ -51,7 +57,9 @@ public abstract class ExtractCallback implements IArchiveExtractCallback {
             @Override
             public int write(byte[] data) throws SevenZipException {
                 String filePath = inArchive.getStringProperty(index, PropID.PATH);
+                //onError("Before:"+filePath,new Exception());
                 filePath = decodeMessy(filePath);
+                //onError("After:"+filePath,new Exception());
                 FileOutputStream fos = null;
                 try {
                     File path = new File(extractPath + filePath);
@@ -70,13 +78,18 @@ public abstract class ExtractCallback implements IArchiveExtractCallback {
                     fos.write(data);
                 } catch (IOException e) {
                     Log.e(TAG,"IOException while extracting "+filePath,e);
-                } finally{
+                    onError(filePath,e);
+                }catch (Throwable e){
+                    onError(filePath,new Exception(e));
+                }
+                finally{
                     try {
                         if(fos != null){
                             fos.flush();
                             fos.close();
                         }
                     } catch (IOException e) {
+                        onError(filePath,e);
                         Log.e(TAG,"Could not close FileOutputStream "+filePath,e);
                     }
                 }
@@ -98,6 +111,11 @@ public abstract class ExtractCallback implements IArchiveExtractCallback {
     @Override
     public void prepareOperation(ExtractAskMode extractAskMode) throws SevenZipException {
 
+    }
+
+    @Override
+    public String cryptoGetTextPassword() throws SevenZipException {
+        return password;
     }
 
     @Override

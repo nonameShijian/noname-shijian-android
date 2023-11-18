@@ -362,7 +362,7 @@ public class SystemWebViewClient extends WebViewClient {
         Map<String, String> headers = request.getRequestHeaders();
         Log.e("Request", method + "  " + url + "  " + headers);
 
-        if (url.startsWith("file://") && !url.contains("/app_webview/") && !url.contains("/app_xwalkcore/")) {
+        if (url.startsWith("file://") && !url.contains("/app_webview/") && !url.contains("/app_xwalkcore/") && url.endsWith(".js")) {
             // 是否是模块请求
             if (headers != null
                     && headers.containsKey("Origin")

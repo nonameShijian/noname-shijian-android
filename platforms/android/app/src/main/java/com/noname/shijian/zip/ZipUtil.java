@@ -28,6 +28,7 @@ public class ZipUtil {
     public interface Callback{
         void setTotal(long total);
         void setCompleted(long completed);
+        void onError(String filePath,Exception e);
     }
 
     public static void extractAll(String filePath, File dest,String charset,String password,Callback callback) throws Exception{
@@ -40,11 +41,18 @@ public class ZipUtil {
             }else{
                 inArchive = SevenZip.openInArchive(null,new RandomAccessFileInStream(randomAccessFile),password);
             }
-            inArchive.extract(null, false, new ExtractCallback(inArchive,dest.getPath(),charset) {
+            inArchive.extract(null, false, new ExtractCallback(inArchive,dest.getPath(),charset,password) {
                 @Override
                 public void setTotal(long total) throws SevenZipException {
                     if(callback!=null){
                         callback.setTotal(total);
+                    }
+                }
+
+                @Override
+                void onError(String filePath, Exception e) {
+                    if(callback!=null){
+                        callback.onError(filePath,e);
                     }
                 }
 
@@ -106,13 +114,18 @@ public class ZipUtil {
                     @Override
                     public void run() {
                         try {
-                            archive.extract(arrayListToArray(group), false, new ExtractCallback(archive, dest.getPath(), charset) {
+                            archive.extract(arrayListToArray(group), false, new ExtractCallback(archive, dest.getPath(), charset,password) {
 
                                 private long total = -1;
 
                                 @Override
                                 public void setTotal(long total) throws SevenZipException {
                                     this.total = total;
+                                }
+
+                                @Override
+                                void onError(String filePath, Exception e) {
+
                                 }
 
                                 @Override

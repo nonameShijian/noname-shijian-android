@@ -307,7 +307,6 @@ public class NonameImportActivity extends Activity {
 					});
 					zipFile = new ZipFile(cacheFile);
 
-
 					if (!zipFile.isValidZipFile()) {
 						throw new Exception("压缩文件不合法,可能被损坏。");
 					}
@@ -1064,8 +1063,8 @@ public class NonameImportActivity extends Activity {
 		runOnUiThread(() -> {
 			if (messageTextView == null) return;
 			String newMsg = msg + "\n" + messageTextView.getText();
-			if(newMsg.length() >= 5000){
-				newMsg = newMsg.substring(0,4999);
+			if(newMsg.length() >= 1000){
+				newMsg = newMsg.substring(0,999);
 			}
 			messageTextView.setText(newMsg);
 		});
@@ -1174,6 +1173,8 @@ public class NonameImportActivity extends Activity {
 		alertBuilder.create().show();
 	}
 
+
+
 	// 解压文件
 	private void extractAll(String filePath, File cacheDir, String extName) {
 		//zipFile = new ZipFile(zipFile.getFile());
@@ -1212,6 +1213,11 @@ public class NonameImportActivity extends Activity {
 					@Override
 					public void setTotal(long total) {
 						this.total = total;
+					}
+
+					@Override
+					public void onError(String filePath, Exception e) {
+						updateText(filePath+": "+e.getMessage());
 					}
 
 					@Override
