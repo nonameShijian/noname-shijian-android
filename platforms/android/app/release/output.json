@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "com.noname.shijian",
+  "variantName": "release",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "properties": [],
+      "versionCode": 15008,
+      "versionName": "15008",
+      "enabled": true,
+      "outputFile": "无名杀诗笺版(安卓)v1.5.0.0.8(2023-11-18).ApK"
+    }
+  ]
+}

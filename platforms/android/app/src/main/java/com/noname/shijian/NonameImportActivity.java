@@ -22,6 +22,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 
+import com.noname.shijian.zip.ZipUtil;
+
 import java.io.BufferedReader;
 import java.io.CharArrayWriter;
 import java.io.File;
@@ -49,6 +51,7 @@ import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.AbstractFileHeader;
 import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.progress.ProgressMonitor;
+import net.sf.sevenzipjbinding.SevenZip;
 
 import cn.hutool.core.util.CharsetUtil;
 
@@ -1167,85 +1170,43 @@ public class NonameImportActivity extends Activity {
 			//clearMessy();
 			//List<FileHeader> fileHeaders = zipFile.getFileHeaders();
 			int size = zipFile.getFileHeaders().size();
-			new Handler(Looper.getMainLooper()).post(() -> {
+			final Handler handler = new Handler(Looper.getMainLooper());
+			handler.post(() -> {
 				dialog.setTitle("正在解压");
-				dialog.setMax(size);
+				dialog.setMax(100);
 				dialog.setProgress(0);
 				dialog.setMessage(getWaitingMessage());
 				dialog.show();
 			});
 			updateText("开始解压zip(共" + size + "个文件)\n若其中有文件名乱码将会自动识别，会增加解压时间，请耐心等待");
-			for (int i = 0; i < size; i++) {
-				FileHeader v = zipFile.getFileHeaders().get(i);
-				if (v.isDirectory()) continue;
-				// 解决乱码后文件路径
-				String extractedFile = getFileName(v);//v.getFileName();
-				// 但是原本的没变，需要改名
-				/*
-				if (!v.getFileName().equals(extractedFile)) {
-					Log.e("renameFile", v.getFileName() + " to " + extractedFile);
-					zipFile.renameFile(v, extractedFile);
-				}*/
-				try {
-					zipFile.extractFile(v.getFileName(),filePath,extractedFile);
-					//zipFile.extractFile(v, filePath, extractedFile);
-				} catch (ZipException e) {
-					String message = e.getMessage().contains("Wrong password!") ? "压缩包密码错误，请重新解压" : e.getMessage();
-
-					Log.e("解压失败", "filePath: " + filePath);
-					Log.e("解压失败", extractedFile + "(" + (i + 1) + "/" + size + ")");
-					Log.e("解压失败", message);
-					Log.e("解压失败", "——————————");
-					updateText("解压失败: " + extractedFile + "(" + (i + 1) + "/" + size + "): " + message);
-
-					if (e.getMessage().contains("Wrong password!")) {
-						hasError = true;
-						dialog.dismiss();
-						clearCache(cacheDir);
-						return;
+			try {
+				String passwordStr = password == null?"":new String(password);
+				ZipUtil.extractAll(zipFile.getFile().getPath(), new File(filePath), charset,passwordStr, new ZipUtil.Callback() {
+					private long total = -1;
+					@Override
+					public void setTotal(long total) {
+						this.total = total;
 					}
 
-					// 尝试换个编码，先换成utf8
-					String oldName = v.getFileName();
-					updateText("尝试更换编码解压: utf-8");
-					extractedFile = getFileName(v, "utf-8");
-					Log.e("renameFile", oldName + " to " + extractedFile);
-					zipFile.renameFile(v, extractedFile);
-					try {
-						if (isMessyCode(extractedFile)) throw new ZipException("文件名为乱码: " + extractedFile);
-						zipFile.extractFile(v.getFileName(), filePath, extractedFile);
-						updateText("解压" + extractedFile + "成功");
-						Log.e("utf-8解压成功", "——————————");
-					} catch (ZipException err) {
-						Log.e("utf-8解压失败", e.getMessage());
-						Log.e("utf-8解压失败", "——————————");
-						updateText("解压失败: " + e.getMessage());
-						updateText("尝试更换编码解压: gbk");
-						zipFile.renameFile(v, oldName);
-						extractedFile = getFileName(v, "gbk");
-						Log.e("renameFile", oldName + " to " + extractedFile);
-						zipFile.renameFile(v, extractedFile);
-						try {
-							if (isMessyCode(extractedFile)) throw new ZipException("文件名为乱码: " + extractedFile);
-							zipFile.extractFile(v.getFileName(), filePath, extractedFile);
-							updateText("解压" + extractedFile + "成功");
-							Log.e("gbk解压成功", "——————————");
-						} catch (ZipException error) {
-							Log.e("gbk解压失败", e.getMessage());
-							Log.e("gbk解压失败", "——————————");
-							updateText("解压失败: " + e.getMessage());
-							hasError = true;
-							dialog.dismiss();
-							clearCache(cacheDir);
-							return;
+					@Override
+					public void setCompleted(long completed) {
+						if(total > 0){
+							double b = completed/(double)total;
+							int m = (int) Math.floor(b*100);
+							handler.post(()->{
+								dialog.setTitle("正在解压");
+								dialog.setMax(100);
+								dialog.setProgress(m);
+								dialog.setMessage(getWaitingMessage());
+							});
 						}
 					}
-				}
-				// updateText("解压成功 ：" + extractedFile + "(" + (i + 1) + "/" + size + ")");
-				Message msg = handler.obtainMessage(0x0001);
-				msg.arg1 = i;
-				handler.sendMessage(msg);
+				});
+			}catch (Throwable e){
+				Log.e("NonameImportActivity","解压失败",e);
+				updateText("解压失败："+e.getMessage());
 			}
+
 			// 关闭对话框
 			if (dialog != null) dialog.dismiss();
 			updateText("解压完成！");
@@ -1460,7 +1421,7 @@ public class NonameImportActivity extends Activity {
 		float count = 0;
 		for (int i = 0; i < ch.length; i++) {
 			char c = ch[i];
-			if (!Character.isLetterOrDigit(c)) {
+			if (!isCertainlyNotMessyCode(c)) {
 				if (!isChinese(c)) {
 					count = count + 1;
 				}
@@ -1473,6 +1434,11 @@ public class NonameImportActivity extends Activity {
 		} else {
 			return false;
 		}
+	}
+
+	private static boolean isCertainlyNotMessyCode(char c){
+		if(Character.isLetterOrDigit(c))return true;
+		return "!@#$%^&*()_+/`~\\|[]{};:\",.<>/".contains(c+"");
 	}
 
 	/**
