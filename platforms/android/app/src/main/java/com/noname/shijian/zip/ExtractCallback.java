@@ -20,8 +20,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public abstract class ExtractCallback implements IArchiveExtractCallback, ICryptoGetTextPassword {
 
