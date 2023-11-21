@@ -264,7 +264,7 @@
 
 						delete window[target];
 					} else await onLoad();
-				} catch {
+				} catch(e) {
 					if (onError) await onError();
 				}
 			}
