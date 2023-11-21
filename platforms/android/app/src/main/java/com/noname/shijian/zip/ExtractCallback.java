@@ -98,6 +98,7 @@ public abstract class ExtractCallback implements IArchiveExtractCallback, ICrypt
 
     //移除乱码。
     private String decodeMessy(String origin){
+        if("utf-8".equalsIgnoreCase(charset))return origin;
         String ret = decodeMessyHashMap.get(origin);
         if(TextUtils.isEmpty(ret)){
             ret = new String(origin.getBytes(StandardCharsets.ISO_8859_1), Charset.forName(charset));
