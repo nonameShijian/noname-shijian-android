@@ -4,6 +4,8 @@ import android.os.Process;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.noname.shijian.Utils;
+
 import net.sf.sevenzipjbinding.ExtractAskMode;
 import net.sf.sevenzipjbinding.ExtractOperationResult;
 import net.sf.sevenzipjbinding.IArchiveExtractCallback;
@@ -98,10 +100,14 @@ public abstract class ExtractCallback implements IArchiveExtractCallback, ICrypt
 
     //移除乱码。
     private String decodeMessy(String origin){
-        if("utf-8".equalsIgnoreCase(charset))return origin;
+        //if("utf-8".equalsIgnoreCase(charset))return origin;
+        //if(!Utils.isMessyCode(origin))return origin;
         String ret = decodeMessyHashMap.get(origin);
         if(TextUtils.isEmpty(ret)){
             ret = new String(origin.getBytes(StandardCharsets.ISO_8859_1), Charset.forName(charset));
+            if(!ret.equals(origin)&&(ret.contains("?") || Utils.isMessyCode(ret)) && !Utils.isMessyCode(origin)){
+                ret = origin;
+            }
             decodeMessyHashMap.put(origin,ret);
         }
         return ret;
