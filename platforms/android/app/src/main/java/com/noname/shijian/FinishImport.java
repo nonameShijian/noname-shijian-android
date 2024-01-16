@@ -96,36 +96,6 @@ public class FinishImport extends CordovaPlugin {
             case "resetGame": {
                 cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).edit().putLong("version", 10000).apply();
             }
-            case "requestMediaRecord": {
-                MainActivity activity = (MainActivity) cordova.getActivity();
-                if (activity != null) {
-                    try {
-                        // 初始化
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            activity.startForegroundService(new Intent(activity, ScreenRecordingService.class));
-                        }else{
-                            activity.startService(new Intent(activity, ScreenRecordingService.class));
-                        }
-                        MainActivity.mProjectionManager = (MediaProjectionManager) activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-                        // 执行
-                        activity.startActivityForResult(MainActivity.mProjectionManager.createScreenCaptureIntent(), MainActivity.MediaRecord_REQUEST_CODE);
-                        callbackContext.success();
-                    } catch (Exception e) {
-                        callbackContext.error(e.getMessage());
-                    }
-                } else {
-                    Log.e("requestMediaRecord", "未获取到activity实例");
-                    callbackContext.error("未获取到activity实例");
-                }
-                return true;
-            }
-            case "stopMediaRecord": {
-                String fileName = args.getString(0);
-                Log.e("FinishImport", fileName);
-                MainActivity.stopRecording(true, fileName);
-                callbackContext.success();
-                return true;
-            }
         }
 
         return super.execute(action, args, callbackContext);
@@ -171,17 +141,4 @@ public class FinishImport extends CordovaPlugin {
             return NonameImportActivity.VERSION;
         }
     }
-
-    /*
-    // 把path转换为以供访问Android/data
-    private static Uri getUri(String path) {
-        String[] paths = path.replaceAll("/storage/emulated/0/Android/data", "").split("/");
-        StringBuilder stringBuilder = new StringBuilder("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata/document/primary%3AAndroid%2Fdata");
-        for (String p : paths) {
-            if (p.length() == 0) continue;
-            stringBuilder.append("%2F").append(p);
-        }
-        return Uri.parse(stringBuilder.toString());
-    }
-    */
 }

@@ -5,12 +5,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport" content="user-scalable=no">
     <link rel="stylesheet" href="app/color.css">
-    <script type="text/javascript" src="app/core-js-bundle.js"></script>
     <script type="text/javascript" src="app/eruda.js"></script>
     <script type="text/javascript" src="app/redirect.js"></script>
     <script>
         window.onerror=function(msg,src,line,column,err){
-            var str=`错误文件: ${typeof src=='string'&&src.length>0?decodeURI(src):'未知文件'}`;
+            let str=`错误文件: ${typeof src=='string'&&src.length>0?decodeURI(src):'未知文件'}`;
             str+=`\n错误信息: ${msg}`;
             str+=`\n行号: ${line}`;
             str+=`\n列号: ${column}`;

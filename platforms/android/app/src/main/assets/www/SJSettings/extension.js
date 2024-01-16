@@ -12,7 +12,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
         exts = ['SJ Settings'];
     }
     for (const extensionName of exts) {
-        if (!lib.config.extensions.contains(extensionName)) {
+        if (!lib.config.extensions.includes(extensionName)) {
             lib.config.extensions.push(extensionName);
         }
         if (!lib.config[`extension_${extensionName}_enable`]) {
@@ -126,6 +126,26 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                             });
                         }, error => {
                             alert('www文件夹不存在: ' + error.code);
+                        });
+                    });
+            };
+
+            window.noname_shijianInterfaces.openPdf = name => {
+                window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory,
+                    /** @param { DirectoryEntry } entry */
+                    entry => {
+                        entry.getFile(name, {}, function (fileEntry) {
+                            fileEntry.file(function (fileToLoad) {
+                                // @ts-ignore
+                                cordova.plugins.fileOpener2.showOpenWithDialog(fileToLoad.localURL, "application/pdf", {
+                                    error: function (e) {
+                                        console.log('Error status: ' + e.status + ' - Error message: ' + e.message);
+                                    },
+                                    success: function () {
+                                        console.log('file opened successfully');
+                                    }
+                                });
+                            });
                         });
                     });
             };
@@ -374,33 +394,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     }, emptyFun);
                 }
 
-                if (false && game.getExtensionConfig('SJ Settings', 'enable') && game.getExtensionConfig('SJ Settings', 'requestMediaRecord')) {
-                    if (lib.arenaReady) {
-                        lib.arenaReady.push(requestMediaRecord);
-                    } else {
-                        requestMediaRecord();
-                    }
-                    lib.onover.push(() => {
-                        setTimeout(() => {
-                            navigator.notification.activityStart('正在合成录屏文件', '请稍候...');
-                            const stop = (e) => {
-                                navigator.notification.activityStop();
-                                if (e) {
-                                    console.log(e);
-                                }
-                            };
-                            let name = lib.translate[game.me.name || game.me.name1];
-                            if (game.me.name2) {
-                                name += "&&" + lib.translate[game.me.name2];
-                            }
-                            if (lib.translate[get.mode()]) {
-                                name += "——" + lib.translate[get.mode()] + "模式";
-                            }
-                            cordova.exec(stop, stop, 'FinishImport', 'stopMediaRecord', [name]);
-                        }, 1500);
-                    });
-                }
-
             }, false);
 
             if (!window.noname_shijianInterfaces.environment && !_status.openTools && game.getExtensionConfig('SJ Settings', 'openTools')) {
@@ -410,7 +403,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             }
 
             if (!lib.config.new_tutorial) {
-                if (confirm('是否查看“无名杀全教程.pdf”?')) noname_shijianInterfaces.openAssetFile("noname_tutorial.pdf", "application/pdf");
+                if (confirm('是否查看“无名杀全教程.pdf”?')) window.noname_shijianInterfaces.openPdf("noname_tutorial.pdf");
             }
             
             // 拦截重置游戏，并添加功能去除安卓版本号储存，让内置资源再次解压
@@ -627,21 +620,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             };
         },
         config: {
-            // requestMediaRecord: {
-            //     init: false,
-            //     name: '对局录屏',
-            //     intro: '游戏加载完成后提示是否开始录屏，游戏结束后自动停止录屏。应用进入后台时，录屏将停止并且不生成视频文件，',
-            //     onclick(item) {
-            //          game.saveExtensionConfig('SJ Settings', 'requestMediaRecord', item);
-            //          alert('重启游戏后生效');
-            //     }
-            // },
             tutorialapk: {
                 name: '查看apk使用教程',
                 intro: '查看apk使用教程',
                 clear: true,
                 onclick() {
-                    noname_shijianInterfaces.openAssetFile("apk_tutorial.pdf", "application/pdf");
+                    window.noname_shijianInterfaces.openPdf("apk_tutorial.pdf");
                 }
             },
             openTools: {
@@ -1013,7 +997,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 intro: '查看无名杀教程',
                 clear: true,
                 onclick() {
-                    window.noname_shijianInterfaces.openAssetFile("noname_tutorial.pdf", "application/pdf");
+                    window.noname_shijianInterfaces.openPdf("noname_tutorial.pdf");
                 }
             },
             importZip: {
@@ -1032,7 +1016,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     const extName = prompt("请输入扩展名");
                     if (!extName) return;
                     const pwd = prompt("请输入压缩包密码，不设密码直接点确定");
-                    let result;
                     if (pwd === '' || pwd === null) {
                         window.noname_shijianInterfaces.shareExtensionAsync(extName);
                     } else {
@@ -1046,7 +1029,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             author: "诗笺",
             diskURL: "",
             forumURL: "",
-            version: "1.5",
+            version: "1.6",
         }
     };
 });

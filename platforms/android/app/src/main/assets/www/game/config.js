@@ -1,9 +1,11 @@
 window.config={
 	extension_sources:{
-		GitHub:'https://raw.githubusercontent.com/libccy/noname-extension/master/',
+		'GitHub Proxy':'https://mirror.ghproxy.com/https://raw.githubusercontent.com/libccy/noname-extension/master/',
+		FastGit:'https://raw.fgit.cf/libccy/noname-extension/master/',
+		GitHub:'https://raw.githubusercontent.com/libccy/noname-extension/master/'
 	},
 	extension_source:'Coding',
-	forbidai:['ns_liuzhang','yuji','re_yuji'],
+	forbidai:['ns_liuzhang'],
 	forbidai_user:[],
 	forbidall:[],
 	forbidstone:['zhugedan','pal_xuanxiao','hs_malfurion','lusu','chenlin','hs_siwangzhiyi',
@@ -20,7 +22,7 @@ window.config={
 	zhinang_tricks:['guohe','wuxie','wuzhong','dongzhuxianji'],
 	connect_zhinang_tricks:['guohe','wuxie','wuzhong','dongzhuxianji'],
 	all:{
-		sgscharacters:['standard','shenhua','xinghuoliaoyuan','refresh','yijiang','sp','sp2','extra','old','mobile','tw','yingbian','offline','sb','clan','collab'],
+		sgscharacters:['standard','shenhua','xinghuoliaoyuan','refresh','yijiang','sp','sp2','xianding','huicui','extra','old','mobile','shiji','tw','yingbian','offline','jsrg','sb','clan','collab','onlyOL'],
 		sgscards:['standard','extra','sp','guozhan','zhulu','yingbian','yongjian'],
 		sgsmodes:['identity','guozhan','versus','doudizhu','single','brawl','connect'],
 		stockmode:['identity','guozhan','versus','boss','doudizhu','single','chess','stone','connect','brawl','tafang'],
@@ -133,7 +135,7 @@ window.config={
 	sort:'type_sort',
 
 	cards:['standard','extra'],
-	characters:['standard','shenhua','sp','sp2','yijiang','refresh','xinghuoliaoyuan','mobile','extra','yingbian','sb','tw','offline','clan','collab'],
+	characters:['standard','shenhua','sp','sp2','yijiang','refresh','xinghuoliaoyuan','mobile','extra','yingbian','sb','tw','offline','clan','collab','xianding','huicui','shiji','jsrg','onlyOL'],
 	connect_characters:['diy'],
 	connect_cards:['huanlekapai','guozhan','sp','zhulu','yingbian','yongjian'],
 	plays:[],
@@ -167,6 +169,8 @@ window.config={
 				['zhu','zhong','nei','fan','fan','fan'],
 				['zhu','zhong','zhong','nei','fan','fan','fan'],
 				['zhu','zhong','zhong','nei','fan','fan','fan','fan'],
+				['zhu','zhong','zhong','zhong','nei','fan','fan','fan','fan'],
+				['zhu','zhong','zhong','zhong','nei','nei','fan','fan','fan','fan'],
 			],
 			choice:{
 				zhu:3,
@@ -240,5 +244,6 @@ window.config={
 		['akane_quanqing','lianying'],
 		['akane_quanqing','relianying'],
 		['akane_quanqing','shangshi'],
+		['dcruyi','cxliushi'],
 	]
 };

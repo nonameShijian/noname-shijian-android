@@ -1,5 +1,0 @@
-/*
-window.noname_shijianInterfaces = {
-
-};
-*/
