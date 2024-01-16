@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
@@ -10,10 +10,8 @@
     {
       "type": "SINGLE",
       "filters": [],
-      "properties": [],
       "versionCode": 16000,
-      "versionName": "16000",
-      "enabled": true,
+      "versionName": "1.6.0",
       "outputFile": "无名杀诗笺版(安卓)v1.6.0(2024-01-16).ApK"
     }
   ]
