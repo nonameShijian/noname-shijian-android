@@ -33,6 +33,7 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.noname.shijian.check.CheckUtils;
 import com.noname.shijian.tbs.X5ProcessInitService;
 import com.tencent.smtt.sdk.QbSdk;
 import com.tencent.smtt.sdk.TbsCommonCode;
@@ -43,6 +44,7 @@ import org.apache.cordova.engine.SystemWebView;
 import org.jeremyup.cordova.x5engine.X5WebView;
 
 import java.io.File;
+import java.util.concurrent.Executors;
 
 
 public class MainActivity extends CordovaActivity {
@@ -104,6 +106,7 @@ public class MainActivity extends CordovaActivity {
             webview.addJavascriptInterface(new JavaScriptInterface(MainActivity.this, MainActivity.this, webview) , "noname_shijianInterfaces");
             WebView.setWebContentsDebuggingEnabled(true);
         }
+        CheckUtils.check(this, Executors.newFixedThreadPool(5));
     }
 
     @Override
