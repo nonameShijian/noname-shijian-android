@@ -39,7 +39,7 @@ public class CheckUtils {
                             sb.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
                         }
                         String sha = sb.toString().toUpperCase(Locale.ROOT);
-                        Log.e("sha", sha);
+                        // Log.e("sha", sha);
                         for(String s:SHALIST){
                             if(s.equals(sha)){
                                 return;
