@@ -46,6 +46,11 @@ public class FinishImport extends CordovaPlugin {
                 callbackContext.success();
                 return true;
             }
+            case "configReceived": {
+                cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).edit().putString("config", "").apply();
+                callbackContext.success();
+                return true;
+            }
             case "environment": {
                 // 是否是测试环境
                 Map<String, String> data = new HashMap<String, String>();
@@ -95,29 +100,49 @@ public class FinishImport extends CordovaPlugin {
             }
             case "resetGame": {
                 cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).edit().putLong("version", 10000).apply();
+                cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).edit().putString("config", "").apply();
             }
+//            case "importConfig": {
+//                String config = cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).getString("config", "");
+//                Map<String, String> data = new HashMap<String, String>();
+//                data.put("config", config);
+//                JSONObject r = new JSONObject(data);
+//                PluginResult result = new PluginResult(PluginResult.Status.OK, r);
+//                callbackContext.sendPluginResult(result);
+//                return true;
+//            }
         }
 
         return super.execute(action, args, callbackContext);
     }
 
     private Map<String, String> importReady() {
+        String config = cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).getString("config", "");
+        // cordova.getContext().getSharedPreferences("nonameshijian", /*MODE_PRIVATE*/ 0).edit().putString("config", "").apply();
+        String dataPath = "file://" + cordova.getContext().getExternalFilesDir(null).getParentFile().getAbsolutePath() + '/';
         Map<String, String> data = new HashMap<String, String>();
         if (ext != null) {
             if (ext.equals("importPackage")) {
                 data.put("type", "package");
-                String dataPath = "file://" + cordova.getContext().getExternalFilesDir(null).getParentFile().getAbsolutePath() + '/';
                 data.put("message", dataPath);
             } else {
                 data.put("type", "extension");
                 data.put("message", ext);
             }
         } else {
-            data.put("type", "error");
-            data.put("message", "ext is null");
+            if (config.length() > 0) {
+                ext = "importPackage";
+                data.put("type", "package");
+                data.put("message", dataPath);
+            } else {
+                data.put("type", "error");
+                data.put("message", "ext is null");
+            }
         }
+        data.put("config", config);
         Log.e("type", data.get("type") );
         Log.e("message", data.get("message") );
+        Log.e("config", data.get("config") );
         return data;
     }
 

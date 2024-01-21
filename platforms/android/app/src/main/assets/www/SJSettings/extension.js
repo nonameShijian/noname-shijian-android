@@ -31,6 +31,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
         editable: false,
         content: function (config, pack) {
             delete lib.extensionMenu['extension_SJ Settings'].delete;
+        },
+        precontent: function () {
+            const emptyFun = () => { };
+
+            if (!Array.isArray(lib.updateReady)) lib.updateReady = [];
+            if (!Array.isArray(lib.updateAssetReady)) lib.updateAssetReady = [];
 
             let layoutPath = lib.assetURL + 'extension/SJ Settings';
             lib.init.css(layoutPath, 'extension');
@@ -39,60 +45,64 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
             // 导入配置
             window.noname_shijianInterfaces.importConfigData = data => {
-                if (!data) return;
-                const extensions = lib.config.extensions;
-                try {
-                    data = JSON.parse(lib.init.decode(data));
-                    if (!data || typeof data != 'object') {
-                        throw ('err');
+                return new Promise((resolve, reject) => {
+                    if (!data) return reject('!data');
+                    const extensions = lib.config.extensions;
+                    try {
+                        data = JSON.parse(lib.init.decode(data));
+                        if (!data || typeof data != 'object') {
+                            throw ('err');
+                        }
+                        // @ts-ignore
+                        if (lib.db && (!data.config || !data.data)) {
+                            throw ('err');
+                        }
                     }
-                    // @ts-ignore
-                    if (lib.db && (!data.config || !data.data)) {
-                        throw ('err');
+                    catch (e) {
+                        console.log(e);
+                        if (e == 'err') {
+                            alert('导入文件格式不正确');
+                            reject('导入文件格式不正确');
+                        } else {
+                            alert('导入失败： ' + e.message);
+                            reject('导入失败： ' + e.message);
+                        }
+                        return;
                     }
-                }
-                catch (e) {
-                    console.log(e);
-                    if (e == 'err') {
-                        alert('导入文件格式不正确');
-                    } else {
-                        alert('导入失败： ' + e.message);
+                    alert('导入成功, 即将自动重启');
+                    if (!lib.db) {
+                        const noname_inited = localStorage.getItem('noname_inited');
+                        const onlineKey = localStorage.getItem(lib.configprefix + 'key');
+                        localStorage.clear();
+                        if (noname_inited) {
+                            localStorage.setItem('noname_inited', noname_inited);
+                        }
+                        if (onlineKey) {
+                            localStorage.setItem(lib.configprefix + 'key', onlineKey);
+                        }
+                        for (let i in data) {
+                            localStorage.setItem(i, data[i]);
+                        }
                     }
-                    return;
-                }
-                alert('导入成功, 即将自动重启');
-                if (!lib.db) {
-                    const noname_inited = localStorage.getItem('noname_inited');
-                    const onlineKey = localStorage.getItem(lib.configprefix + 'key');
-                    localStorage.clear();
-                    if (noname_inited) {
-                        localStorage.setItem('noname_inited', noname_inited);
+                    else {
+                        for (let i in data.config) {
+                            game.putDB('config', i, data.config[i]);
+                            lib.config[i] = data.config[i];
+                        }
+                        for (let i in data.data) {
+                            game.putDB('data', i, data.data[i]);
+                        }
+                        // 现有扩展的合并
+                        if (confirm('导入配置是否额外保存现有扩展？\n否则只保留SJ Settings扩展')) {
+                            lib.config.extensions = [...new Set([...lib.config.extensions, ...extensions])];
+                        } else {
+                            lib.config.extensions = [...new Set([...lib.config.extensions, 'SJ Settings'])];
+                        }
+                        game.saveConfigValue('extensions');
                     }
-                    if (onlineKey) {
-                        localStorage.setItem(lib.configprefix + 'key', onlineKey);
-                    }
-                    for (let i in data) {
-                        localStorage.setItem(i, data[i]);
-                    }
-                }
-                else {
-                    for (let i in data.config) {
-                        game.putDB('config', i, data.config[i]);
-                        lib.config[i] = data.config[i];
-                    }
-                    for (let i in data.data) {
-                        game.putDB('data', i, data.data[i]);
-                    }
-                    // 现有扩展的合并
-                    if (confirm('导入配置是否额外保存现有扩展？\n否则只保留SJ Settings扩展')) {
-                        lib.config.extensions = [...new Set([...lib.config.extensions, ...extensions])];
-                    } else {
-                        lib.config.extensions = [...new Set([...lib.config.extensions, 'SJ Settings'])];
-                    }
-                    game.saveConfigValue('extensions');
-                }
-                lib.init.background();
-                game.reload();
+                    lib.init.background();
+                    resolve();
+                });
             };
 
             window.noname_shijianInterfaces.openAssetFile = (name, type) => {
@@ -165,7 +175,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                             /** @type { string | object } */
                             // @ts-ignore
                             let data = fileLoadedEvent.target.result;
-                            window.noname_shijianInterfaces.importConfigData(data);
+                            window.noname_shijianInterfaces.importConfigData(data).then(game.reload);
                         };
                         fileReader.readAsText(fileToLoad, "UTF-8");
                     } else {
@@ -260,12 +270,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 };
                 return parent;
             };
-        },
-        precontent: function () {
-            const emptyFun = () => {};
-            
-            if (!Array.isArray(lib.updateReady)) lib.updateReady = [];
-            if (!Array.isArray(lib.updateAssetReady)) lib.updateAssetReady = [];
 
             /**
              * @param { DirectoryEntry } [entry] 
@@ -351,6 +355,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
                 const getImportExtension = function () {
                     cordova.exec(async result => {
+                        console.log("result: " + JSON.stringify(result))
                         if (result && result.type == 'extension') {
                             const name = result.message;
                             lib.config.extensions.add(name);
@@ -362,37 +367,43 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                             localStorage.setItem('noname_inited', result.message);
                             await rewrite(lib.updateReady);
                             await rewrite(lib.updateAssetReady);
-                            cordova.exec(game.reload, game.reload, 'FinishImport', 'importReceived', []);
+                            if (typeof result.config == 'string' && result.config.length > 0) {
+                                if (confirm('是否导入压缩包中自带的配置文件？')) {
+                                    window.noname_shijianInterfaces.importConfigData(result.config)
+                                        .then(() => {
+                                            return new Promise(resolve => {
+                                                cordova.exec(resolve, resolve, 'FinishImport', 'configReceived', []);
+                                            });
+                                        })
+                                        .then(() => {
+                                            cordova.exec(game.reload, game.reload, 'FinishImport', 'importReceived', []);
+                                        });
+                                } else {
+                                    new Promise(resolve => {
+                                        cordova.exec(resolve, resolve, 'FinishImport', 'configReceived', []);
+                                    }).then(() => {
+                                        cordova.exec(game.reload, game.reload, 'FinishImport', 'importReceived', []);
+                                    });
+                                }
+                            } else cordova.exec(game.reload, game.reload, 'FinishImport', 'importReceived', []);
                         }
-                    }, () => {
-                        // console.warn('未从其他应用解压zip');
-                    }, 'FinishImport', 'importReady', []);
+                    }, emptyFun, 'FinishImport', 'importReady', []);
                 };
 
-                getImportExtension();
+                // getImportExtension();
+                function checkGPLAlerted() {
+                    console.log("checkGPLAlerted: " + localStorage.getItem('gplv3_noname_alerted'))
+                    if (localStorage.getItem('gplv3_noname_alerted')) {
+                        getImportExtension();
+                    } else {
+                        setTimeout(checkGPLAlerted, 1000);
+                    }
+                }
+                checkGPLAlerted();
 
                 document.addEventListener('visibilitychange', () => {
-                    if (document.hidden == false) getImportExtension();
+                    if (document.hidden == false) checkGPLAlerted();
                 });
-
-                function requestMediaRecord() {
-                    const RECORD_AUDIO = permissions['RECORD_AUDIO'];
-                    permissions.checkPermission(RECORD_AUDIO, (status) => {
-                        if (!status.hasPermission) {
-                            permissions.requestPermission(RECORD_AUDIO, () => {
-                                cordova.exec(emptyFun, (msg) => {
-                                    console.log(msg);
-                                }, 'FinishImport', 'requestMediaRecord', []);
-                            }, () => {
-                                alert('请求权限失败');
-                            });
-                        } else {
-                            cordova.exec(emptyFun, (msg) => {
-                                console.log(msg);
-                            }, 'FinishImport', 'requestMediaRecord', []);
-                        }
-                    }, emptyFun);
-                }
 
             }, false);
 
@@ -402,13 +413,13 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 eruda.init();
             }
 
-            if (!lib.config.new_tutorial) {
-                if (confirm('是否查看“无名杀全教程.pdf”?')) window.noname_shijianInterfaces.openPdf("noname_tutorial.pdf");
-            }
-            
+//            if (!lib.config.new_tutorial) {
+//                if (confirm('是否查看“无名杀全教程.pdf”?')) window.noname_shijianInterfaces.openPdf("noname_tutorial.pdf");
+//            }
+
             // 拦截重置游戏，并添加功能去除安卓版本号储存，让内置资源再次解压
             // @ts-ignore
-            lib.configMenu.others.config.reset_game.onclick = function() {
+            lib.configMenu.others.config.reset_game.onclick = function () {
                 var node = this;
                 if (node._clearing) {
                     // var noname_inited = localStorage.getItem('noname_inited');
@@ -445,7 +456,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                     }, 1000);
                 }, 1000);
             };
-            
+
             // 拦截重置游戏，并添加功能去除安卓版本号储存，让内置资源再次解压
             window.onkeydown = function (e) {
                 if (!ui.menuContainer || !ui.menuContainer.classList.contains('hidden')) {
@@ -548,7 +559,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             };
 
             // 拦截重置游戏，并添加功能去除安卓版本号储存，让内置资源再次解压
-            lib.init.reset = function() {
+            lib.init.reset = function () {
                 if (window.inSplash) return;
                 if (window.resetExtension) {
                     if (confirm('游戏似乎未正常载入，是否禁用扩展并重新打开？')) {
@@ -1001,12 +1012,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 }
             },
             importZip: {
-            	name: '<button>导入本地Zip文件</button>',
-            	intro: '导入本地扩展',
-            	clear: true,
-            	onclick() {
-            	    window.noname_shijianInterfaces.selectZipToExtract();
-            	}
+                name: '<button>导入本地Zip文件</button>',
+                intro: '导入本地扩展',
+                clear: true,
+                onclick() {
+                    window.noname_shijianInterfaces.selectZipToExtract();
+                }
             },
             shareExtension: {
                 name: '<button>压缩并分享扩展</button>',

@@ -176,6 +176,8 @@ public class NonameImportActivity extends Activity {
 		return true;
 	}
 
+	private boolean hasConfigFile;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -184,15 +186,15 @@ public class NonameImportActivity extends Activity {
 		// updateText("Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 		ToastUtils.show(NonameImportActivity.this, "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 		if(Build.VERSION.SDK_INT < 30) {
-			/** 要申请的权限列表 */
+			// 要申请的权限列表
 			ArrayList<String> permissions = new ArrayList<>();
 
-			/** 读取文件权限 */
+			// 读取文件权限
 			if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
 				permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
 			}
 
-			/** 写入文件权限 */
+			// 写入文件权限
 			if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
 				permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
 			}
@@ -313,6 +315,9 @@ public class NonameImportActivity extends Activity {
 
 					if (zipFile.getFileHeader("game/game.js") != null) {
 						updateText("压缩包被识别成游戏主文件包");
+						if (zipFile.getFileHeader("noname.config.txt") != null) {
+							hasConfigFile = true;
+						}
 						importPackage();
 						return;
 					} else if (zipFile.getFileHeader("extension.js") != null) {
@@ -365,10 +370,14 @@ public class NonameImportActivity extends Activity {
 								}
 							}
 							String rootPath = path.substring(0, path.indexOf("game/game.js"));
+							if (list.stream().filter(fileHeader -> (rootPath + "/noname.config.txt").equals(fileHeader.getFileName())).toArray().length > 0) {
+								hasConfigFile = true;
+							}
 							// updateText("rootPath: " + rootPath);
 							importPackage(rootPath);
 							return;
-						} else if (isExtension) {
+						}
+						else if (isExtension) {
 							updateText("压缩包被识别成文件夹嵌套的扩展");
 							if (!inited()) {
 								updateText("检测到您的文件缺失不能进入游戏，所以暂时不能导入扩展。请先导入离线包/完整包，或者在游戏的初始界面下载文件(注: 当前更新源不稳定，不建议在游戏初始界面下载)");
@@ -433,6 +442,9 @@ public class NonameImportActivity extends Activity {
 					if (zipFile.getFileHeader("game/game.js") != null) {
 						updateText("压缩包被识别成游戏主文件包");
 						isAssetZip = true;
+						if (zipFile.getFileHeader("noname.config.txt") != null) {
+							hasConfigFile = true;
+						}
 						importPackage();
 						return;
 					} else {
@@ -477,6 +489,9 @@ public class NonameImportActivity extends Activity {
 								}
 							}
 							String rootPath = path.substring(0, path.indexOf("game/game.js"));
+							if (list.stream().filter(fileHeader -> (rootPath + "/noname.config.txt").equals(fileHeader.getFileName())).toArray().length > 0) {
+								hasConfigFile = true;
+							}
 							// updateText("rootPath: " + rootPath);
 							isAssetZip = true;
 							importPackage(rootPath);
@@ -1242,6 +1257,27 @@ public class NonameImportActivity extends Activity {
 			// 关闭对话框
 			if (dialog != null) dialog.dismiss();
 			updateText("解压完成！");
+			if (hasConfigFile) {
+				File configFile = new File(filePath, "noname.config.txt");
+				if (configFile.exists() && configFile.isFile()) {
+					try (BufferedReader br = new BufferedReader(new FileReader(configFile))) {
+						StringBuilder sb = new StringBuilder();
+						String line;
+						while ((line = br.readLine()) != null) {
+							sb.append(line);
+							sb.append(System.lineSeparator());
+						}
+						getSharedPreferences("nonameshijian", MODE_PRIVATE)
+								.edit()
+								.putString("config", sb.toString())
+								.apply();
+						updateText("读取配置文件成功，启动后将自动导入");
+						configFile.delete();
+					} catch (IOException e) {
+						updateText("读取配置文件异常: " + e.getMessage());
+					}
+				}
+			} else updateText("该压缩包没有配置文件");
 			// 清除缓存
 			clearCache(cacheDir);
 			// 进入无名杀
