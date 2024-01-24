@@ -140,6 +140,7 @@ window.config={
 	connect_cards:['huanlekapai','guozhan','sp','zhulu','yingbian','yongjian'],
 	plays:[],
 	extensions:['SJ Settings'],
+	'extension_SJ Settings_enable': true,
 	banned:[],
 	bannedcards:[],
 	forbidlist:[],
