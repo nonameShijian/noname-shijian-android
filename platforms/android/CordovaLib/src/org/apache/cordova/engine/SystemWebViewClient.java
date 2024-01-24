@@ -22,6 +22,7 @@ import android.annotation.TargetApi;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -29,6 +30,7 @@ import android.os.Build;
 import android.util.Log;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
+import android.webkit.MimeTypeMap;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -38,19 +40,25 @@ import android.webkit.WebViewClient;
 import org.apache.cordova.AuthenticationToken;
 import org.apache.cordova.CordovaClientCertRequest;
 import org.apache.cordova.CordovaHttpAuthHandler;
+import org.apache.cordova.CordovaPluginPathHandler;
 import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginManager;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
+import androidx.webkit.WebViewAssetLoader;
 
 /**
  * This class is the WebViewClient that implements callbacks for our web view.
@@ -63,6 +71,7 @@ public class SystemWebViewClient extends WebViewClient {
 
     private static final String TAG = "SystemWebViewClient";
     protected final SystemWebViewEngine parentEngine;
+    private final WebViewAssetLoader assetLoader;
     private boolean doClearHistory = false;
     boolean isCurrentlyLoading;
 
@@ -71,6 +80,70 @@ public class SystemWebViewClient extends WebViewClient {
 
     public SystemWebViewClient(SystemWebViewEngine parentEngine) {
         this.parentEngine = parentEngine;
+
+        WebViewAssetLoader.Builder assetLoaderBuilder = new WebViewAssetLoader.Builder()
+                .setDomain(parentEngine.preferences.getString("hostname", "localhost").toLowerCase())
+                .setHttpAllowed(true);
+
+        AssetManager assetManager =  parentEngine.webView.getContext().getAssets();
+
+        assetLoaderBuilder.addPathHandler("/", path -> {
+            try {
+                // Check if there a plugins with pathHandlers
+                PluginManager pluginManager = this.parentEngine.pluginManager;
+                if (pluginManager != null) {
+                    for (CordovaPluginPathHandler handler : pluginManager.getPluginPathHandlers()) {
+                        if (handler.getPathHandler() != null) {
+                            WebResourceResponse response = handler.getPathHandler().handle(path);
+                            if (response != null) {
+                                return response;
+                            }
+                        };
+                    }
+                }
+
+                if (path.isEmpty()) {
+                    path = "index.html";
+                }
+                LOG.e(TAG, path);
+                InputStream is;
+                String[] split = ("www/" + path).split("/");
+                String[] newSplit = Arrays.copyOfRange(split, 0, split.length - 1);
+                List<String> list = Arrays.asList(assetManager.list(String.join("/", newSplit)));
+                // LOG.e(TAG, String.valueOf(list));
+                if (!path.startsWith("game/") && list.contains(split[split.length - 1])) {
+                    is = assetManager.open("www/" + path, AssetManager.ACCESS_STREAMING);
+                } else {
+                    File file = new File(
+                            parentEngine.webView.getContext().getExternalFilesDir(null).getParentFile(),
+                            path
+                    );
+                    LOG.e(TAG, file.getAbsolutePath());
+                    is = new FileInputStream(file);
+                }
+
+                String mimeType = "text/html";
+                String extension = MimeTypeMap.getFileExtensionFromUrl(path);
+                if (extension != null) {
+                    if (path.endsWith(".js") || path.endsWith(".mjs")) {
+                        // Make sure JS files get the proper mimetype to support ES modules
+                        mimeType = "application/javascript";
+                    } else if (path.endsWith(".wasm")) {
+                        mimeType = "application/wasm";
+                    } else {
+                        mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                    }
+                }
+
+                return new WebResourceResponse(mimeType, null, is);
+            } catch (Exception e) {
+                e.printStackTrace();
+                LOG.e(TAG, e.getMessage());
+            }
+            return null;
+        });
+
+        this.assetLoader = assetLoaderBuilder.build();
     }
 
     /**
@@ -327,10 +400,10 @@ public class SystemWebViewClient extends WebViewClient {
     @SuppressWarnings("deprecation")
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
         try {
-            // Check the against the whitelist and lock out access to the WebView directory
+            // Check the against the allow list and lock out access to the WebView directory
             // Changing this will cause problems for your application
             if (!parentEngine.pluginManager.shouldAllowRequest(url)) {
-                LOG.w(TAG, "URL blocked by whitelist: " + url);
+                LOG.w(TAG, "URL blocked by allow list: " + url);
                 // Results in a 404.
                 return new WebResourceResponse("text/plain", "UTF-8", null);
             }
@@ -355,36 +428,6 @@ public class SystemWebViewClient extends WebViewClient {
         }
     }
 
-    @Override
-    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-        String url = request.getUrl().toString();
-        String method = request.getMethod();
-        Map<String, String> headers = request.getRequestHeaders();
-        Log.e("Request", method + "  " + url + "  " + headers);
-
-        if (url.startsWith("file://") && !url.contains("/app_webview/") && !url.contains("/app_xwalkcore/") && url.endsWith(".js")) {
-            // 是否是模块请求
-            if (headers != null
-                    && headers.containsKey("Origin")
-                    && Objects.equals(headers.get("Origin"), "file://")
-                    // 非兼容版可能没有这个属性
-                    // 但是华为webview可能会失败
-                    && (!headers.containsKey("Sec-Fetch-Mode") || Objects.equals(headers.get("Sec-Fetch-Mode"), "cors"))
-            ) {
-                try {
-                    URL Url = new URL(url);
-                    URLConnection connection = Url.openConnection();
-                    InputStream data = Url.openStream();
-                    return new WebResourceResponse(connection.getContentType(), "utf-8", data);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return shouldInterceptRequest(view, url);
-    }
-
     private static boolean needsContentUrlFix(Uri uri) {
         return "content".equals(uri.getScheme());
     }
@@ -402,5 +445,37 @@ public class SystemWebViewClient extends WebViewClient {
         }
 
         return false;
+    }
+
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        String url = request.getUrl().toString();
+        String method = request.getMethod();
+        Map<String, String> headers = request.getRequestHeaders();
+        Log.e("Request", method + "  " + url + "  " + headers);
+
+        if (url.startsWith("file://")) {
+            if (!url.contains("/app_webview/") && !url.contains("/app_xwalkcore/") && url.endsWith(".js")) {
+                // 是否是模块请求
+                if (headers != null
+                        && headers.containsKey("Origin")
+                        && Objects.equals(headers.get("Origin"), "file://")
+                        // 非兼容版可能没有这个属性
+                        // 但是华为webview可能会失败
+                        && (!headers.containsKey("Sec-Fetch-Mode") || Objects.equals(headers.get("Sec-Fetch-Mode"), "cors"))
+                ) {
+                    try {
+                        URL Url = new URL(url);
+                        URLConnection connection = Url.openConnection();
+                        InputStream data = Url.openStream();
+                        return new WebResourceResponse(connection.getContentType(), "utf-8", data);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return shouldInterceptRequest(view, url);
+        }
+        return this.assetLoader.shouldInterceptRequest(request.getUrl());
     }
 }

@@ -6,7 +6,7 @@
 	}
 	var url = localStorage.getItem('noname_inited');
 	if (url) {
-		if (url === 'nodejs') {
+		if (url === 'nodejs' || location.protocol.startsWith('http')) {
 			url = '';
 		}
 		var loadFailed = function() {
