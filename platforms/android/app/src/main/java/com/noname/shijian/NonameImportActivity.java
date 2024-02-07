@@ -22,11 +22,15 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 
+import com.alibaba.fastjson.JSON;
 import com.noname.shijian.zip.ZipUtil;
+import com.yanzhenjie.andserver.util.IOUtils;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.CharArrayWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -562,6 +566,7 @@ public class NonameImportActivity extends Activity {
 	private void importExtension2() throws Exception {
 		File cacheDir = new File(getExternalCacheDir(), Utils.getRandomString(10));
 		zipFile.extractFile("extension.js", cacheDir.getPath());
+		try { zipFile.extractFile("info.json", cacheDir.getPath()); } catch (ZipException ignored) {}
 		File cacheJs = new File(cacheDir, "extension.js");
 		try {
 			String extensionName = getExtensionName(cacheJs);
@@ -609,6 +614,7 @@ public class NonameImportActivity extends Activity {
 		File cacheDir = new File(getExternalCacheDir(), randomString);
 		// 把extension.js解压到随机字符串的文件夹
 		zipFile.extractFile(rootPath + "extension.js", cacheDir.getPath());
+		try { zipFile.extractFile("info.json", cacheDir.getPath()); } catch (ZipException ignored) {}
 		File cacheJs = new File(cacheDir, rootPath + "extension.js");
 		String [] split = rootPath.split("/");
 		new Thread() {
@@ -752,7 +758,7 @@ public class NonameImportActivity extends Activity {
 					File config = new File(data, "game/config.js");
 					if (!config.exists()) {
 						updateText("检测到您没有game/config.js，将为您从内置资源中复制一份");
-						File result =  Utils.assetToFile("www/game/config.js",this,"game/config.js");
+						File result =  Utils.assetToFile("www/game/config_example.js",this,"game/config.js");
 						if (result == null) {
 							updateText("内置资源game/config.js复制失败");
 						}
@@ -901,6 +907,20 @@ public class NonameImportActivity extends Activity {
 	}
 
 	private String getExtensionName(File file) throws Exception {
+		// new json file
+		File jsonFile = new File(file.getParentFile(), "info.json");
+		Log.e("getExtensionName", jsonFile.getAbsolutePath());
+		if (jsonFile.exists() && jsonFile.canRead() && jsonFile.isFile()) {
+			InputStream in = new BufferedInputStream(new FileInputStream(jsonFile));
+			String conf = IOUtils.toString(in, StandardCharsets.UTF_8);
+			String name = JSON.parseObject(conf).getString("name");
+			if (name != null) {
+				Log.e("getExtensionName", name);
+				updateText("从info.json解析出的扩展名为: " + name);
+				return name;
+			}
+		}
+		// old
 		Scanner scanner = new Scanner(file);
 		boolean appear = false;
 		String s = "name:\"";
@@ -920,6 +940,8 @@ public class NonameImportActivity extends Activity {
 				}
 				String ret = line.substring(index + s.length(), line.indexOf('\"', index + s.length()));
 				if (ret.length() != 0) {
+					Log.e("getExtensionName", ret);
+					updateText("从extension.js解析出的扩展名为: " + ret);
 					return ret;
 				}
 			}
@@ -929,11 +951,13 @@ public class NonameImportActivity extends Activity {
 				int index = line.indexOf(str);
 				String ret = line.substring(index + length, line.indexOf('\"', index + length));
 				if (ret.length() != 0) {
+					Log.e("getExtensionName", ret);
+					updateText("从extension.js解析出的扩展名为: " + ret);
 					return ret;
 				}
 			}
 		}
-		throw new ExtensionNameException("解析扩展名失败。");
+		throw new ExtensionNameException("解析扩展名失败");
 	}
 
 	private void importPackage() throws Exception {

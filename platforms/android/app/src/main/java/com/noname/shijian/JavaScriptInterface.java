@@ -4,7 +4,6 @@ import static android.content.Context.MODE_PRIVATE;
 
 import static com.noname.shijian.MainActivity.FILE_CHOOSER_RESULT_CODE;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -16,11 +15,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.noname.shijian.server.ServerManager;
+
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
+
+import org.apache.cordova.CordovaPreferences;
 import org.jeremyup.cordova.x5engine.X5WebView;
 
 import java.io.File;
@@ -34,11 +37,11 @@ import io.github.pwlin.cordova.plugins.fileopener2.FileProvider;
 public class JavaScriptInterface {
 
     private final Context context;
-    private final Activity activity;
+    private final MainActivity activity;
     private final WebView webview;
     private final X5WebView x5webView;
 
-    public JavaScriptInterface(Context context, Activity activity, WebView webview) {
+    public JavaScriptInterface(Context context, MainActivity activity, WebView webview) {
         this.context = context;
         this.activity = activity;
         this.webview = webview;
@@ -46,7 +49,7 @@ public class JavaScriptInterface {
         Log.e("new-JavaScriptInterface", String.valueOf(webview));
     }
 
-    public JavaScriptInterface(Context context, Activity activity, X5WebView webview) {
+    public JavaScriptInterface(Context context, MainActivity activity, X5WebView webview) {
         this.context = context;
         this.activity = activity;
         this.webview = null;
@@ -432,5 +435,22 @@ public class JavaScriptInterface {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("application/zip");
         activity.startActivityForResult(Intent.createChooser(intent, "选择zip文件并解压"), FILE_CHOOSER_RESULT_CODE);
+    }
+
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public String sendUpdate() {
+        context.getSharedPreferences("nonameshijian", MODE_PRIVATE)
+                .edit()
+                .putString("protocol", "http")
+                .apply();
+
+        if (activity.mServerManager == null) {
+            activity.mServerManager = new ServerManager(activity);
+            activity.mServerManager.register();
+            activity.mServerManager.startServer();
+        }
+
+        return "http://localhost:8089/";
     }
 }

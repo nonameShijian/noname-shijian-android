@@ -83,7 +83,7 @@ public class SystemWebViewClient extends WebViewClient {
 
         WebViewAssetLoader.Builder assetLoaderBuilder = new WebViewAssetLoader.Builder()
                 .setDomain(parentEngine.preferences.getString("hostname", "localhost").toLowerCase())
-                .setHttpAllowed(true);
+                .setHttpAllowed(false);
 
         AssetManager assetManager =  parentEngine.webView.getContext().getAssets();
 
@@ -105,10 +105,13 @@ public class SystemWebViewClient extends WebViewClient {
                 if (path.isEmpty()) {
                     path = "index.html";
                 }
-                LOG.e(TAG, path);
+                // LOG.e(TAG, path);
                 InputStream is;
+                // 原来cordova的路径
                 String[] split = ("www/" + path).split("/");
+                // 获取原路径所在的文件夹
                 String[] newSplit = Arrays.copyOfRange(split, 0, split.length - 1);
+                // 原路径所在的文件夹的所有文件、文件夹
                 List<String> list = Arrays.asList(assetManager.list(String.join("/", newSplit)));
                 // LOG.e(TAG, String.valueOf(list));
                 if (!path.startsWith("game/") && list.contains(split[split.length - 1])) {
@@ -118,9 +121,10 @@ public class SystemWebViewClient extends WebViewClient {
                             parentEngine.webView.getContext().getExternalFilesDir(null).getParentFile(),
                             path
                     );
-                    LOG.e(TAG, file.getAbsolutePath());
+                    // LOG.e(TAG, file.getAbsolutePath());
                     is = new FileInputStream(file);
                 }
+                // LOG.e(TAG, "-----------------------");
 
                 String mimeType = "text/html";
                 String extension = MimeTypeMap.getFileExtensionFromUrl(path);
@@ -399,6 +403,7 @@ public class SystemWebViewClient extends WebViewClient {
     @Override
     @SuppressWarnings("deprecation")
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+        if (url.contains("worker")) Log.e("Request", url);
         try {
             // Check the against the allow list and lock out access to the WebView directory
             // Changing this will cause problems for your application
@@ -418,7 +423,8 @@ public class SystemWebViewClient extends WebViewClient {
                 return new WebResourceResponse(result.mimeType, "UTF-8", result.inputStream);
             }
             // If we don't need to special-case the request, let the browser load it.
-            return null;
+            // return null;
+            return this.assetLoader.shouldInterceptRequest(Uri.parse(url));
         } catch (IOException e) {
             if (!(e instanceof FileNotFoundException)) {
                 LOG.e(TAG, "Error occurred while loading a file (returning a 404).", e);
@@ -452,8 +458,7 @@ public class SystemWebViewClient extends WebViewClient {
         String url = request.getUrl().toString();
         String method = request.getMethod();
         Map<String, String> headers = request.getRequestHeaders();
-        Log.e("Request", method + "  " + url + "  " + headers);
-
+        if (url.contains("worker")) Log.e("Request", method + "  " + url + "  " + headers);
         if (url.startsWith("file://")) {
             if (!url.contains("/app_webview/") && !url.contains("/app_xwalkcore/") && url.endsWith(".js")) {
                 // 是否是模块请求

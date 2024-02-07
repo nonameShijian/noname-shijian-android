@@ -33,7 +33,10 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import androidx.annotation.Nullable;
+
 import com.noname.shijian.check.CheckUtils;
+import com.noname.shijian.server.ServerManager;
 import com.noname.shijian.tbs.X5ProcessInitService;
 import com.tencent.smtt.sdk.QbSdk;
 import com.tencent.smtt.sdk.TbsCommonCode;
@@ -50,21 +53,28 @@ import java.util.concurrent.Executors;
 public class MainActivity extends CordovaActivity {
     public final static int FILE_CHOOSER_RESULT_CODE = 1;
 
-    @Override
-    public CordovaWebViewEngine makeWebViewEngine() {
-        if (false) {
-            initX5();
-            return new org.jeremyup.cordova.x5engine.X5WebViewEngine(this, this.preferences);
-        }
-        return super.makeWebViewEngine();
+    public CordovaPreferences getPreferences() {
+        return preferences;
     }
+
+//    @Override
+//    public CordovaWebViewEngine makeWebViewEngine() {
+//        if (false) {
+//            initX5();
+//            return new org.jeremyup.cordova.x5engine.X5WebViewEngine(this, this.preferences);
+//        }
+//        return super.makeWebViewEngine();
+//    }
+
+    public ServerManager mServerManager;
+    private boolean started = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         LOG.e("onCreate" ,"111");
         super.onCreate(savedInstanceState);
         super.init();
-        startX5WebProcessPreinitService();
+        // startX5WebProcessPreinitService();
 
         // enable Cordova apps to be started in the background
         Bundle extras = getIntent().getExtras();
@@ -80,8 +90,24 @@ public class MainActivity extends CordovaActivity {
             }
         }
 
+        if (!"file".equals(getSharedPreferences("nonameshijian", MODE_PRIVATE).getString("protocol", "file"))) {
+            // AndServer run in the service.
+            mServerManager = new ServerManager(this);
+            mServerManager.register();
+            mServerManager.startServer();
+        } else {
+            onServerStart(null);
+        }
+    }
+
+    public void onServerStart(@Nullable String ip) {
+        started = true;
         // Set by <content src="index.html" /> in config.xml
-        loadUrl(launchUrl);
+        if (ip != null) {
+            loadUrl("http://localhost:8089/");
+        } else {
+            loadUrl(launchUrl);
+        }
 
         View view = appView.getView();
         Log.e("webview", String.valueOf(view));
@@ -95,7 +121,8 @@ public class MainActivity extends CordovaActivity {
             settings.setUserAgentString(userAgent + " WebViewFontSize/100% 无名杀诗笺版/" + FinishImport.getAppVersion(MainActivity.this));
             webview.addJavascriptInterface(new JavaScriptInterface(MainActivity.this, MainActivity.this, webview) , "noname_shijianInterfaces");
             org.jeremyup.cordova.x5engine.X5WebView.setWebContentsDebuggingEnabled(true);
-        } else {
+        }
+        else {
             SystemWebView webview = (SystemWebView) view;
             WebSettings settings = webview.getSettings();
             int textZoom = settings.getTextZoom();
@@ -107,6 +134,21 @@ public class MainActivity extends CordovaActivity {
             WebView.setWebContentsDebuggingEnabled(true);
         }
         CheckUtils.check(this, Executors.newFixedThreadPool(5));
+    }
+
+    /**
+     * Error notify.
+     */
+    public void onServerError(String message) {
+        Log.e("onServerError", message);
+        if (!started) onServerStart(null);
+    }
+
+    /**
+     * Stop notify.
+     */
+    public void onServerStop() {
+        Log.e("onServerStop", "Stop notify");
     }
 
     @Override
@@ -125,6 +167,7 @@ public class MainActivity extends CordovaActivity {
 
     @Override
     public void onDestroy() {
+        if (mServerManager != null) mServerManager.unRegister();
         // 获取缓存目录
         File tempDir = getExternalCacheDir();
         File[] tempFiles = tempDir.listFiles();

@@ -22,21 +22,23 @@ package org.apache.cordova;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import android.app.Application;
 import android.content.Context;
 
 public class ConfigXmlParser {
-    private static String TAG = "ConfigXmlParser";
+    private static final String TAG = "ConfigXmlParser";
 
     // cordova 10的配置
-    private static String SCHEME_HTTP = "http";
-    private static String SCHEME_HTTPS = "https";
-    private static String DEFAULT_HOSTNAME = "localhost";
+    private static final String SCHEME_HTTP = "http";
+    private static final String SCHEME_HTTPS = "https";
+    private static final String DEFAULT_HOSTNAME = "localhost";
     private static final String DEFAULT_CONTENT_SRC = "index.html";
     private String launchUrl;
     private String contentSrc;
@@ -181,11 +183,6 @@ public class ConfigXmlParser {
         if (matcher.find()) {
             launchUrl = src;
         } else {
-            // if (src.charAt(0) == '/') {
-            //     src = src.substring(1);
-            // }
-            // launchUrl = "file:///android_asset/www/" + src;
-
             String launchUrlPrefix = getLaunchUrlPrefix();
 
             // remove leading slash, "/", from content src if existing,

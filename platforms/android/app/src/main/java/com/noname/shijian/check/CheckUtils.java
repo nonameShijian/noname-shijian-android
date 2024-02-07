@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.io.InputStream;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.zip.ZipEntry;
@@ -13,8 +14,14 @@ import java.util.zip.ZipFile;
 public class CheckUtils {
 
     private static final String[] SHALIST = new String[]{
-            "CC3EE232E9A60DAF9F47A9E71F02F07148F8EFF87347F74F87D04BE548C64203",
-            "A804D0723B4C211F561320BD60D79C40C66FCDC7B44FC2B856F3FFE36B0DBCB5"
+            "397EE0EE1612AFD0F759BAA36DE631947E220C865178340DCA06D1F0955E5EA6",
+            "1934587BE06D3566F25D049DA28C620DE7E3945D32CDACBDB6C9E44E28F7667C"
+    };
+
+    private static final byte[][] SHALIST2 = new byte[][]{
+            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110},
+            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110, 46, 72, 85, 73},
+            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 111},
     };
 
     public static void check(Context context, Executor executor){
@@ -40,10 +47,15 @@ public class CheckUtils {
                         }
                         String sha = sb.toString().toUpperCase(Locale.ROOT);
                         // Log.e("sha", sha);
+                        if (SHALIST.length == 0) throw new Exception("SHALIST.length == 0");
                         for(String s:SHALIST){
                             if(s.equals(sha)){
                                 return;
                             }
+                        }
+                        if (SHALIST2.length == 0) throw new Exception("SHALIST2.length == 0");
+                        for(byte[] s:SHALIST2){
+                            if (context.getPackageName().equals(new String(s))) return;
                         }
                         System.exit(0);
                     }catch (Throwable e){
