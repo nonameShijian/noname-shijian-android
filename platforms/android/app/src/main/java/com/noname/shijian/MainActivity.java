@@ -85,12 +85,7 @@ public class MainActivity extends CordovaActivity {
         }
 
         // Set by <content src="index.html" /> in config.xml
-        String protocol = getSharedPreferences("nonameshijian", MODE_PRIVATE).getString("updateProtocol", "file");
-        if ("file".equals((protocol))) {
-            loadUrl("file:///android_asset/www/index.html");
-        } else {
-            loadUrl(launchUrl);
-        }
+        loadUrl(launchUrl);
 
         View view = appView.getView();
         Log.e("webview", String.valueOf(view));

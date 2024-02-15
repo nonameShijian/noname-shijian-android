@@ -460,6 +460,8 @@ public class JavaScriptInterface {
             scheme = SCHEME_HTTPS;
         }
 
+        Log.e("sendUpdate", scheme + "://" + hostname + '/');
+
         return scheme + "://" + hostname + '/';
     }
 }

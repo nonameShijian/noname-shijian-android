@@ -163,7 +163,8 @@ public class CordovaActivity extends Activity {
         parser.parse(this);
         preferences = parser.getPreferences();
         preferences.setPreferencesBundle(getIntent().getExtras());
-        launchUrl = parser.getLaunchUrl();
+        String protocol = getSharedPreferences("nonameshijian", MODE_PRIVATE).getString("updateProtocol", "file");
+        launchUrl = parser.getLaunchUrl(protocol);
         pluginEntries = parser.getPluginEntries();
         Config.parser = parser;
     }
