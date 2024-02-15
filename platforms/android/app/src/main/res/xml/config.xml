@@ -83,6 +83,6 @@
     <feature name="InAppBrowser">
         <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
     </feature>
-    <!--  暂时以file协议运行  -->
+    <!--  以https协议运行  -->
     <preference name="AndroidInsecureFileModeEnabled" value="true" />
 </widget>

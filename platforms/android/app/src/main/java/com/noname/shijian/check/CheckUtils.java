@@ -14,12 +14,12 @@ import java.util.zip.ZipFile;
 public class CheckUtils {
 
     private static final String[] SHALIST = new String[]{
-            "397EE0EE1612AFD0F759BAA36DE631947E220C865178340DCA06D1F0955E5EA6",
-            "1934587BE06D3566F25D049DA28C620DE7E3945D32CDACBDB6C9E44E28F7667C"
+            "A804D0723B4C211F561320BD60D79C40C66FCDC7B44FC2B856F3FFE36B0DBCB5",
+            "cc3ee232e9a60daf9f47a9e71f02f07148f8eff87347f74f87d04be548c64203"
     };
 
     private static final byte[][] SHALIST2 = new byte[][]{
-            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110},
+            // {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110},
             {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110, 46, 72, 85, 73},
             {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 111},
     };

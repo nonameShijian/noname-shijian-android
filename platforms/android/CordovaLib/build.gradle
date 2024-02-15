@@ -65,7 +65,7 @@ android {
 
     // For the Android Cordova Lib, we will hardcode the minSdkVersion and not allow changes.
     defaultConfig {
-        minSdkVersion 22
+        minSdkVersion 24
     }
 
     sourceSets {

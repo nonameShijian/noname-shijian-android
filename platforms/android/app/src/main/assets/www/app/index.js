@@ -659,75 +659,7 @@
 						else {
 							localStorage.setItem('noname_inited', 'nodejs');
 						}
-						setTimeout(function () {
-							let arr = [];
-							function finishCopy() {
-								window.location.reload();
-							}
-							navigator.notification.activityStart('正在检测是否有内置的SJ Settings扩展', '请耐心等待.....');
-							/** 读取app的资源目录(在安卓是file:///android_asset/) */
-							window.resolveLocalFileSystemURL(cordova.file.applicationDirectory,
-								/** @param { DirectoryEntry } entry */
-								entry => {
-									entry.getDirectory('www/SJSettings', { create: false }, appDirEntry => {
-										appDirEntry.getFile('extension.js', { create: false }, fileEntry => {
-											navigator.notification.activityStop();
-											getEntry().then(appEntry => {
-												getEntry(appEntry, 'extension/SJ Settings', true).then(extEntry => {
-													fileEntry.copyTo(extEntry, 'extension.js', () => {
-														arr.push(true);
-														if (arr.length == 3) finishCopy();
-													}, () => {
-														console.error('SJSettings/extension.js复制失败');
-														alert('内置扩展SJ Settings添加失败，请进入游戏后手动安装扩展');
-														finishCopy();
-													});
-												});
-											});
-											appDirEntry.getFile('extension.css', { create: false }, fileEntry => {
-												getEntry().then(appEntry => {
-													getEntry(appEntry, 'extension/SJ Settings', true).then(extEntry => {
-														fileEntry.copyTo(extEntry, 'extension.css', () => {
-															arr.push(true);
-															if (arr.length == 3) finishCopy();
-														}, () => {
-															console.error('SJSettings/extension.css复制失败');
-															alert('内置扩展SJ Settings添加失败，请进入游戏后手动安装扩展');
-															finishCopy();
-														});
-													});
-												});
-											});
-										}, error => {
-											navigator.notification.activityStop();
-											console.error('www/SJSettings/extension.js不存在: ' + error.code);
-											alert('内置扩展SJ Settings添加失败，请进入游戏后手动安装扩展');
-											finishCopy();
-										});
-										entry.getFile('www/game/config.js', { create: false }, fileEntry => {
-											getEntry().then(appEntry => {
-												getEntry(appEntry, 'game', true).then(extEntry => {
-													fileEntry.copyTo(extEntry, 'config.js', () => {
-														arr.push(true);
-														if (arr.length == 3) finishCopy();
-													}, () => {
-														console.error('game/config.js复制失败');
-														alert('内置扩展SJ Settings添加失败，请进入游戏后手动安装扩展');
-														finishCopy();
-													});
-												});
-											});
-										}, error => {
-											navigator.notification.activityStop();
-											console.error('www/game/config.js: ' + error.code);
-										});
-									}, error => {
-										navigator.notification.activityStop();
-										console.error('www/SJSettings文件夹不存在: ' + error.code);
-										// alert('请用其他方式打开zip文件，选择无名杀导入(诗笺版)，注: 万能导入无效');
-									});
-								});
-						}, 1000);
+						window.location.reload();
 					}
 
 					function downloadFile(url, folder, onsuccess, onerror) {

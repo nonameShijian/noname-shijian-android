@@ -15,8 +15,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.noname.shijian.server.ServerManager;
-
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.CompressionLevel;
@@ -24,6 +22,7 @@ import net.lingala.zip4j.model.enums.CompressionMethod;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 import org.apache.cordova.CordovaPreferences;
+import org.apache.cordova.LOG;
 import org.jeremyup.cordova.x5engine.X5WebView;
 
 import java.io.File;
@@ -440,17 +439,27 @@ public class JavaScriptInterface {
     @JavascriptInterface
     @SuppressWarnings("unused")
     public String sendUpdate() {
+        CordovaPreferences prefs = activity.getPreferences();
+        final String SCHEME_HTTP = "http";
+        final String SCHEME_HTTPS = "https";
+        final String DEFAULT_HOSTNAME = "localhost";
+
+        String scheme = prefs.getString("scheme", SCHEME_HTTPS).toLowerCase();
+        String hostname = prefs.getString("hostname", DEFAULT_HOSTNAME).toLowerCase();
+
         context.getSharedPreferences("nonameshijian", MODE_PRIVATE)
                 .edit()
-                .putString("protocol", "http")
+                .putString("updateProtocol", scheme)
                 .apply();
 
-        if (activity.mServerManager == null) {
-            activity.mServerManager = new ServerManager(activity);
-            activity.mServerManager.register();
-            activity.mServerManager.startServer();
+        if (!scheme.contentEquals(SCHEME_HTTP) && !scheme.contentEquals(SCHEME_HTTPS)) {
+            LOG.d("JavaScriptInterface", "The provided scheme \"" + scheme + "\" is not valid. " +
+                    "Defaulting to \"" + SCHEME_HTTPS + "\". " +
+                    "(Valid Options=" + SCHEME_HTTP + "," + SCHEME_HTTPS + ")");
+
+            scheme = SCHEME_HTTPS;
         }
 
-        return "http://localhost:8089/";
+        return scheme + "://" + hostname + '/';
     }
 }

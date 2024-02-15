@@ -33,10 +33,7 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-import androidx.annotation.Nullable;
-
 import com.noname.shijian.check.CheckUtils;
-import com.noname.shijian.server.ServerManager;
 import com.noname.shijian.tbs.X5ProcessInitService;
 import com.tencent.smtt.sdk.QbSdk;
 import com.tencent.smtt.sdk.TbsCommonCode;
@@ -66,9 +63,6 @@ public class MainActivity extends CordovaActivity {
 //        return super.makeWebViewEngine();
 //    }
 
-    public ServerManager mServerManager;
-    private boolean started = false;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         LOG.e("onCreate" ,"111");
@@ -90,21 +84,10 @@ public class MainActivity extends CordovaActivity {
             }
         }
 
-        if (!"file".equals(getSharedPreferences("nonameshijian", MODE_PRIVATE).getString("protocol", "file"))) {
-            // AndServer run in the service.
-            mServerManager = new ServerManager(this);
-            mServerManager.register();
-            mServerManager.startServer();
-        } else {
-            onServerStart(null);
-        }
-    }
-
-    public void onServerStart(@Nullable String ip) {
-        started = true;
         // Set by <content src="index.html" /> in config.xml
-        if (ip != null) {
-            loadUrl("http://localhost:8089/");
+        String protocol = getSharedPreferences("nonameshijian", MODE_PRIVATE).getString("updateProtocol", "file");
+        if ("file".equals((protocol))) {
+            loadUrl("file:///android_asset/www/index.html");
         } else {
             loadUrl(launchUrl);
         }
@@ -136,21 +119,6 @@ public class MainActivity extends CordovaActivity {
         CheckUtils.check(this, Executors.newFixedThreadPool(5));
     }
 
-    /**
-     * Error notify.
-     */
-    public void onServerError(String message) {
-        Log.e("onServerError", message);
-        if (!started) onServerStart(null);
-    }
-
-    /**
-     * Stop notify.
-     */
-    public void onServerStop() {
-        Log.e("onServerStop", "Stop notify");
-    }
-
     @Override
     protected void onNewIntent(Intent intent) {
         LOG.e("onNewIntent" ,"111");
@@ -167,7 +135,6 @@ public class MainActivity extends CordovaActivity {
 
     @Override
     public void onDestroy() {
-        if (mServerManager != null) mServerManager.unRegister();
         // 获取缓存目录
         File tempDir = getExternalCacheDir();
         File[] tempFiles = tempDir.listFiles();

@@ -24,7 +24,6 @@ import androidx.core.content.FileProvider;
 
 import com.alibaba.fastjson.JSON;
 import com.noname.shijian.zip.ZipUtil;
-import com.yanzhenjie.andserver.util.IOUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -246,11 +245,10 @@ public class NonameImportActivity extends Activity {
 			AlertDialog dialog = new AlertDialog.Builder(this)
 					.setIcon(R.mipmap.ic_banner_foreground)
 					.setTitle("请选择是否解压")
-					.setMessage("检测到您是首次安装或是升级了app,是否解压内置资源？否则仅更新SJ Settings扩展")
+					.setMessage("检测到您是首次安装或是升级了app,是否解压内置资源？")
 					.setNegativeButton("取消", (dialogInterface, i) -> {
 						dialogInterface.dismiss();
 						loadAssetExt();
-						ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
 					})
 					.setPositiveButton("确定", (dialog1, which) -> {
 						dialog1.dismiss();
@@ -261,7 +259,6 @@ public class NonameImportActivity extends Activity {
 							ToastUtils.show(NonameImportActivity.this, "正在解压内置资源包");
 						} catch (IOException e) {
 							loadAssetExt();
-							ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
 						}
 					}).create();
 			dialog.show();
@@ -269,11 +266,10 @@ public class NonameImportActivity extends Activity {
 			AlertDialog dialog = new AlertDialog.Builder(this)
 					.setIcon(R.mipmap.ic_banner_foreground)
 					.setTitle("请选择是否解压")
-					.setMessage("是否解压内置资源？否则仅更新SJ Settings扩展")
+					.setMessage("是否解压内置资源？")
 					.setNegativeButton("取消", (dialogInterface, i) -> {
 						dialogInterface.dismiss();
 						loadAssetExt();
-						ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
 					})
 					.setPositiveButton("确定", (dialog1, which) -> {
 						dialog1.dismiss();
@@ -284,7 +280,6 @@ public class NonameImportActivity extends Activity {
 							ToastUtils.show(NonameImportActivity.this, "正在解压内置资源包");
 						} catch (IOException e) {
 							loadAssetExt();
-							ToastUtils.show(NonameImportActivity.this, "正在更新SJ Settings扩展");
 						}
 					}).create();
 			dialog.show();
@@ -518,15 +513,11 @@ public class NonameImportActivity extends Activity {
 	}
 
 	private void loadAssetExt() {
-		String[] strings = new String[] {
-				"extension.js",
-				"extension.css",
-		};
-		for (String s : strings) {
-			File result = Utils.assetToFile("www/SJSettings/" + s,this,"extension/SJ Settings/" + s);
-			if (result == null) {
-				updateText(s + "添加失败");
-			}
+		long oldVersion = getSharedPreferences("nonameshijian", MODE_PRIVATE).getLong("version",10000);
+		if (oldVersion < 16000) {
+			File data = getExternalFilesDir(null).getParentFile();
+			File config = new File(data, "game/config.js");
+			reWriteConfigFile(config);
 		}
 		// 储存版本号
 		getSharedPreferences("nonameshijian", MODE_PRIVATE)
@@ -624,13 +615,13 @@ public class NonameImportActivity extends Activity {
 					String extensionNameFromJs = null;
 					extensionNameFromJs = getExtensionName(cacheJs);
 					updateText("从文件夹名解析扩展名为: " + extensionNameFromDir);
-					updateText("从js文件解析扩展名为: " + extensionNameFromJs);
+					updateText("从js/json文件解析扩展名为: " + extensionNameFromJs);
 					String extensionName;
 					if (extensionNameFromDir.equals(extensionNameFromJs)) {
 						extensionName = extensionNameFromDir;
 					} else {
-						updateText("解析结果不同，以文件夹的解析结果为准");
-						extensionName = extensionNameFromDir;
+						updateText("解析结果不同，以js/json文件的解析结果为准");
+						extensionName = extensionNameFromJs;
 					}
 					updateText("扩展名解析为：" + extensionName);
 					runOnUiThread(() -> {
@@ -719,98 +710,23 @@ public class NonameImportActivity extends Activity {
 		intent.putExtra("extensionImport", extname);
 		FinishImport.ext = extname;
 
-		// 导入完完整包/离线包后，检查是否有内置扩展。如果没有就从apk目录里复制一个过去
-		// 另，储存版本号
+		// 导入完完整包/离线包后，储存版本号
 		if (extname.equals("importPackage")) {
 			getSharedPreferences("nonameshijian", MODE_PRIVATE)
 					.edit()
-					.putLong("version",VERSION)
+					.putLong("version", VERSION)
 					.apply();
+
 			File data = getExternalFilesDir(null).getParentFile();
-			File extJs = new File(data, "extension/SJ Settings/extension.js");
-			if (!extJs.exists()) {
-				updateText("检测到您没有内置扩展，将为你自动添加'SJ Settings'扩展");
-				File dir = extJs.getParentFile();
-				if (!dir.exists()) {
-					dir.mkdirs();
+			File config = new File(data, "game/config.js");
+			if (!config.exists()) {
+				updateText("检测到您没有game/config.js，将为您从内置资源中复制一份");
+				File result = Utils.assetToFile("www/game/config_example.js", this, "game/config.js");
+				if (result == null) {
+					updateText("内置资源game/config_example.js复制失败");
 				}
-				String[] strings = new String[] {
-						"extension.js",
-						"extension.css",
-				};
-				for (String s : strings) {
-					File result =  Utils.assetToFile("www/SJSettings/" + s,this,"extension/SJ Settings/" + s);
-					if (result == null) {
-						updateText(s + "添加失败");
-						return;
-					}
-				}
-				/* File success =  Utils.assetToFile("www/SJ Settings/",this,"extension/SJ Settings/");
-				if (success == null) {
-					updateText("添加失败");
-					return;
-				}*/
-				File file = new File(data, "extension/SJ Settings/extension.js");
-				if (!file.exists()) {
-					updateText("内置扩展添加失败");
-				} else {
-					// 修改game/config.js
-					File config = new File(data, "game/config.js");
-					if (!config.exists()) {
-						updateText("检测到您没有game/config.js，将为您从内置资源中复制一份");
-						File result =  Utils.assetToFile("www/game/config_example.js",this,"game/config.js");
-						if (result == null) {
-							updateText("内置资源game/config.js复制失败");
-						}
-					} else {
-						try {
-							updateText("检测到您有game/config.js，将为您添加内置扩展");
-							Scanner scan = new Scanner(config);
-							while (scan.hasNextLine()) {
-								String line = scan.nextLine().trim();
-								if (line.startsWith("extensions:")) {
-									String extArray = line.substring(11, line.length() - 1).trim();
-									// updateText("extArray: " + extArray);
-									if (extArray.contains("SJ Settings")) break;
-									// 修改文件，写入
-									FileReader in = new FileReader(config);
-									BufferedReader bufIn = new BufferedReader(in);
-									// 内存流, 作为临时流
-									CharArrayWriter tempStream = new CharArrayWriter();
-									// 替换
-									String lines;
-									while ( (lines = bufIn.readLine()) != null) {
-										// 替换每行中, 符合条件的字符串
-										if (lines.trim().startsWith("extensions:")) {
-											if (extArray.equals("[]")) {
-												lines = lines.replace(extArray, "['SJ Settings']");
-											} else {
-												lines = lines.replace(extArray, "['SJ Settings', " + extArray.substring(1));
-											}
-											// updateText("lines: " + lines);
-										}
-										// 将该行写入内存
-										tempStream.write(lines);
-										// 添加换行符
-										tempStream.append(System.getProperty("line.separator"));
-									}
-									// 关闭 输入流
-									bufIn.close();
-									// 将内存中的流 写入 文件
-									FileWriter out = new FileWriter(config);
-									tempStream.writeTo(out);
-									out.close();
-									// 写入文件后退出读取文件的循环
-									break;
-								}
-							}
-							scan.close();
-							updateText("内置扩展添加成功");
-						} catch (Exception e) {
-							updateText("内置扩展添加失败\n" + e.getMessage());
-						}
-					}
-				}
+			} else {
+				reWriteConfigFile(config);
 			}
 		}
 
@@ -840,8 +756,8 @@ public class NonameImportActivity extends Activity {
 				builder.setNegativeButton("取消", (dialog, which) -> {
 					updateText("正在为你启动无名杀。");
 					Timer timer = new Timer();
-					timer.schedule(new TimerTask(){
-						public void run(){
+					timer.schedule(new TimerTask() {
+						public void run() {
 							timer.cancel();
 							startActivity(intent);
 							finish();
@@ -850,6 +766,54 @@ public class NonameImportActivity extends Activity {
 				});
 				builder.create().show();
 			});
+		}
+	}
+
+	private void reWriteConfigFile(File config) {
+		try {
+			updateText("检测到您有game/config.js，将为您添加内置扩展");
+			Scanner scan = new Scanner(config);
+			while (scan.hasNextLine()) {
+				String line = scan.nextLine().trim();
+				if (line.startsWith("extensions:")) {
+					String extArray = line.substring(11, line.length() - 1).trim();
+					if (extArray.contains("Settings")) break;
+					// 修改文件，写入
+					FileReader in = new FileReader(config);
+					BufferedReader bufIn = new BufferedReader(in);
+					// 内存流, 作为临时流
+					CharArrayWriter tempStream = new CharArrayWriter();
+					// 替换
+					String lines;
+					while ((lines = bufIn.readLine()) != null) {
+						// 替换每行中, 符合条件的字符串
+						if (lines.trim().startsWith("extensions:")) {
+							if (extArray.equals("[]")) {
+								lines = lines.replace(extArray, "['Settings']");
+							} else {
+								lines = lines.replace(extArray, "['Settings', " + extArray.substring(1));
+							}
+							// updateText("lines: " + lines);
+						}
+						// 将该行写入内存
+						tempStream.write(lines);
+						// 添加换行符
+						tempStream.append(System.getProperty("line.separator"));
+					}
+					// 关闭 输入流
+					bufIn.close();
+					// 将内存中的流 写入 文件
+					FileWriter out = new FileWriter(config);
+					tempStream.writeTo(out);
+					out.close();
+					// 写入文件后退出读取文件的循环
+					break;
+				}
+			}
+			scan.close();
+			updateText("内置扩展添加成功");
+		} catch (Exception e) {
+			updateText("内置扩展添加失败\n" + e.getMessage());
 		}
 	}
 
@@ -912,7 +876,9 @@ public class NonameImportActivity extends Activity {
 		Log.e("getExtensionName", jsonFile.getAbsolutePath());
 		if (jsonFile.exists() && jsonFile.canRead() && jsonFile.isFile()) {
 			InputStream in = new BufferedInputStream(new FileInputStream(jsonFile));
-			String conf = IOUtils.toString(in, StandardCharsets.UTF_8);
+			Scanner s = new Scanner(in).useDelimiter("\\A");
+			String conf = s.hasNext() ? s.next() : "";
+			// String conf = IOUtils.toString(in, StandardCharsets.UTF_8);
 			String name = JSON.parseObject(conf).getString("name");
 			if (name != null) {
 				Log.e("getExtensionName", name);

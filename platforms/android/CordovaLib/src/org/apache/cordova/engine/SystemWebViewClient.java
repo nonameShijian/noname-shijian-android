@@ -18,7 +18,6 @@
 */
 package org.apache.cordova.engine;
 
-import android.annotation.TargetApi;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -26,11 +25,13 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
-import android.os.Build;
 import android.util.Log;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
 import android.webkit.MimeTypeMap;
+import android.webkit.ServiceWorkerClient;
+import android.webkit.ServiceWorkerController;
+import android.webkit.ServiceWorkerWebSettings;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -52,7 +53,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
@@ -148,6 +148,19 @@ public class SystemWebViewClient extends WebViewClient {
         });
 
         this.assetLoader = assetLoaderBuilder.build();
+
+        ServiceWorkerController swController = ServiceWorkerController.getInstance();
+        swController.setServiceWorkerClient(new ServiceWorkerClient() {
+            private final WebViewAssetLoader assetLoader = assetLoaderBuilder.build();
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
+                // Capture request here and generate response or allow pass-through
+                return assetLoader.shouldInterceptRequest(request.getUrl());
+            }
+        });
+        ServiceWorkerWebSettings serviceWorkerWebSettings = swController.getServiceWorkerWebSettings();
+        serviceWorkerWebSettings.setAllowContentAccess(true);
+        serviceWorkerWebSettings.setAllowFileAccess(true);
     }
 
     /**
@@ -458,7 +471,6 @@ public class SystemWebViewClient extends WebViewClient {
         String url = request.getUrl().toString();
         String method = request.getMethod();
         Map<String, String> headers = request.getRequestHeaders();
-        if (url.contains("worker")) Log.e("Request", method + "  " + url + "  " + headers);
         if (url.startsWith("file://")) {
             if (!url.contains("/app_webview/") && !url.contains("/app_xwalkcore/") && url.endsWith(".js")) {
                 // 是否是模块请求
