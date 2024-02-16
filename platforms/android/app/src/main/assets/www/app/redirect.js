@@ -1,6 +1,6 @@
 'use strict';
 (function() {
-	if (!localStorage.getItem('noname_freeTips')) {
+	if (!location.protocol.startsWith('http') && !localStorage.getItem('noname_freeTips')) {
 		alert("【无名杀】属于个人开发软件且【完全免费】，如非法倒卖用于牟利将承担法律责任 开发团队将追究到底");
 		localStorage.setItem('noname_freeTips', true);
 	}
