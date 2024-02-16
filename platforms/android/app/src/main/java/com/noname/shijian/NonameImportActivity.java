@@ -826,6 +826,18 @@ public class NonameImportActivity extends Activity {
 
 		if (hasError) return;
 
+		File data = getExternalFilesDir(null).getParentFile();
+		File config = new File(data, "game/config.js");
+		if (!config.exists()) {
+			updateText("检测到您没有game/config.js，将为您从内置资源中复制一份");
+			File result = Utils.assetToFile("www/game/config_example.js", this, "game/config.js");
+			if (result == null) {
+				updateText("内置资源game/config_example.js复制失败");
+			}
+		} else {
+			reWriteConfigFile(config);
+		}
+
 		File file = Utils.assetToFile("www/app/app-release.apk",this,"cache/app-release.apk");
 		if (file == null || !isAssetZip) {
 			Log.e("install", "file is null");
@@ -1177,8 +1189,6 @@ public class NonameImportActivity extends Activity {
 		});
 		alertBuilder.create().show();
 	}
-
-
 
 	// 解压文件
 	private void extractAll(String filePath, File cacheDir, String extName) {
