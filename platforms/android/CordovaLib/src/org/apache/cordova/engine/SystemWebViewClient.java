@@ -18,6 +18,7 @@
 */
 package org.apache.cordova.engine;
 
+import android.annotation.SuppressLint;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -42,6 +43,7 @@ import org.apache.cordova.AuthenticationToken;
 import org.apache.cordova.CordovaClientCertRequest;
 import org.apache.cordova.CordovaHttpAuthHandler;
 import org.apache.cordova.CordovaPluginPathHandler;
+import org.apache.cordova.CordovaPreferences;
 import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginManager;
@@ -51,14 +53,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import androidx.webkit.WebViewAssetLoader;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /**
  * This class is the WebViewClient that implements callbacks for our web view.
@@ -83,7 +89,7 @@ public class SystemWebViewClient extends WebViewClient {
 
         WebViewAssetLoader.Builder assetLoaderBuilder = new WebViewAssetLoader.Builder()
                 .setDomain(parentEngine.preferences.getString("hostname", "localhost").toLowerCase())
-                .setHttpAllowed(false);
+                .setHttpAllowed(true);
 
         AssetManager assetManager =  parentEngine.webView.getContext().getAssets();
 
@@ -289,6 +295,7 @@ public class SystemWebViewClient extends WebViewClient {
         if (!isCurrentlyLoading) {
             return;
         }
+        Log.e(TAG, "errorCode = [" + errorCode + "], description = [" + description + "]");
         LOG.d(TAG, "CordovaWebViewClient.onReceivedError: Error code=%s Description=%s URL=%s", errorCode, description, failingUrl);
 
         // If this is a "Protocol Not Supported" error, then revert to the previous
@@ -317,9 +324,10 @@ public class SystemWebViewClient extends WebViewClient {
      * @param handler       An SslErrorHandler object that will handle the user's response.
      * @param error         The SSL error object.
      */
+    @SuppressLint("WebViewClientOnReceivedSslError")
     @Override
     public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-
+        Log.e(TAG, "SslErrorHandler = [" + handler + "], SslError = [" + error + "]");
         final String packageName = parentEngine.cordova.getActivity().getPackageName();
         final PackageManager pm = parentEngine.cordova.getActivity().getPackageManager();
 
@@ -329,7 +337,6 @@ public class SystemWebViewClient extends WebViewClient {
             if ((appInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
                 // debug = true
                 handler.proceed();
-                return;
             } else {
                 // debug = false
                 super.onReceivedSslError(view, handler, error);
@@ -416,7 +423,6 @@ public class SystemWebViewClient extends WebViewClient {
     @Override
     @SuppressWarnings("deprecation")
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-        if (url.contains("worker")) Log.e("Request", url);
         try {
             // Check the against the allow list and lock out access to the WebView directory
             // Changing this will cause problems for your application
@@ -493,6 +499,82 @@ public class SystemWebViewClient extends WebViewClient {
             }
             return shouldInterceptRequest(view, url);
         }
+        Log.e(TAG, "url = [" + url + "], method = [" + method + "]");
+
+        CordovaPreferences prefs = parentEngine.preferences;
+        String scheme = prefs.getString("scheme", "https").toLowerCase();
+        String hostname = prefs.getString("hostname", "localhost").toLowerCase();
+        // 不是以本网址显示的，一律由java请求
+        if (!url.startsWith(scheme + "://" + hostname + '/')) {
+            WebResourceResponse newRequest = request(request);
+            if (newRequest != null) return newRequest;
+        }
         return this.assetLoader.shouldInterceptRequest(request.getUrl());
+    }
+
+    public WebResourceResponse request(WebResourceRequest request) {
+        String url = request.getUrl().toString();
+        String method = request.getMethod();
+        if (!url.startsWith("http")) return null;
+        try {
+            HttpURLConnection httpConnect;
+            HttpsURLConnection httpsConnect;
+            if (url.startsWith("https")) {
+                httpsConnect = (HttpsURLConnection) new URL(url).openConnection();
+                httpsConnect.setReadTimeout(5000);
+                httpsConnect.setConnectTimeout(5000);
+                httpsConnect.setRequestMethod(method);
+                if (request.getRequestHeaders() != null) for (Map.Entry<String, String> item : request.getRequestHeaders().entrySet()) {
+                    //设置header
+                    httpsConnect.setRequestProperty(item.getKey(), item.getValue());
+                }
+                if (httpsConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    InputStream inputStream = httpsConnect.getInputStream();
+                    WebResourceResponse newRequest = new WebResourceResponse(httpsConnect.getContentType(), "utf-8", inputStream);
+                    Map<String, String> headers = newRequest.getResponseHeaders();
+                    if (headers == null) {
+                        headers = new HashMap<>();
+                    }
+                    headers.put("Access-Control-Allow-Origin", "*");
+                    headers.put("Access-Control-Allow-Headers","X-Requested-With");
+                    headers.put("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+                    headers.put("Access-Control-Allow-Credentials", "true");
+                    newRequest.setResponseHeaders(headers);
+                    return newRequest;
+                } else {
+                    httpsConnect.disconnect();
+                }
+            }
+            else {
+                httpConnect = (HttpURLConnection) new URL(url).openConnection();
+                httpConnect.setReadTimeout(5000);
+                httpConnect.setConnectTimeout(5000);
+                httpConnect.setRequestMethod(method);
+                if (request.getRequestHeaders() != null) for (Map.Entry<String, String> item : request.getRequestHeaders().entrySet()) {
+                    //设置header
+                    httpConnect.setRequestProperty(item.getKey(), item.getValue());
+                }
+                if (httpConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    InputStream inputStream = httpConnect.getInputStream();
+                    WebResourceResponse newRequest = new WebResourceResponse(httpConnect.getContentType(), "utf-8", inputStream);
+                    Map<String, String> headers = newRequest.getResponseHeaders();
+                    if (headers == null) {
+                        headers = new HashMap<>();
+                    }
+                    headers.put("Access-Control-Allow-Origin", "*");
+                    headers.put("Access-Control-Allow-Headers","X-Requested-With");
+                    headers.put("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+                    headers.put("Access-Control-Allow-Credentials", "true");
+                    newRequest.setResponseHeaders(headers);
+                    return newRequest;
+                } else {
+                    httpConnect.disconnect();
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "出现异常，路径为：" + url);
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+        }
+        return null;
     }
 }

@@ -92,26 +92,36 @@ public class MainActivity extends CordovaActivity {
         if (view instanceof org.jeremyup.cordova.x5engine.X5WebView) {
             X5WebView webview = (X5WebView) view;
             com.tencent.smtt.sdk.WebSettings settings = webview.getSettings();
-            int textZoom = settings.getTextZoom();
-            Log.e("textZoom", "WebView当前的字体变焦百分比是: " + textZoom + "%");
-            settings.setTextZoom(100);
-            String userAgent = settings.getUserAgentString();
-            settings.setUserAgentString(userAgent + " WebViewFontSize/100% 无名杀诗笺版/" + FinishImport.getAppVersion(MainActivity.this));
-            webview.addJavascriptInterface(new JavaScriptInterface(MainActivity.this, MainActivity.this, webview) , "noname_shijianInterfaces");
-            org.jeremyup.cordova.x5engine.X5WebView.setWebContentsDebuggingEnabled(true);
+            initWebviewSettings(webview, settings);
         }
         else {
             SystemWebView webview = (SystemWebView) view;
             WebSettings settings = webview.getSettings();
-            int textZoom = settings.getTextZoom();
-            Log.e("textZoom", "WebView当前的字体变焦百分比是: " + textZoom + "%");
-            settings.setTextZoom(100);
-            String userAgent = settings.getUserAgentString();
-            settings.setUserAgentString(userAgent + " WebViewFontSize/100% 无名杀诗笺版/" + FinishImport.getAppVersion(MainActivity.this));
-            webview.addJavascriptInterface(new JavaScriptInterface(MainActivity.this, MainActivity.this, webview) , "noname_shijianInterfaces");
-            WebView.setWebContentsDebuggingEnabled(true);
+            initWebviewSettings(webview, settings);
         }
         CheckUtils.check(this, Executors.newFixedThreadPool(5));
+    }
+
+    private void initWebviewSettings(X5WebView webview, com.tencent.smtt.sdk.WebSettings settings) {
+        int textZoom = settings.getTextZoom();
+        Log.e("textZoom", "WebView当前的字体变焦百分比是: " + textZoom + "%");
+        settings.setTextZoom(100);
+        String userAgent = settings.getUserAgentString();
+        settings.setUserAgentString(userAgent + " WebViewFontSize/100% 无名杀诗笺版/" + FinishImport.getAppVersion(MainActivity.this));
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        webview.addJavascriptInterface(new JavaScriptInterface(MainActivity.this, MainActivity.this, webview) , "noname_shijianInterfaces");
+        X5WebView.setWebContentsDebuggingEnabled(true);
+    }
+
+    private void initWebviewSettings(SystemWebView webview, WebSettings settings) {
+        int textZoom = settings.getTextZoom();
+        Log.e("textZoom", "WebView当前的字体变焦百分比是: " + textZoom + "%");
+        settings.setTextZoom(100);
+        String userAgent = settings.getUserAgentString();
+        settings.setUserAgentString(userAgent + " WebViewFontSize/100% 无名杀诗笺版/" + FinishImport.getAppVersion(MainActivity.this));
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        webview.addJavascriptInterface(new JavaScriptInterface(MainActivity.this, MainActivity.this, webview) , "noname_shijianInterfaces");
+        WebView.setWebContentsDebuggingEnabled(true);
     }
 
     @Override

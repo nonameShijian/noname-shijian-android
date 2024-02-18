@@ -319,7 +319,7 @@ public class NonameImportActivity extends Activity {
 						}
 						importPackage();
 						return;
-					} else if (zipFile.getFileHeader("extension.js") != null) {
+					} else if (zipFile.getFileHeader("extension.js") != null || zipFile.getFileHeader("extension.ts") != null) {
 						updateText("压缩包被识别成扩展包");
 						if (!inited()) {
 							updateText("检测到您的文件缺失不能进入游戏，所以暂时不能导入扩展。请先导入离线包/完整包，或者在游戏的初始界面下载文件(注: 当前更新源不稳定，不建议在游戏初始界面下载)");
@@ -342,11 +342,14 @@ public class NonameImportActivity extends Activity {
 						});
 						boolean isExtension = list.stream().anyMatch(fileHeader -> {
 							String fileName = fileHeader.getFileName();
-							return fileName.endsWith("/extension.js") &&
+							return (
+									fileName.endsWith("/extension.js") &&
 									!fileName.endsWith("/boss/extension.js") &&
 									!fileName.endsWith("/cardpile/extension.js") &&
 									!fileName.endsWith("/wuxing/extension.js") &&
-									!fileName.endsWith("/coin/extension.js");
+									!fileName.endsWith("/coin/extension.js")
+									) ||
+									fileName.endsWith("/extension.ts");
 						});
 						// 是文件夹嵌套的主文件包
 						if (isMain) {
@@ -385,7 +388,7 @@ public class NonameImportActivity extends Activity {
 							Object[] paths = list.stream()
 									.filter(fileHeader -> {
 										String fileName = fileHeader.getFileName();
-										return fileName.endsWith("/extension.js");
+										return fileName.endsWith("/extension.js") || fileName.endsWith("/extension.ts");
 									})
 									.map(AbstractFileHeader::getFileName)
 									.toArray();
@@ -399,7 +402,7 @@ public class NonameImportActivity extends Activity {
 									path = p1;
 								}
 							}
-							String rootPath = path.substring(0, path.indexOf("extension.js"));
+							String rootPath = path.substring(0, path.indexOf(path.endsWith("/extension.js") ? "extension.js" : "extension.ts"));
 							// updateText("rootPath: " + rootPath);
 							importExtension(rootPath);
 							return;
@@ -556,10 +559,12 @@ public class NonameImportActivity extends Activity {
 
 	private void importExtension2() throws Exception {
 		File cacheDir = new File(getExternalCacheDir(), Utils.getRandomString(10));
-		zipFile.extractFile("extension.js", cacheDir.getPath());
+		try { zipFile.extractFile("extension.js", cacheDir.getPath()); } catch (ZipException ignored) {}
+		try { zipFile.extractFile("extension.ts", cacheDir.getPath()); } catch (ZipException ignored) {}
 		try { zipFile.extractFile("info.json", cacheDir.getPath()); } catch (ZipException ignored) {}
 		File cacheJs = new File(cacheDir, "extension.js");
 		try {
+			// ts的扩展名还是以info.json解析为准
 			String extensionName = getExtensionName(cacheJs);
 			updateText("扩展名解析为：" + extensionName);
 			runOnUiThread(() -> {
@@ -604,8 +609,9 @@ public class NonameImportActivity extends Activity {
 		String randomString = Utils.getRandomString(10);
 		File cacheDir = new File(getExternalCacheDir(), randomString);
 		// 把extension.js解压到随机字符串的文件夹
-		zipFile.extractFile(rootPath + "extension.js", cacheDir.getPath());
-		try { zipFile.extractFile("info.json", cacheDir.getPath()); } catch (ZipException ignored) {}
+		try { zipFile.extractFile(rootPath + "extension.js", cacheDir.getPath()); } catch (ZipException ignored) {}
+		try { zipFile.extractFile(rootPath + "extension.ts", cacheDir.getPath()); } catch (ZipException ignored) {}
+		try { zipFile.extractFile(rootPath + "info.json", cacheDir.getPath()); } catch (ZipException ignored) {}
 		File cacheJs = new File(cacheDir, rootPath + "extension.js");
 		String [] split = rootPath.split("/");
 		new Thread() {
@@ -613,14 +619,15 @@ public class NonameImportActivity extends Activity {
 				try {
 					String extensionNameFromDir = split[split.length - 1];
 					String extensionNameFromJs = null;
+					// ts的扩展名还是以info.json解析为准
 					extensionNameFromJs = getExtensionName(cacheJs);
 					updateText("从文件夹名解析扩展名为: " + extensionNameFromDir);
-					updateText("从js/json文件解析扩展名为: " + extensionNameFromJs);
+					updateText("从js/ts/json文件解析扩展名为: " + extensionNameFromJs);
 					String extensionName;
 					if (extensionNameFromDir.equals(extensionNameFromJs)) {
 						extensionName = extensionNameFromDir;
 					} else {
-						updateText("解析结果不同，以js/json文件的解析结果为准");
+						updateText("解析结果不同，以js/ts/json文件的解析结果为准");
 						extensionName = extensionNameFromJs;
 					}
 					updateText("扩展名解析为：" + extensionName);
@@ -899,6 +906,9 @@ public class NonameImportActivity extends Activity {
 			}
 		}
 		// old
+		if (!file.exists() && "extension.js".equals(file.getName())) {
+			file = new File(file.getParentFile(), "extension.ts");
+		}
 		Scanner scanner = new Scanner(file);
 		boolean appear = false;
 		String s = "name:\"";
