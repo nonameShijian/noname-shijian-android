@@ -443,7 +443,7 @@ public class SystemWebViewClient extends WebViewClient {
             }
             // If we don't need to special-case the request, let the browser load it.
             // return null;
-            return this.assetLoader.shouldInterceptRequest(Uri.parse(url));
+            return null;
         } catch (IOException e) {
             if (!(e instanceof FileNotFoundException)) {
                 LOG.e(TAG, "Error occurred while loading a file (returning a 404).", e);
@@ -490,8 +490,20 @@ public class SystemWebViewClient extends WebViewClient {
                     try {
                         URL Url = new URL(url);
                         URLConnection connection = Url.openConnection();
+                        String mimeType = connection.getContentType();
+                        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+                        if (extension != null) {
+                            if (url.endsWith(".js") || url.endsWith(".mjs")) {
+                                // Make sure JS files get the proper mimetype to support ES modules
+                                mimeType = "application/javascript";
+                            } else if (url.endsWith(".wasm")) {
+                                mimeType = "application/wasm";
+                            } else {
+                                mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                            }
+                        }
                         InputStream data = Url.openStream();
-                        return new WebResourceResponse(connection.getContentType(), "utf-8", data);
+                        return new WebResourceResponse(mimeType, "utf-8", data);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -530,7 +542,19 @@ public class SystemWebViewClient extends WebViewClient {
                 }
                 if (httpsConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     InputStream inputStream = httpsConnect.getInputStream();
-                    WebResourceResponse newRequest = new WebResourceResponse(httpsConnect.getContentType(), "utf-8", inputStream);
+                    String mimeType = httpsConnect.getContentType();
+                    String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+                    if (extension != null) {
+                        if (url.endsWith(".js") || url.endsWith(".mjs")) {
+                            // Make sure JS files get the proper mimetype to support ES modules
+                            mimeType = "application/javascript";
+                        } else if (url.endsWith(".wasm")) {
+                            mimeType = "application/wasm";
+                        } else {
+                            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                        }
+                    }
+                    WebResourceResponse newRequest = new WebResourceResponse(mimeType, "utf-8", inputStream);
                     Map<String, String> headers = newRequest.getResponseHeaders();
                     if (headers == null) {
                         headers = new HashMap<>();
@@ -556,7 +580,19 @@ public class SystemWebViewClient extends WebViewClient {
                 }
                 if (httpConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     InputStream inputStream = httpConnect.getInputStream();
-                    WebResourceResponse newRequest = new WebResourceResponse(httpConnect.getContentType(), "utf-8", inputStream);
+                    String mimeType = httpConnect.getContentType();
+                    String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+                    if (extension != null) {
+                        if (url.endsWith(".js") || url.endsWith(".mjs")) {
+                            // Make sure JS files get the proper mimetype to support ES modules
+                            mimeType = "application/javascript";
+                        } else if (url.endsWith(".wasm")) {
+                            mimeType = "application/wasm";
+                        } else {
+                            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                        }
+                    }
+                    WebResourceResponse newRequest = new WebResourceResponse(mimeType, "utf-8", inputStream);
                     Map<String, String> headers = newRequest.getResponseHeaders();
                     if (headers == null) {
                         headers = new HashMap<>();
