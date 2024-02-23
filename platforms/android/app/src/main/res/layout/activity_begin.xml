@@ -20,13 +20,21 @@
                 android:textSize="28sp"
                 android:text="无名杀Android(诗笺版)"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:shadowColor="#ff000000"
+                android:shadowRadius="10"
+                android:shadowDx="5"
+                android:shadowDy="5"/>
 
             <TextView
                 android:id="@+id/messages"
                 android:textSize="24sp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:shadowColor="#ff000000"
+                android:shadowRadius="10"
+                android:shadowDx="5"
+                android:shadowDy="5"/>
         </LinearLayout>
 
     </ScrollView>

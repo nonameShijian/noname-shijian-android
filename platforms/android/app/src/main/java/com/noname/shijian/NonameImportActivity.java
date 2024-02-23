@@ -5,9 +5,12 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.app.WallpaperManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,6 +24,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
+import androidx.palette.graphics.Palette;
 
 import com.alibaba.fastjson.JSON;
 import com.noname.shijian.zip.ZipUtil;
@@ -100,6 +104,9 @@ public class NonameImportActivity extends Activity {
 
 	/** 是否取得权限 */
 	// private boolean hasPermissions = true;
+
+	/** 标题文字 */
+	private TextView titleTextView;
 
 	/** 展示文字 */
 	private TextView messageTextView;
@@ -185,7 +192,34 @@ public class NonameImportActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_begin);
+		titleTextView = findViewById(R.id.title);
 		messageTextView = findViewById(R.id.messages);
+
+		WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
+		BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable(); // 默认获取系统壁纸
+		Bitmap bitMap = bitmapDrawable.getBitmap();  // 获取系统壁纸的Bitmap
+		// Palette palette = new Palette.Builder(bitMap).generate(); // 同步
+		Palette.from(bitMap).maximumColorCount(10).generate(new Palette.PaletteAsyncListener() {
+			@Override
+			public void onGenerated(Palette palette) {
+				Palette.Swatch s = palette.getDominantSwatch();      //独特的一种
+				Palette.Swatch s1 = palette.getVibrantSwatch();      //获取到充满活力的这种色调
+				Palette.Swatch s2 = palette.getDarkVibrantSwatch();  //获取充满活力的黑
+				Palette.Swatch s3 = palette.getLightVibrantSwatch(); //获取充满活力的亮
+				Palette.Swatch s4 = palette.getMutedSwatch();        //获取柔和的色调
+				Palette.Swatch s5 = palette.getDarkMutedSwatch();    //获取柔和的黑
+				Palette.Swatch s6 = palette.getLightMutedSwatch();   //获取柔和的亮
+				if (s6 != null) {
+					titleTextView.setTextColor(s6.getRgb());
+					messageTextView.setTextColor(s6.getRgb());
+				}
+				if (s5 != null) {
+					titleTextView.setShadowLayer(10, 5, 5, s5.getRgb());
+					messageTextView.setShadowLayer(10, 5, 5, s5.getRgb());
+				}
+			}
+		});
+
 		// updateText("Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 		ToastUtils.show(NonameImportActivity.this, "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 		if(Build.VERSION.SDK_INT < 30) {
