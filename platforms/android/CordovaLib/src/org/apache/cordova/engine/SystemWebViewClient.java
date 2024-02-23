@@ -120,7 +120,7 @@ public class SystemWebViewClient extends WebViewClient {
                 // 原路径所在的文件夹的所有文件、文件夹
                 List<String> list = Arrays.asList(assetManager.list(String.join("/", newSplit)));
                 // LOG.e(TAG, String.valueOf(list));
-                if (!path.startsWith("game/") && list.contains(split[split.length - 1])) {
+                if (list.contains(split[split.length - 1])) {
                     is = assetManager.open("www/" + path, AssetManager.ACCESS_STREAMING);
                 } else {
                     File file = new File(
