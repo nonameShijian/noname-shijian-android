@@ -104,18 +104,18 @@ public class JavaScriptInterface {
     @SuppressWarnings("unused")
     public boolean shareFile(@NonNull String documentPath) {
         String rootPath = context.getExternalCacheDir().getParentFile().getAbsolutePath();
-        Log.e("shareImage", rootPath);
-        Log.e("shareImage", documentPath);
+        Log.e("shareFile", rootPath);
+        Log.e("shareFile", documentPath);
         if (!documentPath.startsWith(rootPath)) {
             documentPath = rootPath + "/" + documentPath;
         }
-        Log.e("shareImage", documentPath);
+        Log.e("shareFile", documentPath);
         File shareFile =  new File(documentPath);
         if (!shareFile.exists()) {
-            Log.e("shareDocument", "文件不存在: " + documentPath);
+            Log.e("shareFile", "文件不存在: " + documentPath);
             return false;
         } else if (shareFile.isDirectory()) {
-            Log.e("shareDocument", "不能分享文件夹: " + documentPath);
+            Log.e("shareFile", "不能分享文件夹: " + documentPath);
             return false;
         }
         Intent intent = new Intent(Intent.ACTION_SEND);

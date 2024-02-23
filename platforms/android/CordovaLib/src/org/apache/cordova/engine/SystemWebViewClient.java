@@ -19,6 +19,7 @@
 package org.apache.cordova.engine;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -91,8 +92,11 @@ public class SystemWebViewClient extends WebViewClient {
                 .setDomain(parentEngine.preferences.getString("hostname", "localhost").toLowerCase())
                 .setHttpAllowed(true);
 
-        AssetManager assetManager =  parentEngine.webView.getContext().getAssets();
+        final Context context = parentEngine.webView.getContext();
+        AssetManager assetManager =  context.getAssets();
 
+        assetLoaderBuilder.addPathHandler("/android_asset/", new WebViewAssetLoader.AssetsPathHandler(context));
+        assetLoaderBuilder.addPathHandler("/android_res/", new WebViewAssetLoader.ResourcesPathHandler(context));
         assetLoaderBuilder.addPathHandler("/", path -> {
             try {
                 // Check if there a plugins with pathHandlers
@@ -124,7 +128,7 @@ public class SystemWebViewClient extends WebViewClient {
                     is = assetManager.open("www/" + path, AssetManager.ACCESS_STREAMING);
                 } else {
                     File file = new File(
-                            parentEngine.webView.getContext().getExternalFilesDir(null).getParentFile(),
+                            context.getExternalFilesDir(null).getParentFile(),
                             path
                     );
                     // LOG.e(TAG, file.getAbsolutePath());
@@ -153,11 +157,12 @@ public class SystemWebViewClient extends WebViewClient {
             return null;
         });
 
-        this.assetLoader = assetLoaderBuilder.build();
+        final WebViewAssetLoader assetLoader = assetLoaderBuilder.build();
+
+        this.assetLoader = assetLoader;
 
         ServiceWorkerController swController = ServiceWorkerController.getInstance();
         swController.setServiceWorkerClient(new ServiceWorkerClient() {
-            private final WebViewAssetLoader assetLoader = assetLoaderBuilder.build();
             @Override
             public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
                 // Capture request here and generate response or allow pass-through

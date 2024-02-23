@@ -105,6 +105,45 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                 });
             };
 
+            // 导出配置
+            window.noname_shijianInterfaces.exportConfigData = () => {
+                return new Promise((resolve, reject) => {
+                    let data;
+                    const export_data = function (data) {
+                        window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function (entry) {
+                            entry.getFile('noname.config.txt', { create: true }, function (fileEntry) {
+                                fileEntry.createWriter(function (fileWriter) {
+                                    fileWriter.onwriteend = function () {
+                                        resolve();
+                                    }
+                                    fileWriter.write(lib.init.encode(JSON.stringify(data)));
+                                    fileWriter.onerror = reject;
+                                }, reject);
+                            }, reject);
+                        }, reject);
+                    };
+                    if (!lib.db) {
+                        data = {};
+                        for (let i in localStorage) {
+                            if (i.startsWith(lib.configprefix)) {
+                                data[i] = localStorage[i];
+                            }
+                        }
+                        export_data(data);
+                    }
+                    else {
+                        game.getDB('config', null, function (data1) {
+                            game.getDB('data', null, function (data2) {
+                                export_data({
+                                    config: data1,
+                                    data: data2
+                                });
+                            }, reject);
+                        }, reject);
+                    }
+                });
+            };
+
             window.noname_shijianInterfaces.openAssetFile = (name, type) => {
                 /** 读取app的资源目录(在安卓是file:///android_asset/) */
                 window.resolveLocalFileSystemURL(cordova.file.applicationDirectory,
@@ -1028,6 +1067,18 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
                         window.noname_shijianInterfaces.shareExtensionWithPassWordAsync(extName, pwd);
                     }
                 }
+            },
+            shareConfig: {
+                name: '<button>分享游戏设置</button>',
+                intro: '分享游戏设置',
+                clear: true,
+                onclick() {
+                    window.noname_shijianInterfaces.exportConfigData()
+                        .then(() => {
+                            window.noname_shijianInterfaces.shareFile('files/noname.config.txt');
+                        })
+                        .catch(e => alert('分享游戏设置失败: ' + JSON.stringify(e)));
+                }
             }
         },
         package: {
@@ -1035,7 +1086,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             author: "诗笺",
             diskURL: "",
             forumURL: "",
-            version: "1.6",
+            version: "1.6.2",
         }
     };
 });
