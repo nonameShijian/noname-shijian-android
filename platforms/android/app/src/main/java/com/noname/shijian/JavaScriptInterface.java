@@ -23,7 +23,6 @@ import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 import org.apache.cordova.CordovaPreferences;
 import org.apache.cordova.LOG;
-import org.jeremyup.cordova.x5engine.X5WebView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,21 +37,11 @@ public class JavaScriptInterface {
     private final Context context;
     private final MainActivity activity;
     private final WebView webview;
-    private final X5WebView x5webView;
 
     public JavaScriptInterface(Context context, MainActivity activity, WebView webview) {
         this.context = context;
         this.activity = activity;
         this.webview = webview;
-        this.x5webView = null;
-        Log.e("new-JavaScriptInterface", String.valueOf(webview));
-    }
-
-    public JavaScriptInterface(Context context, MainActivity activity, X5WebView webview) {
-        this.context = context;
-        this.activity = activity;
-        this.webview = null;
-        this.x5webView = webview;
         Log.e("new-JavaScriptInterface", String.valueOf(webview));
     }
 
@@ -191,8 +180,6 @@ public class JavaScriptInterface {
             Log.e("shareExtension", String.valueOf(e));
             if (webview != null) {
                 webview.post(() -> webview.loadUrl("javascript:alert('" + e + "')"));
-            } else if (x5webView != null) {
-                x5webView.post(() -> x5webView.loadUrl("javascript:alert('" + e + "')"));
             }
             return false;
         }
@@ -264,8 +251,6 @@ public class JavaScriptInterface {
             Log.e("shareExtension", String.valueOf(e));
             if (webview != null) {
                 webview.post(() -> webview.loadUrl("javascript:alert('" + e + "')"));
-            } else if (x5webView != null) {
-                x5webView.post(() -> x5webView.loadUrl("javascript:alert('" + e + "')"));
             }
             return false;
         }
@@ -300,8 +285,6 @@ public class JavaScriptInterface {
 
         if (webview != null) {
             webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
-        } else if (x5webView != null) {
-            x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
         }
         Log.e("shareExtension", "shareFile.getPath(): " + shareFile.getPath());
         new Thread(() -> {
@@ -323,8 +306,6 @@ public class JavaScriptInterface {
                 zipFile.close();
                 if (webview != null) {
                     webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();"));
-                } else if (x5webView != null) {
-                    x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStop();"));
                 }
                 Intent share = new Intent(Intent.ACTION_SEND);
                 share.putExtra(
@@ -340,8 +321,6 @@ public class JavaScriptInterface {
             } catch (Exception e) {
                 if (webview != null) {
                     webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
-                } else if (x5webView != null) {
-                    x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
                 }
                 Log.e("shareExtension", String.valueOf(e));
             }
@@ -376,8 +355,6 @@ public class JavaScriptInterface {
         if (shareFile.exists()) shareFile.delete();
         if (webview != null) {
             webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
-        } else if (x5webView != null) {
-            x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStart('正在压缩扩展', '请稍候...');"));
         }
         Log.e("shareExtension", "shareFile.getPath(): " + shareFile.getPath());
         new Thread(() -> {
@@ -403,8 +380,6 @@ public class JavaScriptInterface {
                 zipFile.close();
                 if (webview != null) {
                     webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();"));
-                } else if (x5webView != null) {
-                    x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStop();"));
                 }
                 Intent share = new Intent(Intent.ACTION_SEND);
                 share.putExtra(
@@ -420,8 +395,6 @@ public class JavaScriptInterface {
             } catch (Exception e) {
                 if (webview != null) {
                     webview.post(() -> webview.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
-                } else if (x5webView != null) {
-                    x5webView.post(() -> x5webView.loadUrl("javascript:navigator.notification.activityStop();alert('" + e + "')"));
                 }
                 Log.e("shareExtension", String.valueOf(e));
             }

@@ -365,7 +365,6 @@ dependencies {
     //implementation "org.mozilla.geckoview:geckoview-arm64-v8a:112.0.20230424110519"
     //implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.tencent.tbs:tbssdk:44286'
     implementation files('src/main/libs/zip4j-2.9.0.jar', 'src/main/libs/hutool-core-5.8.5.jar')
     implementation fileTree(dir: 'libs', include: '*.jar')
 

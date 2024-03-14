@@ -323,7 +323,7 @@ public class NonameImportActivity extends Activity {
 					}).create();
 			dialog.show();
 		} else {
-			Intent intent = new Intent(this, MainActivity.class);
+			Intent intent = new Intent(this, WebviewUpdate.class);
 			startActivity(intent);
 			this.finish();
 		}
