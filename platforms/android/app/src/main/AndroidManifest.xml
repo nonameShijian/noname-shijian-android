@@ -46,19 +46,6 @@
         tools:ignore="HardcodedDebugMode"
         tools:targetApi="q">
         <activity
-            android:name=".WebviewUpdate"
-            android:label="@string/activity_name"
-            android:screenOrientation="sensorLandscape"
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
-            android:windowSoftInputMode="adjustResize"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".NonameImportActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
@@ -86,9 +73,9 @@
             android:windowSoftInputMode="adjustResize"
             android:exported="true">
             <intent-filter android:label="@string/launcher_name">
-                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
