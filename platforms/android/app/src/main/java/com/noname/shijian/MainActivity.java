@@ -66,6 +66,7 @@ public class MainActivity extends CordovaActivity {
     private void ActivityOnCreate() {
         if (WebViewUpgradeProgressDialog != null) {
             WebViewUpgradeProgressDialog.hide();
+            WebViewUpgradeProgressDialog.dismiss();
             WebViewUpgradeProgressDialog = null;
         }
 
@@ -84,6 +85,7 @@ public class MainActivity extends CordovaActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         LOG.e("onCreate", "111");
+        LOG.e("onCreate", String.valueOf(savedInstanceState));
         super.onCreate(savedInstanceState);
 
         // enable Cordova apps to be started in the background
@@ -120,32 +122,31 @@ public class MainActivity extends CordovaActivity {
                 WebViewUpgradeProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                 WebViewUpgradeProgressDialog.setMax(100);
                 WebViewUpgradeProgressDialog.setProgress(0);
+                if (WebViewUpgradeProgressDialog.isShowing()) WebViewUpgradeProgressDialog.hide();
             }
 
             WebViewUpgrade.addUpgradeCallback(new UpgradeCallback() {
                 @Override
                 public void onUpgradeProcess(float percent) {
-                    WebViewUpgradeProgressDialog.setProgress((int) percent);
+                    if (percent <= 0.9 && !WebViewUpgradeProgressDialog.isShowing()) {
+                        WebViewUpgradeProgressDialog.show();
+                    }
+                    WebViewUpgradeProgressDialog.setProgress((int) (percent * 100));
                 }
 
                 @Override
                 public void onUpgradeComplete() {
                     Log.e(TAG, "onUpgradeComplete");
                     WebViewUpgradeProgressDialog.setProgress(100);
-                    if (WebViewUpgradeProgressDialog.isShowing()) WebViewUpgradeProgressDialog.hide();
                     ActivityOnCreate();
                 }
 
                 @Override
                 public void onUpgradeError(Throwable throwable) {
                     Log.e(TAG, "onUpgradeError: " + throwable.getMessage());
-                    WebViewUpgradeProgressDialog.setProgress(0);
-                    if (WebViewUpgradeProgressDialog.isShowing()) WebViewUpgradeProgressDialog.hide();
                     ActivityOnCreate();
                 }
             });
-
-            if (!WebViewUpgradeProgressDialog.isShowing()) WebViewUpgradeProgressDialog.show();
 
             // 添加webview
             // com.google.android.webview_119.0.6045.194
@@ -211,6 +212,7 @@ public class MainActivity extends CordovaActivity {
 
         if (WebViewUpgradeProgressDialog != null) {
             WebViewUpgradeProgressDialog.hide();
+            WebViewUpgradeProgressDialog.dismiss();
             WebViewUpgradeProgressDialog = null;
         }
 
@@ -273,7 +275,7 @@ public class MainActivity extends CordovaActivity {
                     while ((readLength = fis.read(buffer))!=-1){
                         if (count > 0) {
                             int avail_bytes = fis.available();
-                            float percentage = (count - avail_bytes) / (float) count * 100;
+                            float percentage = (count - avail_bytes) / (float) count;
                             for (Callback callback : callbackList) {
                                 callback.onProcess(percentage);
                             }
@@ -283,7 +285,7 @@ public class MainActivity extends CordovaActivity {
                     fos.close();
                     fis.close();
                     for (Callback callback : callbackList) {
-                        callback.onProcess(100);
+                        callback.onProcess(1);
                         callback.onComplete(this.path);
                     }
                     Log.e(TAG, "onComplete");
