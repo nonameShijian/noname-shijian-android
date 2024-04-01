@@ -24,6 +24,8 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,13 +33,16 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import com.noname.shijian.check.CheckUtils;
 import com.norman.webviewup.lib.UpgradeCallback;
-import com.norman.webviewup.lib.UpgradeOptions;
 import com.norman.webviewup.lib.WebViewUpgrade;
-import com.norman.webviewup.lib.download.DownloadAction;
+import com.norman.webviewup.lib.source.UpgradeAssetSource;
+import com.norman.webviewup.lib.source.UpgradePackageSource;
+import com.norman.webviewup.lib.source.UpgradeSource;
 import com.norman.webviewup.lib.util.ProcessUtils;
+import com.norman.webviewup.lib.util.VersionUtils;
 
 import org.apache.cordova.*;
 import org.apache.cordova.engine.SystemWebView;
@@ -47,8 +52,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Executors;
 
 
@@ -148,29 +151,48 @@ public class MainActivity extends CordovaActivity {
                 }
             });
 
-            // 添加webview
-            // com.google.android.webview_119.0.6045.194
-            WebViewUpgrade.upgrade(new UpgradeOptions
-                    .Builder(getApplicationContext(),
-                    "com.google.android.webview",
-                    "asset:com.google.android.webview_119.0.6045.194.apk",
-                    "119.0.6045.194",
-                    (url, path) -> new DownloadActionImpl(url, path, this,
-                            "com.google.android.webview",
-                            "119.0.6045.194"
-                    ))
-                    .build());
+            try {
+                // 添加webview
+                UpgradeSource upgradeSource = null;
 
-//            WebViewUpgrade.upgrade(new UpgradeOptions
-//                    .Builder(getApplicationContext(),
-//                    "com.android.chrome",
-//                    "asset:com.android.chrome_122.0.6261.43.apk",
-//                    "122.0.6261.43",
-//                    (url, path) -> new DownloadActionImpl(url, path, this,
-//                            "com.android.chrome",
-//                            "122.0.6261.43"
-//                    ))
-//                    .build());
+                UpgradeAssetSource webviewUpgradeSource = new UpgradeAssetSource(
+                        getApplicationContext(),
+                        "com.google.android.webview_119.0.6045.194.apk",
+                        new File(getApplicationContext().getFilesDir(), "com.google.android.webview/119.0.6045.194.apk")
+                );
+
+                UpgradePackageSource chromeUpgradeSource = new UpgradePackageSource(
+                        getApplicationContext(),
+                        "com.android.chrome"
+                );
+
+                if (false) {
+                    upgradeSource = webviewUpgradeSource;
+                } else {
+                    upgradeSource = chromeUpgradeSource;
+                }
+
+                PackageInfo upgradePackageInfo = getPackageManager().getPackageInfo(chromeUpgradeSource.getPackageName(), 0);
+                if (upgradePackageInfo != null) {
+                    String SystemWebViewPackageName = WebViewUpgrade.getSystemWebViewPackageName();
+                    // google webview应当等同于chrome
+                    if (upgradeSource == chromeUpgradeSource && "com.google.android.webview".equals(SystemWebViewPackageName) && "com.android.chrome".equals(chromeUpgradeSource.getPackageName())) {
+                        SystemWebViewPackageName = "com.android.chrome";
+                    }
+                    if (SystemWebViewPackageName.equals(chromeUpgradeSource.getPackageName())
+                            && VersionUtils.compareVersion( WebViewUpgrade.getSystemWebViewPackageVersion(), upgradePackageInfo.versionName) >= 0) {
+                        Toast.makeText(getApplicationContext(), "系统Webview版本较新，无需升级", Toast.LENGTH_LONG).show();
+                        ActivityOnCreate();
+                        return;
+                    }
+                    WebViewUpgrade.upgrade(upgradeSource);
+                } else {
+                    ActivityOnCreate();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, String.valueOf(e));
+                ActivityOnCreate();
+            }
         }
     }
 
@@ -236,113 +258,5 @@ public class MainActivity extends CordovaActivity {
             }
         }
         super.onActivityResult(requestCode, resultCode, intent);
-    }
-
-    private static class DownloadActionImpl implements DownloadAction {
-        private final String url;
-        private final String path;
-        private boolean finish = false;
-        private final Thread thread;
-        private final List<Callback> callbackList = new ArrayList<>();
-        private final Context context;
-        private final String packageName;
-        private final String version;
-        public DownloadActionImpl(String url, String path, Context context,
-                                  String packageName, String version) {
-            if (url.startsWith("asset:")) {
-                this.url  = url.substring("asset:".length());
-            } else {
-                this.url  = url;
-            }
-            this.context = context;
-            this.path = path;
-            this.packageName = packageName;
-            this.version = version;
-            thread = new Thread(() -> {
-                try {
-                    Log.e(TAG, "开始线程");
-                    InputStream fis = context.getAssets().open(this.url);
-                    int count = fis.available();
-                    File ret = new File(this.path);
-                    if(ret.exists()) {
-                        ret.delete();
-                    } else {
-                        ret.getParentFile().mkdirs();
-                    }
-                    FileOutputStream fos = new FileOutputStream(ret);
-                    byte[] buffer = new byte[4096];
-                    int readLength;
-                    while ((readLength = fis.read(buffer))!=-1){
-                        if (count > 0) {
-                            int avail_bytes = fis.available();
-                            float percentage = (count - avail_bytes) / (float) count;
-                            for (Callback callback : callbackList) {
-                                callback.onProcess(percentage);
-                            }
-                        }
-                        fos.write(buffer,0,readLength);
-                    }
-                    fos.close();
-                    fis.close();
-                    for (Callback callback : callbackList) {
-                        callback.onProcess(1);
-                        callback.onComplete(this.path);
-                    }
-                    Log.e(TAG, "onComplete");
-                } catch (Exception e) {
-                    for (Callback callback : callbackList) {
-                        callback.onFail(e);
-                    }
-                    Log.e(TAG, "Exception:" + e.getMessage());
-                } finally {
-                    finish = true;
-                }
-            });
-        }
-
-        @Override
-        public String getUrl() {
-            return url;
-        }
-
-        @Override
-        public void start() {
-            thread.start();
-        }
-
-        @Override
-        public void stop() {
-            // thread.stop();
-        }
-
-        @Override
-        public void delete() {
-            File ret = new File(this.path);
-            if (ret.exists())  ret.delete();
-        }
-
-        @Override
-        public boolean isCompleted() {
-            File dir = new File(context.getFilesDir(), "WebViewUpgrade/" + packageName + "/" + version);
-            if (dir.exists() && dir.isDirectory()) return true;
-            return finish;
-        }
-
-        @Override
-        public boolean isProcessing() {
-            return !this.isCompleted();
-        }
-
-        @Override
-        public void addCallback(Callback callback) {
-            if (callbackList.contains(callback)) return;
-            callbackList.add(callback);
-        }
-
-        @Override
-        public void removeCallback(Callback callback) {
-            if (!callbackList.contains(callback)) return;
-            callbackList.remove(callback);
-        }
     }
 }

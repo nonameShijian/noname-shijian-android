@@ -541,8 +541,10 @@ public class SystemWebViewClient extends WebViewClient {
                 httpsConnect.setReadTimeout(5000);
                 httpsConnect.setConnectTimeout(5000);
                 httpsConnect.setRequestMethod(method);
+                httpsConnect.setUseCaches(false);
                 if (request.getRequestHeaders() != null) for (Map.Entry<String, String> item : request.getRequestHeaders().entrySet()) {
                     //设置header
+                    Log.e(TAG, "request添加header: " + item.getKey() + " : " + item.getValue());
                     httpsConnect.setRequestProperty(item.getKey(), item.getValue());
                 }
                 if (httpsConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
@@ -560,15 +562,42 @@ public class SystemWebViewClient extends WebViewClient {
                         }
                     }
                     WebResourceResponse newRequest = new WebResourceResponse(mimeType, "utf-8", inputStream);
-                    Map<String, String> headers = newRequest.getResponseHeaders();
-                    if (headers == null) {
-                        headers = new HashMap<>();
+                    Log.e(TAG, "newRequest返回StatusCode: " + newRequest.getStatusCode());
+                    Log.e(TAG, "newRequest返回header: " + newRequest.getResponseHeaders());
+                    Map<String, List<String>> allHeaders = httpsConnect.getHeaderFields();
+                    Map<String, String> singleValueHeaders = new HashMap<>();
+                    for (Map.Entry<String, List<String>> entry : allHeaders.entrySet()) {
+                        String headerName = entry.getKey();
+                        StringBuilder headerValueBuilder = new StringBuilder();
+
+                        if (!entry.getValue().isEmpty()) {
+                            Log.e(TAG, "httpsConnect返回header: " + entry.getKey() + " : " + entry.getValue());
+                            boolean isCookieHeader = "Cookie".equalsIgnoreCase(headerName);
+
+                            for (String value : entry.getValue()) {
+                                if (isCookieHeader) {
+                                    // 对于Cookie特殊处理，用分号和空格隔开各个cookie值
+                                    if (headerValueBuilder.length() > 0) {
+                                        headerValueBuilder.append("; ");
+                                    }
+                                    headerValueBuilder.append(value);
+                                } else {
+                                    // 其他头字段直接用逗号分隔
+                                    if (headerValueBuilder.length() > 0) {
+                                        headerValueBuilder.append(",");
+                                    }
+                                    headerValueBuilder.append(value);
+                                }
+                            }
+
+                            singleValueHeaders.put(headerName, headerValueBuilder.toString());
+                        }
                     }
-                    headers.put("Access-Control-Allow-Origin", "*");
-                    headers.put("Access-Control-Allow-Headers","X-Requested-With");
-                    headers.put("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
-                    headers.put("Access-Control-Allow-Credentials", "true");
-                    newRequest.setResponseHeaders(headers);
+                    singleValueHeaders.put("Access-Control-Allow-Origin", "*");
+                    singleValueHeaders.put("Access-Control-Allow-Headers","X-Requested-With");
+                    singleValueHeaders.put("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+                    singleValueHeaders.put("Access-Control-Allow-Credentials", "true");
+                    newRequest.setResponseHeaders(singleValueHeaders);
                     return newRequest;
                 } else {
                     httpsConnect.disconnect();
@@ -579,8 +608,10 @@ public class SystemWebViewClient extends WebViewClient {
                 httpConnect.setReadTimeout(5000);
                 httpConnect.setConnectTimeout(5000);
                 httpConnect.setRequestMethod(method);
+                httpConnect.setUseCaches(false);
                 if (request.getRequestHeaders() != null) for (Map.Entry<String, String> item : request.getRequestHeaders().entrySet()) {
                     //设置header
+                    Log.e(TAG, "request添加header: " + item.getKey() + " : " + item.getValue());
                     httpConnect.setRequestProperty(item.getKey(), item.getValue());
                 }
                 if (httpConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
@@ -598,15 +629,40 @@ public class SystemWebViewClient extends WebViewClient {
                         }
                     }
                     WebResourceResponse newRequest = new WebResourceResponse(mimeType, "utf-8", inputStream);
-                    Map<String, String> headers = newRequest.getResponseHeaders();
-                    if (headers == null) {
-                        headers = new HashMap<>();
+                    Map<String, List<String>> allHeaders = httpConnect.getHeaderFields();
+                    Map<String, String> singleValueHeaders = new HashMap<>();
+                    for (Map.Entry<String, List<String>> entry : allHeaders.entrySet()) {
+                        String headerName = entry.getKey();
+                        StringBuilder headerValueBuilder = new StringBuilder();
+
+                        if (!entry.getValue().isEmpty()) {
+                            Log.e(TAG, "httpsConnect返回header: " + entry.getKey() + " : " + entry.getValue());
+                            boolean isCookieHeader = "Cookie".equalsIgnoreCase(headerName);
+
+                            for (String value : entry.getValue()) {
+                                if (isCookieHeader) {
+                                    // 对于Cookie特殊处理，用分号和空格隔开各个cookie值
+                                    if (headerValueBuilder.length() > 0) {
+                                        headerValueBuilder.append("; ");
+                                    }
+                                    headerValueBuilder.append(value);
+                                } else {
+                                    // 其他头字段直接用逗号分隔
+                                    if (headerValueBuilder.length() > 0) {
+                                        headerValueBuilder.append(",");
+                                    }
+                                    headerValueBuilder.append(value);
+                                }
+                            }
+
+                            singleValueHeaders.put(headerName, headerValueBuilder.toString());
+                        }
                     }
-                    headers.put("Access-Control-Allow-Origin", "*");
-                    headers.put("Access-Control-Allow-Headers","X-Requested-With");
-                    headers.put("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
-                    headers.put("Access-Control-Allow-Credentials", "true");
-                    newRequest.setResponseHeaders(headers);
+                    singleValueHeaders.put("Access-Control-Allow-Origin", "*");
+                    singleValueHeaders.put("Access-Control-Allow-Headers","X-Requested-With");
+                    singleValueHeaders.put("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+                    singleValueHeaders.put("Access-Control-Allow-Credentials", "true");
+                    newRequest.setResponseHeaders(singleValueHeaders);
                     return newRequest;
                 } else {
                     httpConnect.disconnect();

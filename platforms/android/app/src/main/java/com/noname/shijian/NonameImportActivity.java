@@ -278,7 +278,8 @@ public class NonameImportActivity extends Activity {
 		updateText("APK版本: " + VERSION);
 		if (getIntent() != null && getIntent().getAction() != null && getIntent().getAction().equals(Intent.ACTION_VIEW)) {
 			loadUri(getIntent().getData());
-		} else if (getSharedPreferences("nonameshijian", MODE_PRIVATE).getLong("version",10000) < VERSION) {
+		}
+		else if (getSharedPreferences("nonameshijian", MODE_PRIVATE).getLong("version",10000) < VERSION) {
 			updateText("检测到您是首次安装或是升级了app，将自动为您解压内置资源");
 			fixCharSet = "utf-8";
 			AlertDialog dialog = new AlertDialog.Builder(this)
@@ -301,7 +302,8 @@ public class NonameImportActivity extends Activity {
 						}
 					}).create();
 			dialog.show();
-		} else if (getIntent() != null && getIntent().getExtras() != null && "true".equals(getIntent().getExtras().getString("unzip"))) {
+		}
+		else if (getIntent() != null && getIntent().getExtras() != null && "true".equals(getIntent().getExtras().getString("unzip"))) {
 			AlertDialog dialog = new AlertDialog.Builder(this)
 					.setIcon(R.mipmap.ic_banner_foreground)
 					.setTitle("请选择是否解压")
@@ -322,7 +324,8 @@ public class NonameImportActivity extends Activity {
 						}
 					}).create();
 			dialog.show();
-		} else {
+		}
+		else {
 			Intent intent = new Intent(this, MainActivity.class);
 			startActivity(intent);
 			this.finish();

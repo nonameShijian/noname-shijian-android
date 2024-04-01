@@ -1,3 +1,5 @@
+本项目中使用[WebViewUpgrade](https://github.com/JonaNorman/WebViewUpgrade)项目的代码升级Webview内核
+
 最近有一伙人号称是《无名杀十周年》的开发团队，宣称《无名杀十周年》“全新无名杀，比旧版拥有更多武将，兼容更多扩展”，实际上: 
 
 - 《无名杀十周年》（原《无名杀清瑶版》）由无名杀v1.9.124修改而来，属于无名杀（libccy/noname）的一种**Fork**，并非“全新无名杀”；且《无名杀十周年》开发团队**公然违反GPL-3.0协议**，详情请看[这里](https://github.com/github/dmca/blob/master/2023/09/2023-09-20-noname.md)、[这里](https://tieba.baidu.com/p/8623890806)以及[这里](https://tieba.baidu.com/p/8624582238)。

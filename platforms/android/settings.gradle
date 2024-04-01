@@ -2,3 +2,4 @@
 include ":"
 include ":CordovaLib"
 include ":app"
+include ":core"
