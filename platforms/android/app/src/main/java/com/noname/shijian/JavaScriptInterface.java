@@ -86,7 +86,7 @@ public class JavaScriptInterface {
     @JavascriptInterface
     @SuppressWarnings("unused")
     public void showToast(@NonNull String message) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+        activity.runOnUiThread(() -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show());
     }
 
     @JavascriptInterface

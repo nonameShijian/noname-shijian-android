@@ -57,12 +57,19 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.DateFormat;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TimeZone;
+
 import androidx.webkit.WebViewAssetLoader;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -124,6 +131,7 @@ public class SystemWebViewClient extends WebViewClient {
                 // 原路径所在的文件夹的所有文件、文件夹
                 List<String> list = Arrays.asList(assetManager.list(String.join("/", newSplit)));
                 // LOG.e(TAG, String.valueOf(list));
+                Long lastModified = null;
                 if (list.contains(split[split.length - 1])) {
                     is = assetManager.open("www/" + path, AssetManager.ACCESS_STREAMING);
                 } else {
@@ -132,6 +140,7 @@ public class SystemWebViewClient extends WebViewClient {
                             path
                     );
                     // LOG.e(TAG, file.getAbsolutePath());
+                    lastModified = file.lastModified();
                     is = new FileInputStream(file);
                 }
                 // LOG.e(TAG, "-----------------------");
@@ -149,9 +158,21 @@ public class SystemWebViewClient extends WebViewClient {
                     }
                 }
 
-                return new WebResourceResponse(mimeType, null, is);
+                WebResourceResponse response = new WebResourceResponse(mimeType, null, is);
+                if (lastModified != null) {
+                    Locale aLocale = Locale.US;
+                    @SuppressLint("SimpleDateFormat")
+                    DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", new DateFormatSymbols(aLocale));
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("last-modified", fmt.format(new Date(lastModified)));
+                    if (response.getResponseHeaders() != null) {
+                        headers.putAll(response.getResponseHeaders());
+                    }
+                    response.setResponseHeaders(headers);
+                }
+                return response;
             } catch (Exception e) {
-                e.printStackTrace();
+                // e.printStackTrace();
                 LOG.e(TAG, e.getMessage());
             }
             return null;

@@ -382,7 +382,8 @@ dependencies {
     implementation 'com.alibaba:fastjson:1.1.55.android'
     // Palette
     implementation 'androidx.palette:palette:1.0.0'
-    implementation project(":core")
+    // webviewup
+    implementation 'io.github.jonanorman.android.webviewup:core:0.1.0'
     // SUB-PROJECT DEPENDENCIES END
 }
 

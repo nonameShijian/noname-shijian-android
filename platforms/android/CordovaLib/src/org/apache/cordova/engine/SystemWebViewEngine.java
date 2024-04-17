@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
@@ -169,7 +170,6 @@ public class SystemWebViewEngine implements CordovaWebViewEngine {
         String databasePath = webView.getContext().getApplicationContext().getDir("database", Context.MODE_PRIVATE).getPath();
         settings.setDatabaseEnabled(true);
         settings.setDatabasePath(databasePath);
-
 
         //Determine whether we're in debug or release mode, and turn on Debugging!
         ApplicationInfo appInfo = webView.getContext().getApplicationContext().getApplicationInfo();

@@ -297,7 +297,7 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
     "cordova-plugin-whitelist": "1.3.4",
     "cordova-plugin-dialogs": "2.0.2",
     "cordova-plugin-websocket": "0.12.2",
-    "cordova-plugin-android-permissions": "1.1.3",
+    "cordova-plugin-android-permissions": "1.1.5",
     "cordova-plugin-file-opener2": "3.0.5",
     "cordova-plugin-inappbrowser": "5.0.0",
     "cordova-plugin-insomnia": "4.3.0"

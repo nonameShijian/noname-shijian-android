@@ -112,6 +112,8 @@ public class MainActivity extends CordovaActivity {
         int indexOfArm64 = Arrays.binarySearch(supportBitAbis,"arm64-v8a");
         int indexOfArmeabi = Arrays.binarySearch(supportBitAbis,"armeabi-v7a");
 
+        Log.e(TAG, Arrays.toString(supportBitAbis));
+
         if (inited || (indexOfArm64 < 0 && indexOfArmeabi < 0)) {
             ActivityOnCreate();
         } else {
@@ -153,28 +155,36 @@ public class MainActivity extends CordovaActivity {
 
             try {
                 // 添加webview
-                UpgradeSource upgradeSource = null;
+                UpgradeSource upgradeSource;
 
+                // 兼容版需要内置webview
                 UpgradeAssetSource webviewUpgradeSource = new UpgradeAssetSource(
                         getApplicationContext(),
                         "com.google.android.webview_119.0.6045.194.apk",
                         new File(getApplicationContext().getFilesDir(), "com.google.android.webview/119.0.6045.194.apk")
                 );
 
+                // 其他的使用chrome就行
                 UpgradePackageSource chromeUpgradeSource = new UpgradePackageSource(
                         getApplicationContext(),
                         "com.android.chrome"
                 );
 
-                if (false) {
+                if ("yuri.nakamura.noname".equals(getPackageName())) {
                     upgradeSource = webviewUpgradeSource;
                 } else {
                     upgradeSource = chromeUpgradeSource;
                 }
 
+                String SystemWebViewPackageName = WebViewUpgrade.getSystemWebViewPackageName();
+                // 如果webview就是chrome
+                if ("com.android.chrome".equals(SystemWebViewPackageName)) {
+                    ActivityOnCreate();
+                    return;
+                }
+
                 PackageInfo upgradePackageInfo = getPackageManager().getPackageInfo(chromeUpgradeSource.getPackageName(), 0);
                 if (upgradePackageInfo != null) {
-                    String SystemWebViewPackageName = WebViewUpgrade.getSystemWebViewPackageName();
                     // google webview应当等同于chrome
                     if (upgradeSource == chromeUpgradeSource && "com.google.android.webview".equals(SystemWebViewPackageName) && "com.android.chrome".equals(chromeUpgradeSource.getPackageName())) {
                         SystemWebViewPackageName = "com.android.chrome";
@@ -240,6 +250,22 @@ public class MainActivity extends CordovaActivity {
 
         super.onDestroy();
     }
+
+    @Override
+    public void onBackPressed() {
+        if (appView != null) {
+            SystemWebView webview = (SystemWebView) appView.getView();
+            if (webview != null && webview.canGoBack()) {
+                webview.goBack();
+            }
+            else {
+                super.onBackPressed();
+            }
+        } else {
+            super.onBackPressed();
+        }
+    }
+
 
     @SuppressLint("LongLogTag")
     @Override

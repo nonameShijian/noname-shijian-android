@@ -29,7 +29,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.MessagingStyle.Message;
-//import android.support.v4.media.app.NotificationCompat.MediaStyle;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import java.util.List;
@@ -39,8 +38,6 @@ import de.appplant.cordova.plugin.notification.action.Action;
 
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
-import de.appplant.cordova.plugin.notification.Notification;
-// import static de.appplant.cordova.plugin.notification.Notification.EXTRA_UPDATE;
 
 /**
  * Builder class for local notifications. Build fully configured local

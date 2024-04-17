@@ -382,19 +382,18 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             }
 
             document.addEventListener('deviceready', () => {
-                // @ts-ignore
-                const permissions = cordova.plugins.permissions;
-                // 请求写入权限, 不然可能不能读写扩展
-                const WRITE_EXTERNAL_STORAGE = permissions['WRITE_EXTERNAL_STORAGE'];
-                permissions.checkPermission(WRITE_EXTERNAL_STORAGE, (status) => {
-                    if (!status.hasPermission) {
-                        permissions.requestPermission(WRITE_EXTERNAL_STORAGE, emptyFun, emptyFun);
-                    }
-                }, emptyFun);
+//                const permissions = cordova.plugins.permissions;
+//                // 请求写入权限, 不然可能不能读写扩展
+//                const WRITE_EXTERNAL_STORAGE = permissions['WRITE_EXTERNAL_STORAGE'];
+//                permissions.checkPermission(WRITE_EXTERNAL_STORAGE, (status) => {
+//                    if (!status.hasPermission) {
+//                        permissions.requestPermission(WRITE_EXTERNAL_STORAGE, emptyFun, emptyFun);
+//                    }
+//                }, emptyFun);
 
                 const getImportExtension = function () {
                     cordova.exec(async result => {
-                        console.log("result: " + JSON.stringify(result))
+                        // console.log("result: " + JSON.stringify(result))
                         if (result && result.type == 'extension') {
                             const name = result.message;
                             lib.config.extensions.add(name);
@@ -447,12 +446,10 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
             if (!window.noname_shijianInterfaces.environment && !_status.openTools && game.getExtensionConfig('Settings', 'openTools')) {
                 _status.openTools = true;
-                // @ts-ignore
                 eruda.init();
             }
 
             // 拦截重置游戏，并添加功能去除安卓版本号储存，让内置资源再次解压
-            // @ts-ignore
             lib.configMenu.others.config.reset_game.onclick = function () {
                 var node = this;
                 if (node._clearing) {
@@ -1086,7 +1083,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
             author: "诗笺",
             diskURL: "",
             forumURL: "",
-            version: "1.6.2",
+            version: "1.6.3",
         }
     };
 });

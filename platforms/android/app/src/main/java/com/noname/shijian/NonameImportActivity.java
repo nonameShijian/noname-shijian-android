@@ -23,6 +23,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.palette.graphics.Palette;
 
@@ -39,11 +40,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,8 +56,6 @@ import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.AbstractFileHeader;
 import net.lingala.zip4j.model.FileHeader;
-import net.lingala.zip4j.progress.ProgressMonitor;
-import net.sf.sevenzipjbinding.SevenZip;
 
 import cn.hutool.core.util.CharsetUtil;
 
@@ -172,13 +169,13 @@ public class NonameImportActivity extends Activity {
 	/** app文件夹内是否有游戏主文件 */
 	public boolean inited() {
 		File appPath = getExternalFilesDir(null).getParentFile();
-		File[] files = new File[] {
+		File[] files = new File[]{
 				new File(appPath, "game/update.js"),
 				new File(appPath, "game/config.js"),
 				new File(appPath, "game/package.js"),
 				new File(appPath, "game/game.js"),
 		};
-		for (File file: files) {
+		for (File file : files) {
 			if (!file.exists()) {
 				return false;
 			}
@@ -198,11 +195,13 @@ public class NonameImportActivity extends Activity {
 		try {
 			WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
 			if (wallpaperManager.isWallpaperSupported()) {
-				BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable(); // 默认获取系统壁纸
-				Bitmap bitMap = bitmapDrawable.getBitmap();  // 获取系统壁纸的Bitmap
-				Palette.from(bitMap).maximumColorCount(10).generate(new Palette.PaletteAsyncListener() {
-					@Override
-					public void onGenerated(Palette palette) {
+				if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED ||
+						ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED) {
+					// 默认获取系统壁纸
+					BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable();
+					// 获取系统壁纸的Bitmap
+					Bitmap bitMap = bitmapDrawable.getBitmap();
+					Palette.from(bitMap).maximumColorCount(10).generate(palette -> {
 						Palette.Swatch s = palette.getDominantSwatch();      // 独特的一种
 						Palette.Swatch s1 = palette.getVibrantSwatch();      // 获取到充满活力的这种色调
 						Palette.Swatch s2 = palette.getDarkVibrantSwatch();  // 获取充满活力的黑
@@ -218,34 +217,46 @@ public class NonameImportActivity extends Activity {
 							titleTextView.setShadowLayer(10, 5, 5, s5.getRgb());
 							messageTextView.setShadowLayer(10, 5, 5, s5.getRgb());
 						}
-					}
-				});
+					});
+				}
 			}
 		} catch (Exception e) {
 			updateText("获取壁纸主色调失败:" + e.getMessage());
 		}
 
-		// updateText("Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 		ToastUtils.show(NonameImportActivity.this, "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
-		if(Build.VERSION.SDK_INT < 30) {
-			// 要申请的权限列表
-			ArrayList<String> permissions = new ArrayList<>();
 
-			// 读取文件权限
-			if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-				permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+		// 要申请的权限列表
+		ArrayList<String> permissions = new ArrayList<>();
+		String [] requestPermissions;
+		if (Build.VERSION.SDK_INT < 33) {
+			requestPermissions = new String[] {
+					// 读取文件权限
+					Manifest.permission.READ_EXTERNAL_STORAGE,
+					// 写入文件权限
+					Manifest.permission.WRITE_EXTERNAL_STORAGE
+			};
+		}
+		else {
+			requestPermissions = new String[] {
+					// 读取图片权限
+					Manifest.permission.READ_MEDIA_IMAGES,
+					// 读取视频权限
+					Manifest.permission.READ_MEDIA_VIDEO,
+					// 读取音频权限
+					Manifest.permission.READ_MEDIA_AUDIO
+			};
+		}
+		Log.e("permissions", Arrays.toString(requestPermissions));
+		for (String permission: requestPermissions) {
+			if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(permission)) {
+				permissions.add(permission);
 			}
+		}
+		Log.e("permissions", permissions.toString());
 
-			// 写入文件权限
-			if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-				permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-			}
-
-			if (permissions.size() > 0) {
-				requestPermissions(permissions.toArray(new String[permissions.size()]), 999);
-			} else {
-				afterHasPermissions();
-			}
+		if (permissions.size() > 0) {
+			requestPermissions(permissions.toArray(new String[permissions.size()]), 999);
 		} else {
 			afterHasPermissions();
 		}
