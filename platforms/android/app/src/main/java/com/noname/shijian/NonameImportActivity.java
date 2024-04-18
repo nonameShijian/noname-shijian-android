@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -256,7 +257,18 @@ public class NonameImportActivity extends Activity {
 		Log.e("permissions", permissions.toString());
 
 		if (permissions.size() > 0) {
-			requestPermissions(permissions.toArray(new String[permissions.size()]), 999);
+			StringBuilder permissionBuilder = new StringBuilder();
+			for(String s:permissions){
+				permissionBuilder.append(s);
+				permissionBuilder.append(' ');
+			}
+			updateText("正在申请权限"+permissionBuilder);
+			(new Handler(Looper.getMainLooper())).postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					requestPermissions(permissions.toArray(new String[permissions.size()]), 999);
+				}
+			},100);
 		} else {
 			afterHasPermissions();
 		}
@@ -271,14 +283,27 @@ public class NonameImportActivity extends Activity {
 				if (ret != PackageManager.PERMISSION_GRANTED) {
 					AlertDialog.Builder builder = new AlertDialog.Builder(this);
 					builder.setCancelable(false);
-					builder.setTitle("未授予权限，将退出程序");
+					StringBuilder text = new StringBuilder("未授予权限，将退出程序。");
+					text.append("如果您没有弹出窗口询问权限，可能是被系统的安全策略禁止，请在应用设置中手动开启权限。");
+					if(Build.VERSION.SDK_INT >= 33){
+						text.append("注意：Android 14用户需要为无名杀开启“读取公共存储空间的照片和视频文件”权限，如果看不到这个权限，可点击应用权限设置界面的“查看所有权限”。");
+					}
+					TextView textView = new TextView(this);
+					textView.setText(text);
+					textView.setTextSize(25);
+					textView.setTextColor(Color.WHITE);
+					builder.setView(textView);
+					//builder.setTitle(text);
+					updateText(text.toString());
 					builder.setNegativeButton("知道了", (dialog, which) -> {
 						updateText("未授予权限，将退出程序");
 						finish();
 					});
+					builder.create().show();
 					return;
 				}
 			}
+			updateText("权限已经授予");
 			afterHasPermissions();
 		}
 	}
