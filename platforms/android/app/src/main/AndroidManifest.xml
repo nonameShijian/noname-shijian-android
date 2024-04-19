@@ -31,6 +31,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <!--  安卓13将READ_EXTERNAL_STORAGE细分为IMAGES、VIDEO、AUDIO权限  -->
+    <!--  但是不请求这三个权限也不影响webview的文件选择  -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />

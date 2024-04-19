@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -20,6 +21,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -193,42 +195,117 @@ public class NonameImportActivity extends Activity {
 		titleTextView = findViewById(R.id.title);
 		messageTextView = findViewById(R.id.messages);
 
-		try {
-			WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
-			if (wallpaperManager.isWallpaperSupported()) {
-				if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED ||
-						ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED) {
-					// 默认获取系统壁纸
-					BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable();
-					// 获取系统壁纸的Bitmap
-					Bitmap bitMap = bitmapDrawable.getBitmap();
-					Palette.from(bitMap).maximumColorCount(10).generate(palette -> {
-						Palette.Swatch s = palette.getDominantSwatch();      // 独特的一种
-						Palette.Swatch s1 = palette.getVibrantSwatch();      // 获取到充满活力的这种色调
-						Palette.Swatch s2 = palette.getDarkVibrantSwatch();  // 获取充满活力的黑
-						Palette.Swatch s3 = palette.getLightVibrantSwatch(); // 获取充满活力的亮
-						Palette.Swatch s4 = palette.getMutedSwatch();        // 获取柔和的色调
-						Palette.Swatch s5 = palette.getDarkMutedSwatch();    // 获取柔和的黑
-						Palette.Swatch s6 = palette.getLightMutedSwatch();   // 获取柔和的亮
-						if (s6 != null) {
-							titleTextView.setTextColor(s6.getRgb());
-							messageTextView.setTextColor(s6.getRgb());
-						}
-						if (s5 != null) {
-							titleTextView.setShadowLayer(10, 5, 5, s5.getRgb());
-							messageTextView.setShadowLayer(10, 5, 5, s5.getRgb());
-						}
-					});
-				}
-			}
-		} catch (Exception e) {
-			updateText("获取壁纸主色调失败:" + e.getMessage());
-		}
-
 		ToastUtils.show(NonameImportActivity.this, "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 
 		// 要申请的权限列表
 		ArrayList<String> permissions = new ArrayList<>();
+		String [] requestPermissions = getRequestPermissions();
+		Log.e("permissions", Arrays.toString(requestPermissions));
+		for (String permission: requestPermissions) {
+			if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(permission)) {
+				permissions.add(permission);
+			}
+		}
+		Log.e("permissions", permissions.toString());
+
+		if (!permissions.isEmpty()) {
+			StringBuilder permissionBuilder = new StringBuilder();
+			for(String s:permissions){
+				permissionBuilder.append(s);
+				permissionBuilder.append(' ');
+			}
+			updateText("正在申请权限"+permissionBuilder);
+			(new Handler(Looper.getMainLooper())).postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					requestPermissions(permissions.toArray(new String[permissions.size()]), 999);
+				}
+			},100);
+		} else {
+			afterHasPermissions();
+		}
+	}
+
+	private void setTextColor() {
+		getWindow().getDecorView().post(() -> {
+			try {
+				Bitmap bitMap;
+				WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
+				if (wallpaperManager.isWallpaperSupported() &&
+						Build.VERSION.SDK_INT < 33 &&
+						ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+					// 默认获取系统壁纸
+					BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable();
+					// 获取系统壁纸的Bitmap
+					bitMap = bitmapDrawable.getBitmap();
+				}
+				else {
+					View view = getWindow().getDecorView();
+					// 截屏获取view
+					bitMap = getViewBitmap(view);
+				}
+				Palette.from(bitMap).maximumColorCount(10).generate(palette -> {
+					Palette.Swatch s = palette.getDominantSwatch();      // 独特的一种
+					Palette.Swatch s1 = palette.getVibrantSwatch();      // 获取到充满活力的这种色调
+					Palette.Swatch s2 = palette.getDarkVibrantSwatch();  // 获取充满活力的黑
+					Palette.Swatch s3 = palette.getLightVibrantSwatch(); // 获取充满活力的亮
+					Palette.Swatch s4 = palette.getMutedSwatch();        // 获取柔和的色调
+					Palette.Swatch s5 = palette.getDarkMutedSwatch();    // 获取柔和的黑
+					Palette.Swatch s6 = palette.getLightMutedSwatch();   // 获取柔和的亮
+					Log.e("Palette", "s1为: " + (s1 != null ? Integer.toHexString(s1.getRgb()) : "null"));
+					Log.e("Palette", "s2为: " + (s2 != null ? Integer.toHexString(s2.getRgb()) : "null"));
+					Log.e("Palette", "s3为: " + (s3 != null ? Integer.toHexString(s3.getRgb()) : "null"));
+					Log.e("Palette", "s4为: " + (s4 != null ? Integer.toHexString(s4.getRgb()) : "null"));
+					Log.e("Palette", "s5为: " + (s5 != null ? Integer.toHexString(s5.getRgb()) : "null"));
+					Log.e("Palette", "s6为: " + (s6 != null ? Integer.toHexString(s6.getRgb()) : "null"));
+					if (s6 != null) {
+						titleTextView.setTextColor(s6.getRgb());
+						messageTextView.setTextColor(s6.getRgb());
+						Log.e("Palette", "已将字体颜色替换为: " + s6.getRgb());
+					}
+					if (s5 != null) {
+						titleTextView.setShadowLayer(10, 5, 5, s5.getRgb());
+						messageTextView.setShadowLayer(10, 5, 5, s5.getRgb());
+					}
+				});
+			} catch (Exception e) {
+				updateText("获取壁纸主色调失败:" + e.getMessage());
+				e.printStackTrace();
+			}
+		});
+	}
+
+	private Bitmap getViewBitmap(View view) {
+		// 获取View的宽度和高度
+		int width = view.getWidth();
+		int height = view.getHeight();
+
+		// 如果View还没有测量尺寸，则需要先强制测量
+		if (width == 0 || height == 0) {
+			// 测量子View的宽高
+			view.measure(
+					View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+					View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+			// 获取测量后的尺寸
+			width = view.getMeasuredWidth();
+			height = view.getMeasuredHeight();
+		}
+
+		// 创建一个与View尺寸匹配的Bitmap
+		Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+		// 创建一个Canvas，并将Bitmap绑定到Canvas上
+		Canvas canvas = new Canvas(bitmap);
+
+		// 将View的内容绘制到Canvas上
+		view.draw(canvas);
+
+		// 返回生成的Bitmap
+		return bitmap;
+	}
+
+	@NonNull
+	private String[] getRequestPermissions() {
 		String [] requestPermissions;
 		if (Build.VERSION.SDK_INT < 33) {
 			requestPermissions = new String[] {
@@ -248,30 +325,7 @@ public class NonameImportActivity extends Activity {
 					Manifest.permission.READ_MEDIA_AUDIO
 			};
 		}
-		Log.e("permissions", Arrays.toString(requestPermissions));
-		for (String permission: requestPermissions) {
-			if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(permission)) {
-				permissions.add(permission);
-			}
-		}
-		Log.e("permissions", permissions.toString());
-
-		if (permissions.size() > 0) {
-			StringBuilder permissionBuilder = new StringBuilder();
-			for(String s:permissions){
-				permissionBuilder.append(s);
-				permissionBuilder.append(' ');
-			}
-			updateText("正在申请权限"+permissionBuilder);
-			(new Handler(Looper.getMainLooper())).postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					requestPermissions(permissions.toArray(new String[permissions.size()]), 999);
-				}
-			},100);
-		} else {
-			afterHasPermissions();
-		}
+		return requestPermissions;
 	}
 
 	@Override
@@ -279,37 +333,57 @@ public class NonameImportActivity extends Activity {
 	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		if (requestCode == 999) {
-			for (int ret : grantResults) {
+			boolean hasDenied = false;
+			StringBuilder text = new StringBuilder("您未授予");
+			for (int index = 0; index < grantResults.length; index++) {
+				int ret = grantResults[index];
+				Log.e("onRequestPermissionsResult", permissions[index]);
+				Log.e("onRequestPermissionsResult", String.valueOf(index));
+				Log.e("onRequestPermissionsResult", "______________");
 				if (ret != PackageManager.PERMISSION_GRANTED) {
-					AlertDialog.Builder builder = new AlertDialog.Builder(this);
-					builder.setCancelable(false);
-					StringBuilder text = new StringBuilder("未授予权限，将退出程序。");
-					text.append("如果您没有弹出窗口询问权限，可能是被系统的安全策略禁止，请在应用设置中手动开启权限。");
-					if(Build.VERSION.SDK_INT >= 33){
-						text.append("注意：Android 14用户需要为无名杀开启“读取公共存储空间的照片和视频文件”权限，如果看不到这个权限，可点击应用权限设置界面的“查看所有权限”。");
+					if (Build.VERSION.SDK_INT > 29) {
+						if (permissions[index].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+								permissions[index].equals(Manifest.permission.READ_EXTERNAL_STORAGE)) continue;
 					}
-					TextView textView = new TextView(this);
-					textView.setText(text);
-					textView.setTextSize(25);
-					textView.setTextColor(Color.WHITE);
-					builder.setView(textView);
-					//builder.setTitle(text);
-					updateText(text.toString());
-					builder.setNegativeButton("知道了", (dialog, which) -> {
-						updateText("未授予权限，将退出程序");
-						finish();
-					});
-					builder.create().show();
-					return;
+					text.append(permissions[index]).append(",");;
+					hasDenied = true;
 				}
 			}
-			updateText("权限已经授予");
-			afterHasPermissions();
+			if (hasDenied &&
+					!getSharedPreferences("nonameshijian", MODE_PRIVATE)
+							.getBoolean("showFirstPermissionsDialog", false)) {
+				text.append("权限。\n");
+				text.append("如果您的设备小于安卓11，将因为无法正常使用读写功能而退出本页面。\n");
+				text.append("如果您没有弹出窗口询问权限，可能是被系统的安全策略禁止，请在应用设置中手动开启权限。");
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setCancelable(false);
+				TextView textView = new TextView(this);
+				textView.setText(text);
+				textView.setTextSize(25);
+				textView.setTextColor(Color.WHITE);
+				builder.setView(textView);
+				ToastUtils.show(this, text.toString());
+				builder.setNegativeButton("知道了", (dialog, which) -> {
+					if (Build.VERSION.SDK_INT < 30) {
+						finish();
+					}
+					else afterHasPermissions();
+				});
+				builder.create().show();
+				getSharedPreferences("nonameshijian", MODE_PRIVATE)
+						.edit()
+						.putBoolean("showFirstPermissionsDialog", true)
+						.apply();
+			}
+			else {
+				afterHasPermissions();
+			}
 		}
 	}
 
 	/** 成功申请后 */
 	private void afterHasPermissions() {
+		setTextColor();
 		FinishImport.getAppVersion(this);
 		updateText("APK版本: " + VERSION);
 		if (getIntent() != null && getIntent().getAction() != null && getIntent().getAction().equals(Intent.ACTION_VIEW)) {

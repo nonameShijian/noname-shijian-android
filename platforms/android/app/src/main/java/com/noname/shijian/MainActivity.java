@@ -19,21 +19,30 @@
 
 package com.noname.shijian;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.noname.shijian.check.CheckUtils;
 import com.norman.webviewup.lib.UpgradeCallback;
@@ -105,6 +114,108 @@ public class MainActivity extends CordovaActivity {
             }
         }
 
+        // 要申请的权限列表
+        ArrayList<String> permissions = new ArrayList<>();
+        String[] requestPermissions = getRequestPermissions();
+        Log.e("permissions", Arrays.toString(requestPermissions));
+        for (String permission: requestPermissions) {
+            if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(permission)) {
+                permissions.add(permission);
+            }
+        }
+        Log.e("permissions", permissions.toString());
+
+        if (!permissions.isEmpty()) {
+            StringBuilder permissionBuilder = new StringBuilder();
+            for(String s:permissions){
+                permissionBuilder.append(s);
+                permissionBuilder.append(' ');
+            }
+            (new Handler(Looper.getMainLooper())).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    requestPermissions(permissions.toArray(new String[permissions.size()]), 999);
+                }
+            },100);
+        } else {
+            afterHasPermissions();
+        }
+    }
+
+    @NonNull
+    private static String[] getRequestPermissions() {
+        String [] requestPermissions;
+        if (Build.VERSION.SDK_INT < 33) {
+            requestPermissions = new String[] {
+                    // 读取文件权限
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    // 写入文件权限
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            };
+        }
+        else {
+            requestPermissions = new String[] {
+                    // 读取图片权限
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    // 读取视频权限
+                    Manifest.permission.READ_MEDIA_VIDEO,
+                    // 读取音频权限
+                    Manifest.permission.READ_MEDIA_AUDIO
+            };
+        }
+        return requestPermissions;
+    }
+
+    @Override
+    /** 权限请求回调 */
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 999) {
+            boolean hasDenied = false;
+            StringBuilder text = new StringBuilder("您未授予");
+            for (int index = 0; index < grantResults.length; index++) {
+                int ret = grantResults[index];
+                Log.e(TAG, permissions[index]);
+                Log.e(TAG, String.valueOf(ret));
+                Log.e(TAG, "______________");
+                if (ret != PackageManager.PERMISSION_GRANTED) {
+                    if (Build.VERSION.SDK_INT > 29) {
+                        if (permissions[index].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+                                permissions[index].equals(Manifest.permission.READ_EXTERNAL_STORAGE)) continue;
+                    }
+                    text.append(permissions[index]).append(",");
+                    hasDenied = true;
+                }
+            }
+            if (hasDenied &&
+                    !getSharedPreferences("nonameshijian", MODE_PRIVATE)
+                            .getBoolean("showFirstPermissionsDialog", false)) {
+                text.append("权限。\n");
+                text.append("如果您没有弹出窗口询问权限，可能是被系统的安全策略禁止，请在应用设置中手动开启权限。");
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setCancelable(false);
+                TextView textView = new TextView(this);
+                textView.setText(text);
+                textView.setTextSize(25);
+                textView.setTextColor(Color.WHITE);
+                builder.setView(textView);
+                ToastUtils.show(this, text.toString());
+                builder.setNegativeButton("知道了", (dialog, which) -> {
+                    afterHasPermissions();
+                });
+                builder.create().show();
+                getSharedPreferences("nonameshijian", MODE_PRIVATE)
+                        .edit()
+                        .putBoolean("showFirstPermissionsDialog", true)
+                        .apply();
+            }
+            else {
+                afterHasPermissions();
+            }
+        }
+    }
+
+    private void afterHasPermissions() {
         boolean is64Bit = ProcessUtils.is64Bit();
         String[] supportBitAbis = is64Bit ? Build.SUPPORTED_64_BIT_ABIS : Build.SUPPORTED_32_BIT_ABIS;
 
@@ -116,7 +227,8 @@ public class MainActivity extends CordovaActivity {
 
         if (inited || (indexOfArm64 < 0 && indexOfArmeabi < 0)) {
             ActivityOnCreate();
-        } else {
+        }
+        else {
             inited = true;
 
             if (WebViewUpgradeProgressDialog == null) {
