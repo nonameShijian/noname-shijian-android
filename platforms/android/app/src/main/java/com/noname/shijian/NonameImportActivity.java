@@ -23,6 +23,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -121,11 +122,67 @@ public class NonameImportActivity extends Activity {
 	// String encoding = null;
 
 	/** 进度条 */
-	private ProgressDialog dialog;
+	//private ProgressDialog dialog;
 
 	private int currentWaiting = 0;
 
 	private long lastWaitingTime = 0;
+
+	private ProgressBar progressBar;
+
+	private TextView currentMessage;
+
+	private TextView subTitle;
+
+	private long fakeProgressStartTime;
+
+	private Timer fakeProgressTimer;
+
+	private boolean fakeProgress = false;
+
+	private boolean fakeProgressPause = false;
+
+	private boolean isWaiting = false;
+
+	private void startFakeProgress(){
+		if(fakeProgress)return;
+		fakeProgress = true;
+		fakeProgressStartTime = System.currentTimeMillis();
+		(new Handler(Looper.getMainLooper())).postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				continueFakeProgress();
+			}
+		},200);
+	}
+
+	private void continueFakeProgress(){
+		if(fakeProgressPause)return;
+		if(!fakeProgress)return;
+		if(finished)return;
+		if(isWaiting)return;
+		isWaiting = true;
+		final int guessTime = 18000;
+		long time = System.currentTimeMillis() - fakeProgressStartTime;
+		if(time <= guessTime){
+			progressBar.setProgress((int)((time/(float)guessTime)*30));
+		}else{
+			double p = 1+(time - guessTime)/1000d;
+			p = 20 - 20/p;
+			progressBar.setProgress(30+(int)p);
+		}
+		(new Handler(Looper.getMainLooper())).postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				isWaiting = false;
+				continueFakeProgress();
+			}
+		},(int)(150+1000*Math.random()));
+	}
+
+	private void endFakeProgress(){
+		fakeProgress = false;
+	}
 
 	@SuppressLint("HandlerLeak")
 	private final Handler handler = new Handler() {
@@ -135,8 +192,12 @@ public class NonameImportActivity extends Activity {
 			int MSG_PROGRESS = 0x0001;
 			if (msg.what == MSG_PROGRESS) {
 				int progress = msg.arg1;
-				dialog.setProgress(progress);
-				dialog.setMessage(getWaitingMessage());
+				endFakeProgress();
+				//dialog.setProgress(progress);
+				progressBar.setProgress(50+progress/2);
+				currentMessage.setTextColor(getRandomColor());
+				currentMessage.setText(getWaitingMessage());
+				//dialog.setMessage(getWaitingMessage());
 			}
 		}
 	};
@@ -194,7 +255,9 @@ public class NonameImportActivity extends Activity {
 		setContentView(R.layout.activity_begin);
 		titleTextView = findViewById(R.id.title);
 		messageTextView = findViewById(R.id.messages);
-
+		progressBar = findViewById(R.id.progress);
+		currentMessage = findViewById(R.id.current_message);
+		subTitle = findViewById(R.id.title2);
 		ToastUtils.show(NonameImportActivity.this, "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
 
 		// 要申请的权限列表
@@ -444,6 +507,7 @@ public class NonameImportActivity extends Activity {
 
 	/** 导入压缩文件 */
 	private void loadUri(final Uri uri) {
+		startFakeProgress();
 		new Thread(){
 			public void run(){
 				//ToastUtils.show(NonameImportActivity.this, "正在加载压缩包文件");
@@ -582,6 +646,12 @@ public class NonameImportActivity extends Activity {
 		new Thread(){
 			public void run(){
 				updateText("正在加载内置资源压缩包");
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						startFakeProgress();
+					}
+				});
 				try {
 					// 把文件写入cache/currentLoadFile.zip
 					InputStream inputStream = getAssets().open("www/app/noname.zip");
@@ -722,11 +792,14 @@ public class NonameImportActivity extends Activity {
 			runOnUiThread(() -> {
 				final EditText editText = new EditText(NonameImportActivity.this);
 				editText.setText(extensionName);
+				fakeProgressPause = true;
 				new AlertDialog.Builder(NonameImportActivity.this)
 						.setTitle("请确认扩展名是否正确")
 						.setView(editText)
 						.setCancelable(false)
 						.setPositiveButton("确定", (dialogInterface, i) -> {
+							fakeProgressPause = false;
+							continueFakeProgress();
 							if (editText.getText().length() == 0) {
 								ToastUtils.show(NonameImportActivity.this,  "请输入扩展名！");
 							} else {
@@ -739,11 +812,14 @@ public class NonameImportActivity extends Activity {
 		} catch (ExtensionNameException e) {
 			runOnUiThread(() -> {
 				final EditText editText = new EditText(NonameImportActivity.this);
+				fakeProgressPause = true;
 				new AlertDialog.Builder(NonameImportActivity.this)
 						.setTitle("扩展名解析失败，请手动输入扩展名（纯扩展名，不包含版本号等信息）")
 						.setView(editText)
 						.setCancelable(false)
 						.setPositiveButton("确定", (dialogInterface, i) -> {
+							fakeProgressPause = false;
+							continueFakeProgress();
 							if (editText.getText().length() == 0) {
 								ToastUtils.show(NonameImportActivity.this,  "请输入扩展名！");
 							} else {
@@ -785,6 +861,7 @@ public class NonameImportActivity extends Activity {
 					updateText("扩展名解析为：" + extensionName);
 					runOnUiThread(() -> {
 						final EditText editText = new EditText(NonameImportActivity.this);
+						fakeProgressPause = true;
 						new AlertDialog.Builder(NonameImportActivity.this)
 								.setTitle("请确认扩展名是否正确")
 								.setView(editText)
@@ -793,6 +870,8 @@ public class NonameImportActivity extends Activity {
 									if (editText.getText().length() == 0) {
 										ToastUtils.show(NonameImportActivity.this,  "请输入扩展名！");
 									} else {
+										fakeProgressPause = false;
+										continueFakeProgress();
 										final String extName = editText.getText().toString();
 										updateText("开始检测解压文件，此过程时间可能会较长，请耐心等待。");
 										try {
@@ -855,10 +934,11 @@ public class NonameImportActivity extends Activity {
 
 	/** 延时1.5S进入游戏 */
 	private void afterFinishImportExtension(String extname) {
+		/*
 		if (dialog != null) {
 			// 关闭对话框
 			dialog.dismiss();
-		}
+		}*/
 
 		if (hasError) return;
 
@@ -978,10 +1058,11 @@ public class NonameImportActivity extends Activity {
 
 	/** 不延时进入游戏 */
 	private void afterFinishImportExtension() {
+		/*
 		if (dialog != null) {
 			// 关闭对话框
 			dialog.dismiss();
-		}
+		}*/
 
 		if (hasError) return;
 
@@ -1189,12 +1270,15 @@ public class NonameImportActivity extends Activity {
 	private void setPassword(int method, String rootPath) {
 		runOnUiThread(() -> {
 			final EditText editText = new EditText(NonameImportActivity.this);
+			fakeProgressPause = true;
 			new AlertDialog.Builder(NonameImportActivity.this)
 					.setTitle("请输入压缩包密码")
 					.setView(editText)
 					.setCancelable(false)
 					.setIcon(R.mipmap.ic_launcher)
 					.setPositiveButton("确定", (dialogInterface, i) -> {
+						fakeProgressPause = false;
+						continueFakeProgress();
 						if (editText.getText().length() == 0) {
 							ToastUtils.show(NonameImportActivity.this,  "请输入压缩包密码！");
 							// alertDialog框消失后重新出现
@@ -1241,9 +1325,9 @@ public class NonameImportActivity extends Activity {
 	private void updateText(final String msg){
 		runOnUiThread(() -> {
 			if (messageTextView == null) return;
-			String newMsg = msg + "\n" + messageTextView.getText();
-			if(newMsg.length() >= 1000){
-				newMsg = newMsg.substring(0,999);
+			String newMsg = msg + "\n---------\n" + messageTextView.getText();
+			if(newMsg.length() >= 2000){
+				newMsg = newMsg.substring(0,1999);
 			}
 			messageTextView.setText(newMsg);
 		});
@@ -1376,11 +1460,14 @@ public class NonameImportActivity extends Activity {
 			int size = zipFile.getFileHeaders().size();
 			final Handler handler = new Handler(Looper.getMainLooper());
 			handler.post(() -> {
-				dialog.setTitle("正在解压");
-				dialog.setMax(100);
-				dialog.setProgress(0);
-				dialog.setMessage(getWaitingMessage());
-				dialog.show();
+				subTitle.setText("正在解压");
+				progressBar.setVisibility(View.VISIBLE);
+				progressBar.setMax(100);
+				progressBar.setProgress(0);
+				startFakeProgress();
+				currentMessage.setTextColor(getRandomColor());
+				currentMessage.setText(getWaitingMessage());
+				//dialog.show();
 			});
 			updateText("开始解压zip(共" + size + "个文件)\n若其中有文件名乱码将会自动识别，会增加解压时间，请耐心等待");
 			try {
@@ -1403,10 +1490,11 @@ public class NonameImportActivity extends Activity {
 							double b = completed/(double)total;
 							int m = (int) Math.floor(b*100);
 							handler.post(()->{
-								dialog.setTitle("正在解压");
-								dialog.setMax(100);
-								dialog.setProgress(m);
-								dialog.setMessage(getWaitingMessage());
+								subTitle.setText("正在解压");
+								progressBar.setMax(100);
+								endFakeProgress();
+								progressBar.setProgress(50+m/2);
+								currentMessage.setText(getWaitingMessage());
 							});
 						}
 					}
@@ -1417,7 +1505,7 @@ public class NonameImportActivity extends Activity {
 			}
 
 			// 关闭对话框
-			if (dialog != null) dialog.dismiss();
+			//if (dialog != null) dialog.dismiss();
 			updateText("解压完成！");
 			if (hasConfigFile) {
 				File configFile = new File(filePath, "noname.config.txt");
@@ -1530,12 +1618,12 @@ public class NonameImportActivity extends Activity {
 	// 显示解压进度条并解压文件
 	private void showProgressDialogAndExtractAll(String filePath, File cacheDir, String extName) {
 		runOnUiThread(() -> {
-			dialog = new ProgressDialog(NonameImportActivity.this);
-			dialog.setTitle("正在解压");
-			dialog.setCancelable(false);
-			dialog.setIcon(R.mipmap.ic_launcher);
+			//dialog = new ProgressDialog(NonameImportActivity.this);
+			subTitle.setText("正在解压");
+			//dialog.setCancelable(false);
+			//dialog.setIcon(R.mipmap.ic_launcher);
 			// 水平进度条
-			dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			//dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 
 			Runnable runnable = () -> extractAll(filePath, cacheDir, extName);
 			(new Thread(runnable)).start();
@@ -1565,6 +1653,12 @@ public class NonameImportActivity extends Activity {
 		}
 		//删除完里面的文件夹后，当前文件夹也删除
 		file.delete();
+	}
+
+	private int getRandomColor(){
+		final int[] colors= new int[]{0xFFF5F5F5,0xFF98F5FF,0xFF54FF9F,0xFF20B2AA,
+				0xFFEEE9BF,0xFFB0E2FF,0xFFE0FFFF,0xFFEEB4B4,0xFFFFFF00,0xFFFFE7BA,0xFFFF7F00};
+		return colors[(int)(Math.random()*colors.length)];
 	}
 
 	private String getWaitingMessage(){
@@ -1684,8 +1778,11 @@ public class NonameImportActivity extends Activity {
 				|| ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS;
 	}
 
+	private boolean finished = false;
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		finished = true;
 	}
 }
