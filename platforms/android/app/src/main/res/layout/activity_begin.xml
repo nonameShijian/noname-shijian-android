@@ -8,6 +8,7 @@
     tools:context=".NonameImportActivity">
 
     <LinearLayout
+        android:id="@+id/main_linear"
         android:background="@drawable/backgrounddialog"
         android:orientation="vertical"
         android:layout_width="match_parent"

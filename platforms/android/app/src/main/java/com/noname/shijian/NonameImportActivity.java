@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -61,6 +62,8 @@ import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.AbstractFileHeader;
 import net.lingala.zip4j.model.FileHeader;
 
+import org.json.JSONObject;
+
 import cn.hutool.core.util.CharsetUtil;
 
 public class NonameImportActivity extends Activity {
@@ -101,7 +104,7 @@ public class NonameImportActivity extends Activity {
 			"无名杀不排斥开发自己的版本，但是必须遵守GPL协议。",
 			"广告位招租！不要money交个朋友！",
 			"如果你导入扩展后出现弹窗，请关闭扩展后再尝试，如果是扩展问题，联系扩展作者解决。",
-			"你听说过狂神吗？那个活在传说中的男人。",
+			"无名杀的仓库在Github上，任何人都可以提交代码。",
 			"技能的async/await写法比传统step写法更为方便。",
 			"推荐使用Visual Studio Code编辑扩展代码。",
 			"提问需要技巧，贸然的提问只会让人摸不着头脑。",
@@ -295,48 +298,99 @@ public class NonameImportActivity extends Activity {
 		}
 	}
 
+	private boolean setViewBackground(View view,String path){
+		if(TextUtils.isEmpty(path))return false;
+		File file = new File(getPackageDir(),path);
+		if(!file.exists()){
+			updateText("文件"+path+"不存在");
+			return false;
+		}
+		try {
+			FileInputStream fileInputStream = new FileInputStream(file);
+			Bitmap bitmap = BitmapFactory.decodeStream(fileInputStream);
+			view.setBackground(new BitmapDrawable(getResources(),bitmap));
+			fileInputStream.close();
+			//updateText("图片加载完整"+path);
+			return true;
+		}catch (Throwable e){
+			updateText("图片加载失败");
+			return false;
+		}
+	}
+
 	private void setTextColor() {
+		JSONObject style = getStyleJson();
 		getWindow().getDecorView().post(() -> {
 			try {
-				Bitmap bitMap;
-				WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
-				if (wallpaperManager.isWallpaperSupported() &&
-						Build.VERSION.SDK_INT < 33 &&
-						ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-					// 默认获取系统壁纸
-					BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable();
-					// 获取系统壁纸的Bitmap
-					bitMap = bitmapDrawable.getBitmap();
-				}
-				else {
-					View view = getWindow().getDecorView();
-					// 截屏获取view
-					bitMap = getViewBitmap(view);
-				}
-				Palette.from(bitMap).maximumColorCount(10).generate(palette -> {
-					Palette.Swatch s = palette.getDominantSwatch();      // 独特的一种
-					Palette.Swatch s1 = palette.getVibrantSwatch();      // 获取到充满活力的这种色调
-					Palette.Swatch s2 = palette.getDarkVibrantSwatch();  // 获取充满活力的黑
-					Palette.Swatch s3 = palette.getLightVibrantSwatch(); // 获取充满活力的亮
-					Palette.Swatch s4 = palette.getMutedSwatch();        // 获取柔和的色调
-					Palette.Swatch s5 = palette.getDarkMutedSwatch();    // 获取柔和的黑
-					Palette.Swatch s6 = palette.getLightMutedSwatch();   // 获取柔和的亮
-					Log.e("Palette", "s1为: " + (s1 != null ? Integer.toHexString(s1.getRgb()) : "null"));
-					Log.e("Palette", "s2为: " + (s2 != null ? Integer.toHexString(s2.getRgb()) : "null"));
-					Log.e("Palette", "s3为: " + (s3 != null ? Integer.toHexString(s3.getRgb()) : "null"));
-					Log.e("Palette", "s4为: " + (s4 != null ? Integer.toHexString(s4.getRgb()) : "null"));
-					Log.e("Palette", "s5为: " + (s5 != null ? Integer.toHexString(s5.getRgb()) : "null"));
-					Log.e("Palette", "s6为: " + (s6 != null ? Integer.toHexString(s6.getRgb()) : "null"));
-					if (s6 != null) {
-						titleTextView.setTextColor(s6.getRgb());
-						messageTextView.setTextColor(s6.getRgb());
-						Log.e("Palette", "已将字体颜色替换为: " + s6.getRgb());
+				Bitmap bitMap = null;
+				String wallpaperPath = style.optString("wallpaper","");
+				updateText("配置墙纸地址"+wallpaperPath);
+				File bitmapFile = new File(getPackageDir(),wallpaperPath);
+				if(!TextUtils.isEmpty(wallpaperPath) && bitmapFile.exists()){
+					try {
+						FileInputStream fileInputStream = new FileInputStream(bitmapFile);
+						bitMap = BitmapFactory.decodeStream(fileInputStream);
+						getWindow().getDecorView().setBackground(new BitmapDrawable(getResources(),bitMap));
+						if(bitMap == null){
+							updateText("无法解析墙纸");
+						}
+					}catch (Throwable e){
+						updateText("解析墙纸失败");
 					}
-					if (s5 != null) {
-						titleTextView.setShadowLayer(10, 5, 5, s5.getRgb());
-						messageTextView.setShadowLayer(10, 5, 5, s5.getRgb());
+				}else {
+					updateText(wallpaperPath+"不存在");
+				}
+				if(bitMap==null){
+					updateText("正在加载默认墙纸");
+					WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
+					if (wallpaperManager.isWallpaperSupported() &&
+							Build.VERSION.SDK_INT < 33 &&
+							ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+						// 默认获取系统壁纸
+						BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable();
+						// 获取系统壁纸的Bitmap
+						bitMap = bitmapDrawable.getBitmap();
+					} else {
+						View view = getWindow().getDecorView();
+						// 截屏获取view
+						bitMap = getViewBitmap(view);
 					}
-				});
+				}
+				JSONObject colorJson = getStyleJson().optJSONObject("textColor");
+				final String titleColor = colorJson==null?"": colorJson.optString("title","");
+				final String messageColor = colorJson==null?"":colorJson.optString("message","");
+				if(!TextUtils.isEmpty(titleColor) && !TextUtils.isEmpty(messageColor)){
+					titleTextView.setTextColor(Color.parseColor(titleColor));
+					messageTextView.setTextColor(Color.parseColor(messageColor));
+				}else {
+					Palette.from(bitMap).maximumColorCount(10).generate(palette -> {
+						Palette.Swatch s = palette.getDominantSwatch();      // 独特的一种
+						Palette.Swatch s1 = palette.getVibrantSwatch();      // 获取到充满活力的这种色调
+						Palette.Swatch s2 = palette.getDarkVibrantSwatch();  // 获取充满活力的黑
+						Palette.Swatch s3 = palette.getLightVibrantSwatch(); // 获取充满活力的亮
+						Palette.Swatch s4 = palette.getMutedSwatch();        // 获取柔和的色调
+						Palette.Swatch s5 = palette.getDarkMutedSwatch();    // 获取柔和的黑
+						Palette.Swatch s6 = palette.getLightMutedSwatch();   // 获取柔和的亮
+						Log.e("Palette", "s1为: " + (s1 != null ? Integer.toHexString(s1.getRgb()) : "null"));
+						Log.e("Palette", "s2为: " + (s2 != null ? Integer.toHexString(s2.getRgb()) : "null"));
+						Log.e("Palette", "s3为: " + (s3 != null ? Integer.toHexString(s3.getRgb()) : "null"));
+						Log.e("Palette", "s4为: " + (s4 != null ? Integer.toHexString(s4.getRgb()) : "null"));
+						Log.e("Palette", "s5为: " + (s5 != null ? Integer.toHexString(s5.getRgb()) : "null"));
+						Log.e("Palette", "s6为: " + (s6 != null ? Integer.toHexString(s6.getRgb()) : "null"));
+						if (s6 != null) {
+							titleTextView.setTextColor(TextUtils.isEmpty(titleColor)?s6.getRgb():Color.parseColor(titleColor));
+							messageTextView.setTextColor(TextUtils.isEmpty(messageColor)?s6.getRgb():Color.parseColor(messageColor));
+							Log.e("Palette", "已将字体颜色替换为: " + s6.getRgb());
+						}else{
+							titleTextView.setTextColor(Color.parseColor(titleColor));
+							messageTextView.setTextColor(Color.parseColor(messageColor));
+						}
+						if (s5 != null) {
+							titleTextView.setShadowLayer(10, 5, 5, s5.getRgb());
+							messageTextView.setShadowLayer(10, 5, 5, s5.getRgb());
+						}
+					});
+				}
 			} catch (Exception e) {
 				updateText("获取壁纸主色调失败:" + e.getMessage());
 				e.printStackTrace();
@@ -453,6 +507,8 @@ public class NonameImportActivity extends Activity {
 	/** 成功申请后 */
 	private void afterHasPermissions() {
 		setTextColor();
+		titleTextView.setText(getStyleJson().optString("title","无名杀诗笺版"));
+		setViewBackground(findViewById(R.id.main_linear),getStyleJson().optString("frame",""));
 		FinishImport.getAppVersion(this);
 		updateText("APK版本: " + VERSION);
 		if (getIntent() != null && getIntent().getAction() != null && getIntent().getAction().equals(Intent.ACTION_VIEW)) {
@@ -1790,5 +1846,31 @@ public class NonameImportActivity extends Activity {
 	protected void onDestroy() {
 		super.onDestroy();
 		finished = true;
+	}
+
+	private File getPackageDir(){
+		return getExternalFilesDir(null).getParentFile();
+	}
+
+	private JSONObject styleJson;
+
+	private JSONObject getStyleJson(){
+		if(styleJson != null){
+			return styleJson;
+		}
+		try {
+			File data = getExternalFilesDir(null).getParentFile();
+			File file = new File(data, "apk/style.json");
+			Scanner scanner = new Scanner(file);
+			StringBuilder stringBuilder = new StringBuilder();
+			while (scanner.hasNextLine()){
+				stringBuilder.append(scanner.nextLine());
+			}
+			scanner.close();
+			styleJson = new JSONObject(stringBuilder.toString());
+			return styleJson;
+		}catch (Throwable e){
+			return new JSONObject();
+		}
 	}
 }
