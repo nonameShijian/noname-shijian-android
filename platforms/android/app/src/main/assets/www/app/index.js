@@ -17,57 +17,44 @@
 				document.addEventListener('deviceready', this.onDeviceReady, false);
 			}
 		},
-		onDeviceReady() {
-		    if (window.eruda) eruda.init();
-			/** 如果导入了完整包，就直接进入游戏 */
-			const getImportPackage = function () {
-				window.cordova && cordova.exec(result => {
-					console.log(result);
-					if (result && result.type == 'package') {
-						localStorage.setItem('noname_inited', result.message);
-						cordova.exec(() => location.reload(), () => location.reload(), 'FinishImport', 'importReceived', []);
-					}
-				}, () => {}, 'FinishImport', 'importReady', []);
-			};
+		async onDeviceReady() {
+			if (window.eruda) eruda.init();
+			// /** 如果导入了完整包，就直接进入游戏 */
+			// const getImportPackage = function () {
+			// 	window.cordova && cordova.exec(result => {
+			// 		console.log(result);
+			// 		if (result && result.type == 'package') {
+			// 			localStorage.setItem('noname_inited', result.message);
+			// 			cordova.exec(() => location.reload(), () => location.reload(), 'FinishImport', 'importReceived', []);
+			// 		}
+			// 	}, () => {}, 'FinishImport', 'importReady', []);
+			// };
 
-			getImportPackage();
+			// getImportPackage();
 
-			/** 每次切换回应用触发检测 */
-			document.addEventListener('visibilitychange', () => {
-				if (document.hidden == false) getImportPackage();
+			// /** 每次切换回应用触发检测 */
+			// document.addEventListener('visibilitychange', () => {
+			// 	if (document.hidden == false) getImportPackage();
+			// });
+
+			/** 添加app/index.css的样式 */
+			let link = document.createElement('link');
+			link.rel = 'stylesheet';
+			link.href = 'app/index.css';
+			document.head.appendChild(link);
+			await new Promise((resolve, reject) => {
+				link.onload = resolve;
+				link.onerror = resolve;
 			});
 
-			/** 无名杀资源目录 */
-			let appPath = '';
-			if (typeof window.require == 'function' && typeof window.__dirname == 'string') {
-				appPath = __dirname;
-			} else if (window.cordova) {
-				appPath = cordova.file.externalApplicationStorageDirectory;
-			}
-
-			/**
-			 * @param { DirectoryEntry } [entry] 
-			 * @param { string } [name] 文件/文件夹名
-			 * @param { boolean } [isdir] 是否是文件夹
-			 * @return { Promise<DirectoryEntry | FileEntry> }
-			 */
-			function getEntry(entry, name, isdir) {
-				return new Promise((resolve, reject) => {
-					if (!entry) {
-						window.resolveLocalFileSystemURL(appPath,
-							/** @param { DirectoryEntry } entry */
-							entry => resolve(entry),
-							e => reject(e));
-					} else if (typeof name == 'string') {
-						entry[isdir ? 'getDirectory' : 'getFile'](name, { create: true },
-							/** @param { DirectoryEntry | FileEntry } e */
-							e => resolve(e),
-							e => reject(e));
-					} else {
-						resolve(entry);
-					}
-				});
-			}
+			// 加载jszip
+			await new Promise((resolve, reject) => {
+				var script = document.createElement('script');
+				script.src = 'app/jszip.js';
+				script.onload = resolve;
+				script.onerror = reject;
+				document.head.appendChild(script);
+			});
 
 			navigator.notification.activityStart('正在检测是否有内置zip资源', '请耐心等待.....');
 			/** 读取app的资源目录(在安卓是file:///android_asset/) */
@@ -80,15 +67,15 @@
 							const zipDataDiv = document.getElementById('changesite');
 							zipDataDiv.innerText = '内置zip资源存在';
 							// 跳转到java解压
-							if (confirm('检测到内置压缩包存在，是否解压？')) cordova.exec(() => { }, () => { }, 'FinishImport', 'assetZip', []);
-							else checkConnection();
+							if (confirm('检测到内置压缩包存在，是否解压？\n注意: 此客户端不是懒人包的情况建议点击取消，然后在此页面在线下载最新离线包')) cordova.exec(() => { }, () => { }, 'FinishImport', 'assetZip', []);
+							// else checkConnection();
 						}, error => {
 							navigator.notification.activityStop();
 							console.error('www/app/noname.zip不存在: ' + error.code);
 							const zipDataDiv = document.getElementById('changesite');
 							zipDataDiv.innerText = 'www/app/noname.zip不存在';
 							// alert('请用其他方式打开zip文件，选择无名杀导入(诗笺版)，注: 万能导入无效');
-							checkConnection();
+							// checkConnection();
 						});
 					}, error => {
 						navigator.notification.activityStop();
@@ -96,15 +83,25 @@
 						const zipDataDiv = document.getElementById('changesite');
 						zipDataDiv.innerText = 'www/app文件夹不存在';
 						// alert('请用其他方式打开zip文件，选择无名杀导入(诗笺版)，注: 万能导入无效');
-						checkConnection();
+						// checkConnection();
 					});
-			});
+				});
 
-			/** 添加app/index.css的样式 */
-			let link = document.createElement('link');
-			link.rel = 'stylesheet';
-			link.href = 'app/index.css';
-			document.head.appendChild(link);
+			var dir;
+			var ua = navigator.userAgent.toLowerCase();
+			if (ua.indexOf('android') != -1) {
+				dir = cordova.file.externalApplicationStorageDirectory;
+			}
+			else if (ua.indexOf('iphone') != -1 || ua.indexOf('ipad') != -1) {
+				dir = cordova.file.documentsDirectory;
+			}
+			// 如果没有noname_inited那就重试一次
+			if (!sessionStorage.getItem('noname_inited')) {
+				localStorage.setItem('noname_inited', dir);
+				sessionStorage.setItem('noname_inited', dir);
+				window.location.reload();
+				return;
+			}
 
 			/**
 			 * 自行扩展创建dom元素方法
@@ -113,46 +110,438 @@
 			 * @param { options } opts 选项
 			 * @return { HTMLElementTagNameMap[k] } dom元素
 			 */
-			function createElement(tag, opts = {}) {
+			const createElement = function (tag, opts = {}) {
 				const d = document.createElement(tag);
-				for (const key in opts) {
+				for (const [key, value] of Object.entries(opts)) {
 					switch (key) {
 						case 'class':
-							opts[key].forEach(v => d.classList.add(v));
+							value.forEach(v => d.classList.add(v));
 							break;
 						case 'id':
-							d.id = opts[key];
+							d.id = value;
 							break;
 						case 'innerHTML':
 						case 'innerText':
-							d[key] = opts[key];
+							d[key] = value;
 							break;
 						case 'parentNode':
-							opts[key].appendChild(d);
+							value.appendChild(d);
 							break;
 						case 'listen':
-							for (const evt in opts[key]) {
-								if (typeof opts[key][evt] == 'function') {
-									d[evt] = opts[key][evt];
+							for (const evt in value) {
+								if (typeof value[evt] == 'function') {
+									d[evt] = value[evt];
 								}
 							}
 							break;
 						case 'style':
-							for (const s in opts[key]) {
-								d.style[s] = opts[key][s];
+							for (const s in value) {
+								d.style[s] = value[s];
 							}
 							break;
 					}
 				}
 				return d;
-			}
+			};
+
+			/**
+			 * 对比版本号
+			 * @param { string } ver1 版本号1
+			 * @param { string } ver2 版本号2
+			 * @returns { -1 | 0 | 1 } -1为ver1 < ver2, 0为ver1 == ver2, 1为ver1 > ver2
+			 * @throws {Error}
+			 */
+			const checkVersion = function (ver1, ver2) {
+				if (typeof ver1 !== "string") ver1 = String(ver1);
+				if (typeof ver2 !== "string") ver2 = String(ver2);
+
+				// 移除 'v' 开头
+				if (ver1.startsWith("v")) ver1 = ver1.slice(1);
+				if (ver2.startsWith("v")) ver2 = ver2.slice(1);
+
+				// 验证版本号格式
+				if (/[^0-9.-]/i.test(ver1) || /[^0-9.-]/i.test(ver2)) {
+					throw new Error("Invalid characters found in the version numbers");
+				}
+
+				/** @param { string } str */
+				function* walk(str) {
+					let part = "";
+					for (const char of str) {
+						if (char === "." || char === "-") {
+							if (part) yield Number(part);
+							part = "";
+						} else {
+							part += char;
+						}
+					}
+					if (part) yield Number(part);
+				}
+
+				const iterator1 = walk(ver1);
+				const iterator2 = walk(ver2);
+
+				while (true) {
+					const iter1 = iterator1.next();
+					const iter2 = iterator2.next();
+					let { value: item1 } = iter1;
+					let { value: item2 } = iter2;
+
+					// 如果任意一个迭代器已经没有剩余值，将该值视为0
+					item1 = item1 === undefined ? 0 : item1;
+					item2 = item2 === undefined ? 0 : item2;
+
+					if (isNaN(item1) || isNaN(item2)) {
+						throw new Error("Non-numeric part found in the version numbers");
+					} else if (item1 > item2) {
+						return 1;
+					} else if (item1 < item2) {
+						return -1;
+					} else {
+						if (iter1.done && iter2.done) break;
+					}
+				}
+
+				// 若正常遍历结束，说明版本号相等
+				return 0;
+			};
+
+			/**
+			 * HTTP响应头中的Rate Limit相关信息：
+			 * X-RateLimit-Limit: 请求总量限制
+			 * X-RateLimit-Remaining: 剩余请求次数
+			 * X-RateLimit-Reset: 限制重置时间（UTC时间戳）
+			 */
+
+			/** @type { HeadersInit } */
+			const defaultHeaders = {
+				Accept: "application/vnd.github.v3+json",
+			};
+
+			/**
+			 *
+			 * 获取指定仓库的tags
+			 * @param { Object } options
+			 * @param { string } [options.username = 'libccy'] 仓库拥有者
+			 * @param { string } [options.repository = 'noname'] 仓库名称
+			 * @param { string } [options.accessToken] 身份令牌
+			 * @returns { Promise<{ commit: { sha: string, url: string }, name: string, node_id: string, tarball_url: string, zipball_url: string }[]> }
+			 *
+			 * @example
+			 * ```js
+			 * getRepoTags().then(tags => {
+			 * 	console.log("All tags:", tags.map(tag => tag.name));
+			 * 	// 获取最新tag（假设按时间顺序排列，最新tag在数组首位）
+			 * 	const latestTag = tags[0].name;
+			 * 	console.log("Latest tag:", latestTag);
+			 * });
+			 * ```
+			 */
+			const getRepoTags = async function (options = { username: "libccy", repository: "noname" }) {
+				const { username = "libccy", repository = "noname", accessToken } = options;
+				const headers = Object.assign({}, defaultHeaders);
+				if (accessToken) {
+					headers["Authorization"] = `token ${accessToken}`;
+				}
+				const url = `https://api.github.com/repos/${username}/${repository}/tags`;
+				const response = await fetch(url, { headers });
+				if (response.ok) {
+					const data = await response.json();
+					return data;
+				} else {
+					throw new Error(`Error fetching tags: ${response.statusText}`);
+				}
+			};
+
+			/**
+			 * 获取指定仓库的指定tags的描述
+			 * @param { string } tagName tag名称
+			 * @param { Object } options
+			 * @param { string } [options.username = 'libccy'] 仓库拥有者
+			 * @param { string } [options.repository = 'noname'] 仓库名称
+			 * @param { string } [options.accessToken] 身份令牌
+			 * @example
+			 * ```js
+			 * getRepoTagDescription('v1.10.10')
+			 * 	.then(description => console.log(description))
+			 * 	.catch(error => console.error('Failed to fetch description:', error));
+			 * ```
+			 */
+
+			const getRepoTagDescription = async function (tagName, options = { username: "libccy", repository: "noname" }) {
+				const { username = "libccy", repository = "noname", accessToken } = options;
+				const headers = Object.assign({}, defaultHeaders);
+				if (accessToken) {
+					headers["Authorization"] = `token ${accessToken}`;
+				}
+				const apiUrl = `https://api.github.com/repos/${username}/${repository}/releases/tags/${tagName}`;
+				const response = await fetch(apiUrl, { headers });
+				if (!response.ok) {
+					throw new Error(`Request failed with status ${response.status}`);
+				}
+				const releaseData = await response.json();
+				return {
+					/** @type { { browser_download_url: string, content_type: string, name: string, size: number }[] } tag额外上传的素材包 */
+					assets: releaseData.assets,
+					author: {
+						/** @type { string } 用户名 */
+						login: releaseData.author.login,
+						/** @type { string } 用户头像地址 */
+						avatar_url: releaseData.author.avatar_url,
+						/** @type { string } 用户仓库地址 */
+						html_url: releaseData.author.html_url,
+					},
+					/** @type { string } tag描述 */
+					body: releaseData.body,
+					// created_at: (new Date(releaseData.created_at)).toLocaleString(),
+					/** @type { string } tag页面 */
+					html_url: releaseData.html_url,
+					/** @type { string } tag名称 */
+					name: releaseData.name,
+					/** 发布日期 */
+					published_at: new Date(releaseData.published_at).toLocaleString(),
+					/** @type { string } 下载地址 */
+					zipball_url: releaseData.zipball_url,
+				};
+			};
+
+			/**
+			 * 请求一个文件而不是直接储存为文件，这样可以省内存空间
+			 * @param { string } url
+			 * @param { (receivedBytes: number, total?:number, filename?: string) => void } [onProgress]
+			 * @param { RequestInit } [options={}]
+			 * @example
+			 * ```js
+			 * await getRepoTagDescription('v1.10.10').then(({ zipball_url }) => request(zipball_url));
+			 * ```
+			 */
+			const request = async function (url, onProgress, options = {}) {
+				const response = await fetch(
+					url,
+					Object.assign(
+						{
+							// 告诉服务器我们期望得到范围请求的支持
+							headers: { Range: "bytes=0-" },
+						},
+						options
+					)
+				);
+
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+
+				// @ts-ignore
+				let total = parseInt(response.headers.get("Content-Length"), 10);
+				// 如果服务器未返回Content-Length，则无法准确计算进度
+				// @ts-ignore
+				if (isNaN(total)) total = null;
+				// @ts-ignore
+				const reader = response.body.getReader();
+				let filename;
+				try {
+					// @ts-ignore
+					filename = response.headers.get("Content-Disposition").split(";")[1].split("=")[1];
+				} catch {
+					/* empty */
+				}
+				let receivedBytes = 0;
+				let chunks = [];
+
+				while (true) {
+					// 使用ReadableStream来获取部分数据并计算进度
+					const { done, value } = await reader.read();
+
+					if (done) {
+						break;
+					}
+
+					chunks.push(value);
+					receivedBytes += value.length;
+
+					if (typeof onProgress == "function") {
+						if (total) {
+							const progress = (receivedBytes / total) * 100;
+							onProgress(receivedBytes, progress, filename);
+						} else {
+							onProgress(receivedBytes, void 0, filename);
+						}
+					}
+				}
+
+				// 合并chunks并转换为Blob
+				const blob = new Blob(chunks);
+
+				// 仅做演示，打印已合并的Blob大小
+				// console.log(`Download completed. Total size: ${parseSize(blob.size)}.`);
+
+				return blob;
+			};
+
+			/**
+			 *
+			 * @param { string } [title]
+			 * @param { string | number } [max]
+			 * @param { string } [fileName]
+			 * @param { string | number } [value]
+			 * @returns { progress }
+			 */
+			const createProgress = function (title, max, fileName, value) {
+				/** @type { progress } */
+				const parent = createElement("div", {
+					parentNode: document.body,
+					style: {
+						textAlign: "center",
+						width: "300px",
+						height: "150px",
+						left: "calc(50% - 150px)",
+						top: "auto",
+						bottom: "calc(50% - 75px)",
+						zIndex: "10",
+						boxShadow: "rgb(0 0 0 / 40 %) 0 0 0 1px, rgb(0 0 0 / 20 %) 0 3px 10px",
+						backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4))",
+						borderRadius: "8px",
+						overflow: "hidden scroll",
+					}
+				});
+
+				const container = createElement("div", {
+					parentNode: parent,
+					style: {
+						position: "absolute",
+						top: "0",
+						left: "0",
+						width: "100%",
+						height: "100%",
+					}
+				});
+
+				const caption = createElement("div", {
+					parentNode: container,
+					innerHTML: title,
+					style: {
+						position: "relative",
+						paddingTop: "8px",
+						fontSize: "20px",
+					}
+				});
+
+				// createElement("br", {
+				//     parentNode: container
+				// });
+
+				const tip = createElement("div", {
+					parentNode: container,
+					style: {
+						position: "relative",
+						paddingTop: "8px",
+						fontSize: "20px",
+						width: "100%",
+						left: "0",
+					}
+				});
+
+				const file = createElement("span", {
+					parentNode: tip,
+					innerHTML: fileName,
+					style: {
+						width: "100%",
+						maxWidth: "100",
+					}
+				});
+
+				createElement("br", {
+					parentNode: tip
+				});
+
+				const index = createElement("span", {
+					parentNode: tip,
+					innerHTML: String(value || "0"),
+				});
+
+				createElement("span", {
+					parentNode: tip,
+					innerHTML: "/",
+				});
+
+				const maxSpan = createElement("span", {
+					parentNode: tip,
+					innerHTML: String(max || "未知"),
+				});
+
+				// createElement("br", {
+				//     parentNode: container
+				// });
+
+				const progress = createElement("progress", {
+					class: ["progress"],
+					parentNode: container,
+				});
+				progress.setAttribute("value", value || "0");
+				progress.setAttribute("max", max);
+
+				parent.getTitle = () => caption.innerText;
+				parent.setTitle = (title) => (caption.innerHTML = title);
+				parent.getFileName = () => file.innerText;
+				parent.setFileName = (name) => (file.innerHTML = name);
+				parent.getProgressValue = () => progress.value;
+				parent.setProgressValue = (value) => (progress.value = index.innerHTML = value);
+				parent.getProgressMax = () => progress.max;
+				parent.setProgressMax = (max) => (progress.max = maxSpan.innerHTML = max);
+				parent.autoSetFileNameFromArray = (fileNameList) => {
+					if (fileNameList.length > 2) {
+						parent.setFileName(
+							fileNameList
+								.slice(0, 2)
+								.concat(`......等${fileNameList.length - 2}个文件`)
+								.join("<br/>")
+						);
+					} else if (fileNameList.length == 2) {
+						parent.setFileName(fileNameList.join("<br/>"));
+					} else if (fileNameList.length == 1) {
+						parent.setFileName(fileNameList[0]);
+					} else {
+						parent.setFileName("当前没有正在下载的文件");
+					}
+				};
+				return parent;
+			};
+
+			/**
+			 * 从GitHub存储库检索最新版本(tag)，不包括特定tag。
+			 * 
+			 * 此函数从GitHub存储库中获取由所有者和存储库名称指定的tags列表，然后返回不是“v1998”的最新tag名称。
+			 * @param {string} owner GitHub上拥有存储库的用户名或组织名称。
+			 * @param {string} repo 要从中提取tag的存储库的名称。
+			 * @returns {Promise<string>} 以最新版本tag的名称解析的promise，或者如果操作失败则以错误拒绝。
+			 * @throws {Error} 如果获取操作失败或找不到有效tag，将抛出错误。
+			 */
+			const getLatestVersionFromGitHub = async function (owner = "libccy", repo = "noname") {
+				const tags = await getRepoTags({
+					username: owner,
+					repository: repo,
+				});
+
+				for (const tag of tags) {
+					const tagName = tag.name;
+					if (tagName === "v1998") continue;
+					try {
+						checkVersion(tagName, '0');
+						return tagName;
+					} catch {
+						// 非标准版本号
+					}
+				}
+
+				throw new Error("No valid tags found in the repository");
+			};
 
 			// 设置触摸和鼠标监听
-			let touchstart = function () {
+			const touchstart = function () {
 				if (this.classList.contains('disabled')) return;
 				this.style.transform = 'scale(0.98)';
 			};
-			let touchend = function () {
+			const touchend = function () {
 				this.style.transform = '';
 			};
 
@@ -163,7 +552,7 @@
 				id: 'button',
 				class: ['disabled'],
 				parentNode: document.body,
-				innerText: '解压资源包',
+				innerText: '正在连接',
 				listen: {
 					ontouchstart: touchstart,
 					ontouchend: touchend,
@@ -183,13 +572,13 @@
 			const zipDataDiv = createElement('div', {
 				id: 'changesite',
 				parentNode: document.body,
-				innerText: '正在加载内置zip资源...',
+				innerText: '正在加载github资源...',
 				style: {
 					// opacity: '0.5',
 				}
 			});
 
-			const version = createElement('div', {
+			const versionnode = createElement('div', {
 				id: 'version',
 				parentNode: document.body,
 			});
@@ -211,6 +600,15 @@
 
 			const helpnodetext = createElement('div', {
 				parentNode: helpnode,
+				innerHTML: `<div>
+					<ol>
+						<li>访问
+						<a href="https://github.com/libccy/noname/releases/latest">网址1</a>，
+						下载zip文件，或者通过其他方式(比如QQ群,QQ频道,微信公众号)下载最新的“无名杀完整包”。
+						<li>使用QQ或者文件管理器将完整包导入进无名杀目录
+						<li>完成上述步骤后，<a href="javascript:localStorage.setItem(\'noname_inited\',window.tempSetNoname);window.location.reload()">点击此处</a></div>
+					</ol>
+				</div>`
 			});
 
 			const back = createElement('div', {
@@ -224,502 +622,431 @@
 				}
 			});
 
-			const importdata = createElement('div', {
-				id: 'importdata',
-				innerHTML: '导入数据文件',
-				parentNode: document.body,
-			});
-
-			const importselect = createElement('select', {
-				id: 'importselect',
-				parentNode: document.body,
-			});
-
-			/** FASTGIT更新源 */
-			const site_c = 'https://raw.fgit.cf/libccy/noname/master/';
-			/** URC更新源 */
-			const site_urc = 'https://unitedrhythmized.club/libccy/noname/master/';
-			/** 现在使用的更新源 */
-			let site = site_c;
-			
-			/**
-			 * @description 请求指定网址的js文件并执行
-			 * @param { string } url 请求指定网址的js文件
-			 * @param { (target?: string, result?: any) => void } onLoad 请求成功后执行回调
-			 * @param { VoidFunction } onError 请求失败后执行回调
-			 * @param { string } [target] 用window[target]是否存在来判断js是否加载成功
-			 */
-			const req = async (url, onLoad, onError, target) => {
-				if (!onLoad) return;
-
-				try {
-					eval(await (await fetch(url, {
-						referrerPolicy: 'no-referrer'
-					})).text());
-
-					if (target) {
-						if (!window[target]) throw new ReferenceError();
-
-						await onLoad();
-
-						delete window[target];
-					} else await onLoad();
-				} catch(e) {
-					if (onError) await onError();
-				}
-			}
-
-			/** @type { string } 应用文件夹 **/
-			let dir;
-			const ua = navigator.userAgent.toLowerCase();
-			if (ua.includes('android')) dir = cordova.file.externalApplicationStorageDirectory;
-			else if (ua.includes('iphone') || ua.includes('ipad')) dir = cordova.file.documentsDirectory;
-
-			var game = {
-				putDB: (storeName, idbValidKey, value, onSuccess, onError) => {
-					if (!lib.db) return Promise.resolve(value);
-					return new Promise((resolve, reject) => {
-						const record = lib.db.transaction([storeName], 'readwrite').objectStore(storeName).put(value, idbValidKey);
-						record.onerror = event => {
-							if (typeof onError == 'function') {
-								onError(event);
-								resolve(null);
-							}
-							else {
-								reject(event);
-							}
-						};
-						record.onsuccess = event => {
-							if (typeof onSuccess == 'function') {
-								onSuccess(event);
-							}
-							resolve(event);
-						};
-					});
-				}
-			};
-			var lib = {
-				configprefix: 'noname_0.9_',
-				init: {
-					decode: function (str) {
-						var strUtf = atob(str);
-						var strUni = strUtf.replace(
-							/[\u00e0-\u00ef][\u0080-\u00bf][\u0080-\u00bf]/g, function (c) {
-								var cc = ((c.charCodeAt(0) & 0x0f) << 12) | ((c.charCodeAt(1) & 0x3f) << 6) | (c.charCodeAt(2) & 0x3f);
-								return String.fromCharCode(cc);
-							});
-						strUni = strUni.replace(
-							/[\u00c0-\u00df][\u0080-\u00bf]/g, function (c) {
-								var cc = (c.charCodeAt(0) & 0x1f) << 6 | c.charCodeAt(1) & 0x3f;
-								return String.fromCharCode(cc);
-							});
-						return strUni;
-					}
-				}
+			document.ontouchmove = function (e) {
+				e.preventDefault();
 			};
 
-			if (typeof __dirname === 'string' && __dirname.length) {
-				var dirsplit = __dirname.split('/');
-				for (var i = 0; i < dirsplit.length; i++) {
-					if (dirsplit[i]) {
-						var c = dirsplit[i][0];
-						lib.configprefix += /[A-Z]|[a-z]/.test(c) ? c : '_';
-					}
-				}
-				lib.configprefix += '_';
-			}
-
-			var index = window.location.href.indexOf('index.html?server=');
-			if (index != -1) {
-				window.isNonameServer = window.location.href.slice(index + 18);
-				window.nodb = true;
-			}
-			if (localStorage.getItem(`${lib.configprefix}nodb`)) window.nodb = true;
-
-			if (window.FileTransfer) {
-				// @ts-ignore
-				window.tempSetNoname = dir;
-
-				game.getFileList = (_dir, success, failure) => {
-					var files = [], folders = [];
-					window.resolveLocalFileSystemURL(dir + _dir, entry => {
-						var dirReader = entry.createReader();
-						var entries = [];
-						var readEntries = () => {
-							dirReader.readEntries(results => {
-								if (!results.length) {
-									entries.sort();
-									for (var i = 0; i < entries.length; i++) {
-										if (entries[i].isDirectory) {
-											folders.push(entries[i].name);
-										}
-										else {
-											files.push(entries[i].name);
-										}
-									}
-									success(folders, files);
-								}
-								else {
-									entries = entries.concat(Array.from(results));
-									readEntries();
-								}
-							}, failure);
-						};
-						readEntries();
-					}, failure);
-				};
-
-				game.readFileAsText = function (filename, callback, onerror) {
-					window.resolveLocalFileSystemURL(dir, function (entry) {
-						entry.getFile(filename, {}, function (fileEntry) {
-							fileEntry.file(function (fileToLoad) {
-								var fileReader = new FileReader();
-								fileReader.onload = function (e) {
-									callback(e.target.result);
-								};
-								fileReader.readAsText(fileToLoad, "UTF-8");
-							}, onerror);
-						}, onerror);
-					}, onerror);
-				};
-			}
-			else {
-				window.tempSetNoname = 'nodejs';
-
-				game.getFileList = (dir, success, failure) => {
-					var files = [], folders = [];
-					dir = __dirname + '/' + dir;
-					if (typeof failure == "undefined") {
-						failure = err => {
-							throw err;
-						};
-					}
-					else if (failure == null) {
-						failure = () => { };
-					}
-					try {
-						require('fs').readdir(dir, (err, filelist) => {
-							if (err) {
-								failure(err);
-								return;
-							}
-							for (var i = 0; i < filelist.length; i++) {
-								if (filelist[i][0] != '.' && filelist[i][0] != '_') {
-									if (require('fs').statSync(dir + '/' + filelist[i]).isDirectory()) {
-										folders.push(filelist[i]);
-									}
-									else {
-										files.push(filelist[i]);
-									}
-								}
-							}
-							success(folders, files);
-						});
-					}
-					catch (e) {
-						failure(e);
-					}
-				};
-
-				game.readFileAsText = function (filename, callback, onerror) {
-					require('fs').readFile(__dirname + '/' + filename, 'utf-8', function (err, data) {
-						if (err) {
-							onerror(err);
-						}
-						else {
-							callback(data);
-						}
-					});
-				};
-			}
-
-			function addOption(name) {
-				var option = document.createElement('option');
-				option.value = name;
-				option.innerHTML = name;
-				importselect.appendChild(option);
-				return option;
-			}
-
-			addOption('默认');
-			addOption('选择系统文件');
-
-			game.getFileList('files/', (_, files) => {
-				files.filter(fileName => fileName.startsWith('无名杀 - 数据 -')).forEach(v => {
-					addOption(v);
-				});
-			}, error => {
-				console.error('读取无名杀数据文件失败: ' + error);
-			});
-
-			importselect.onchange = function (e) {
-				if (importselect.value == '默认') return;
-				if (confirm(`是否从“${importselect.value}”导入无名杀数据？`)) {
-					new Promise((resolve, reject) => {
-						if (lib.db || window.nodb) return resolve(null);
-						const idbOpenDBRequest = window.indexedDB.open(`${lib.configprefix}data`);
-						idbOpenDBRequest.onerror = reject;
-						idbOpenDBRequest.onsuccess = resolve;
-						idbOpenDBRequest.onupgradeneeded = idbVersionChangeEvent => {
-							const idbDatabase = idbVersionChangeEvent.target.result;
-							if (!idbDatabase.objectStoreNames.contains('video')) idbDatabase.createObjectStore('video', {
-								keyPath: 'time'
-							});
-							if (!idbDatabase.objectStoreNames.contains('image')) idbDatabase.createObjectStore('image');
-							if (!idbDatabase.objectStoreNames.contains('audio')) idbDatabase.createObjectStore('audio');
-							if (!idbDatabase.objectStoreNames.contains('config')) idbDatabase.createObjectStore('config');
-							if (!idbDatabase.objectStoreNames.contains('data')) idbDatabase.createObjectStore('data');
-						};
-					}).then(event => {
-						if (!lib.db && !window.nodb) lib.db = event.target.result;
-						return new Promise((resolve, reject) => {
-							if (importselect.value != '选择系统文件') {
-								game.readFileAsText('files/' + importselect.value, data => {
-									if (!data) return reject('no data');
-									try {
-										data = JSON.parse(lib.init.decode(data));
-										if (!data || typeof data != 'object') {
-											throw ('err');
-										}
-										if (lib.db && (!data.config || !data.data)) {
-											throw ('err');
-										}
-									}
-									catch (e) {
-										return reject(e);
-									}
-									return resolve(data);
-								}, reject);
-							} else {
-								if (document.getElementById("fileNameInput")) {
-									document.body.removeChild(document.getElementById("fileNameInput"));
-								}
-								var inputObj = document.createElement('input');
-								inputObj.setAttribute('id', 'fileNameInput');
-								inputObj.setAttribute('type', 'file');
-								inputObj.setAttribute('name', 'fileNameInput');
-								inputObj.setAttribute("style", 'visibility:hidden');
-								document.body.appendChild(inputObj);
-								inputObj.value;
-								inputObj.click();
-								inputObj.addEventListener('change', e => {
-									if (!inputObj.files) return;
-									var fileToLoad = inputObj.files[0];
-									if (fileToLoad) {
-										var fileReader = new FileReader();
-										fileReader.onload = function (fileLoadedEvent) {
-											var data = fileLoadedEvent.target.result;
-											if (!data) return reject('no data');
-											try {
-												data = JSON.parse(lib.init.decode(data));
-												if (!data || typeof data != 'object') {
-													throw ('err');
-												}
-												if (lib.db && (!data.config || !data.data)) {
-													throw ('err');
-												}
-											}
-											catch (e) {
-												return reject(e);
-											}
-											return resolve(data);
-										};
-										fileReader.readAsText(fileToLoad, "UTF-8");
-									}
-								});
-							}
-						});
-					}).then(async data => {
-						if (!lib.db) {
-							var noname_inited = localStorage.getItem('noname_inited');
-							var onlineKey = localStorage.getItem(lib.configprefix + 'key');
-							localStorage.clear();
-							if (noname_inited) {
-								localStorage.setItem('noname_inited', noname_inited);
-							}
-							if (onlineKey) {
-								localStorage.setItem(lib.configprefix + 'key', onlineKey);
-							}
-							for (var i in data) {
-								localStorage.setItem(i, data[i]);
-							}
-						}
-						else {
-							for (var i in data.config) {
-								await game.putDB('config', i, data.config[i]);
-							}
-							for (var i in data.data) {
-								await game.putDB('data', i, data.data[i]);
-							}
-						}
-						localStorage.setItem('noname_inited', window.tempSetNoname);
-						alert('导入成功');
-						setTimeout(() => {
-							window.location.reload();
-						}, 1000);
-					}).catch(error => {
-						alert('导入失败: ' + error);
-						console.error(error);
-					})
-				}
-			};
-
-			/** 点击更新源按钮后根据req的结果更改显示文字 */
-			function checkConnection() {
-				zipDataDiv.innerHTML = `更新源: ${ site == site_c ? 'FAST GIT' : 'URC' }(点击此处更换更新源)`;
-				// 赋值更换更新源的点击事件
-				zipDataDiv.onclick = function() {
-					if (this.classList.toggle('bluetext')) {
-						site = site_urc;
-						zipDataDiv.innerHTML = `更新源: URC`;
-					}
-					else {
-						site = site_c;
-						zipDataDiv.innerHTML = `更新源: GitHub Proxy`;
-					}
-					checkConnection();
-				};
+			const checkConnection = async function () {
 				button.innerHTML = '正在连接';
 				button.classList.add('disabled');
-				version.innerHTML = '';
-
-				function failed() {
-					button.classList.add('disabled');
-					button.innerHTML = '连接失败';
-					// 把下面显示版本的div改为重试a标签
-					var a = document.createElement('div');
-					a.innerText = '点击重试';
-					a.style['text-decoration'] = 'underline';
-					a.addEventListener('click', checkConnection);
-					version.innerHTML = '';
-					version.appendChild(a);
-				}
-
-				function success() {
-					button.classList.remove('disabled');
-					button.innerHTML = '下载无名杀';
-					version.innerHTML = 'v' + window.noname_update.version;
-				}
-
-				/*if (!window.noname_android_extension) {
-					// 默认从site_c拿最新版本号
-					req(site_c + 'game/update.js', function () {
-						req(my_ext_site + 'update.js', success, failed, 'noname_android_extension');
-					}, failed, 'noname_update');
-				} else {
-					req(site_c + 'game/update.js', success, failed, 'noname_update');
-				}*/
-				req(site + 'game/update.js', success, failed, 'noname_update');
-				return false;
+				versionnode.innerHTML = '';
 			};
 
-			/** 下载素材 */
-			function update() {
-				button.innerHTML = '获取下载文件';
-				button.classList.add('disabled');
-				version.innerHTML = '';
-				req(`${ site }v${ version }game/source.js`, () => {
+			const update = function () {
+				checkConnection()
+					.then(() => getLatestVersionFromGitHub())
+					.then(tagName => {
+						return getRepoTagDescription(tagName);
+					})
+					.then(description => {
+						button.classList.remove('disabled');
+						button.innerHTML = '下载无名杀';
+						versionnode.innerHTML = description.name;
+						download(description);
+					})
+					.catch((e) => {
+						alert("获取更新失败: " + e);
+						button.classList.add('disabled');
+						button.innerHTML = '连接失败';
+					});
+				/**
+				 * @param {{ assets: any; author?: { login: string; avatar_url: string; html_url: string; }; body?: string; html_url?: string; name: any; published_at?: string; zipball_url: any; }} description
+				 */
+				const download = function (description) {
 					button.remove();
 					zipDataDiv.remove();
 					help.remove();
-					version.remove();
-					
-					const prompt = createElement('div', {
-						innerText: '正在下载游戏文件',
-						parentNode: document.body,
-						style: {
-							height: '40px',
-							top: 'calc(50% - 40px)',
-							lineHeight: '40px'
+					versionnode.remove();
+					const progress = createProgress(
+						"正在更新" + description.name,
+						1,
+						description.name + ".zip"
+					);
+					let unZipProgress;
+					let url = description.zipball_url;
+					if (Array.isArray(description.assets) && description.assets.length > 0) {
+						const coreZipData = description.assets.find((v) => v.name == "noname.core.zip");
+						// 自动下载离线包
+						if (coreZipData) {
+							url = "https://ghproxy.cc/" + coreZipData.browser_download_url;
 						}
-					});
-
-					const progress = createElement('div', {
-						innerText: '0/0',
-						parentNode: document.body,
-						style: {
-							top: 'calc(50% + 20px)',
-							fontSize: '20px'
-						}
-					});
-
-					let updates = window.noname_source_list;
-					delete window.noname_source_list;
-
-					let n1 = 0;
-					let n2 = updates.length;
-					progress.innerHTML = n1 + '/' + n2;
-
-					function finish() {
-						prompt.innerHTML = '游戏文件下载完毕';
-						progress.innerHTML = n1 + '/' + n2;
-						if (window.FileTransfer) {
-							localStorage.setItem('noname_inited', dir);
-						}
-						else {
-							localStorage.setItem('noname_inited', 'nodejs');
-						}
-						window.location.reload();
 					}
-
-					function downloadFile(url, folder, onsuccess, onerror) {
-						console.log(url);
-						var fileTransfer = new FileTransfer();
-						url = site + url;
-						folder = dir + folder;
-						fileTransfer.download(encodeURI(url), folder, onsuccess, onerror);
-					};
-
-					/** 下载失败重新下载文件 */
-					function multiDownload(list, onsuccess, onerror, onfinish) {
-						list = list.slice(0);
-						let download = function (current) {
-							if (current) {
-								downloadFile(current, current, function () {
-									if (onsuccess) onsuccess();
-									download(list.shift());
-								}, function (e) {
-									// 跳过404
-									if (e.http_status && (e.http_status == 404 || e.http_status == '404')) {
-										if (onsuccess) onsuccess();
-										download(list.shift());
-									} else {
-										if (onerror) {
-											console.log(e);
-											onerror(e);
-										}
-										setTimeout(() => {
-											download(current);
-										}, 350);
-									}
-								});
+					request(url, (receivedBytes, total, filename) => {
+						if (typeof filename == "string") {
+							progress.setFileName(filename);
+						}
+						let received = 0,
+							max = 0;
+						if (total) {
+							max = +(total / (1024 * 1024)).toFixed(1);
+						} else {
+							max = 1000;
+						}
+						received = +(receivedBytes / (1024 * 1024)).toFixed(1);
+						if (received > max) max = received;
+						progress.setProgressMax(max);
+						progress.setProgressValue(received);
+					})
+						.then(async (blob) => {
+							progress.remove();
+							const zip = new JSZip();
+							zip.load(await blob.arrayBuffer());
+							const entries = Object.entries(zip.files);
+							let root;
+							const hiddenFileFlags = [".", "_"];
+							unZipProgress = createProgress(
+								"正在解压" + progress.getFileName(),
+								entries.length
+							);
+							let i = 0;
+							for (const [key, value] of entries) {
+								// 第一个是文件夹的话，就是根文件夹
+								if (i == 0 && value.dir && !description.name.includes("noname.core.zip")) {
+									root = key;
+								}
+								unZipProgress.setProgressValue(i++);
+								const fileName =
+									typeof root == "string" && key.startsWith(root)
+										? key.replace(root, "")
+										: key;
+								if (hiddenFileFlags.includes(fileName[0])) continue;
+								if (value.dir) {
+									await game.promises.createDir(fileName);
+									continue;
+								}
+								unZipProgress.setFileName(fileName);
+								const [path, name] = [
+									fileName.split("/").slice(0, -1).join("/"),
+									fileName.split("/").slice(-1).join("/"),
+								];
+								await game.promises
+									.writeFile(value.asArrayBuffer(), path, name)
+									.catch(async (e) => {
+										// 特殊处理
+										if (
+											name == "noname-server.exe" &&
+											e.message.includes("resource busy or locked") &&
+											location.protocol.startsWith("http")
+										) {
+											if (
+												typeof window.require == "function" &&
+												typeof window.process == "object" &&
+												typeof window.__dirname == "string"
+											) {
+												return new Promise((resolve, reject) => {
+													const cp = require("child_process");
+													cp.exec(`taskkill /IM noname-server.exe /F`, (e) => {
+														if (e) reject(e);
+														else
+															game.promises
+																.writeFile(value.asArrayBuffer(), path, name)
+																.then(() => {
+																	cp.exec(
+																		`start /b ${__dirname}\\noname-server.exe -platform=electron`,
+																		() => { }
+																	);
+																	function loadURL() {
+																		let myAbortController =
+																			new AbortController();
+																		let signal = myAbortController.signal;
+																		setTimeout(
+																			() => myAbortController.abort(),
+																			2000
+																		);
+																		fetch(
+																			`http://localhost:8089/app.html`,
+																			{ signal }
+																		)
+																			.then(({ ok }) => {
+																				if (ok) resolve(null);
+																				else
+																					throw new Error(
+																						"fetch加载失败"
+																					);
+																			})
+																			.catch(() => loadURL());
+																	}
+																	loadURL();
+																})
+																.catch(reject);
+													});
+												});
+											}
+										} else throw e;
+									});
+							}
+							unZipProgress.remove();
+							if (window.FileTransfer) {
+								localStorage.setItem('noname_inited', dir);
 							}
 							else {
-								if (onfinish) onfinish();
+								localStorage.setItem('noname_inited', 'nodejs');
 							}
-						}
-						download(list.shift());
-					};
+							location.reload();
+						})
+						.catch((e) => {
+							if (progress.parentNode) progress.remove();
+							if (unZipProgress && unZipProgress.parentNode) unZipProgress.remove();
+							throw e;
+						});
+				};
+			};
 
-					multiDownload(updates/* [] */, function () {
-						n1++;
-						progress.innerHTML = n1 + '/' + n2;
-					}, null, function () {
-						setTimeout(finish, 500);
+			const game = {
+				promises: {
+					createDir(directory) {
+						return new Promise((resolve, reject) => {
+							// @ts-ignore
+							game.createDir(directory, resolve, reject);
+						});
+					},
+					writeFile(data, path, name) {
+						return new Promise((resolve, reject) => {
+							// @ts-ignore
+							game.writeFile(data, path, name, resolve);
+						}).then((result) => {
+							return new Promise((resolve, reject) => {
+								if (result instanceof Error) {
+									reject(result);
+								} else {
+									resolve(result);
+								}
+							});
+						});
+					},
+				},
+				createDir(directory, successCallback, errorCallback) {
+					if (window.cordova) {
+						const paths = directory.split("/").reverse();
+						new Promise((resolve, reject) =>
+							window.resolveLocalFileSystemURL(dir, resolve, reject)
+						).then(
+							(directoryEntry) => {
+								const redo = (entry) =>
+									new Promise((resolve, reject) =>
+										entry.getDirectory(
+											paths.pop(),
+											{
+												create: true,
+											},
+											resolve,
+											reject
+										)
+									).then((resolvedDirectoryEntry) => {
+										if (paths.length) return redo(resolvedDirectoryEntry);
+										if (typeof successCallback == "function") successCallback();
+									});
+								return redo(directoryEntry);
+							},
+							(reason) => {
+								if (typeof errorCallback != "function") return Promise.reject(reason);
+								errorCallback(reason);
+							}
+						);
+					}
+					else if (typeof require == "function") {
+						const fs = require("fs");
+						const path = require("path");
+						const target = path.join(__dirname, directory);
+						if (fs.existsSync(target)) {
+							// 修改逻辑，路径存在且是文件才会报错
+							if (!fs.statSync(target).isDirectory()) {
+								if (typeof errorCallback == "function") errorCallback(new Error(`${target}文件已存在`));
+								else if (typeof successCallback == "function") successCallback();
+							}
+							else if (typeof successCallback == "function") successCallback();
+						} else if (checkVersion(process.versions.node, "10.12.0") > -1) {
+							fs.mkdir(target, { recursive: true }, (e) => {
+								if (e) {
+									if (typeof errorCallback == "function") errorCallback(e);
+									else throw e;
+								} else {
+									if (typeof successCallback == "function") successCallback();
+								}
+							});
+						} else {
+							const paths = directory.split("/").reverse();
+							let _path = __dirname;
+							const redo = () => {
+								_path = path.join(_path, paths.pop());
+								const exists = fs.existsSync(_path);
+								const callback = (e) => {
+									if (e) {
+										if (typeof errorCallback != "function") throw e;
+										errorCallback(e);
+										return;
+									}
+									if (paths.length) return redo();
+									if (typeof successCallback == "function") successCallback();
+								};
+								if (!exists) fs.mkdir(_path, callback);
+								else callback();
+							};
+							redo();
+						}
+					}
+				},
+				writeFile(data, path, name, callback) {
+					game.ensureDirectory(path, function () {
+						if (Object.prototype.toString.call(data) == "[object File]") {
+							var fileReader = new FileReader();
+							fileReader.onload = function (e) {
+								game.writeFile(this.result, path, name, callback);
+							};
+							fileReader.readAsArrayBuffer(data);
+						}
+						if (window.cordova) {
+							window.resolveLocalFileSystemURL(
+								dir + path,
+								function (entry) {
+									entry.getFile(
+										name,
+										{ create: true },
+										function (fileEntry) {
+											fileEntry.createWriter(function (fileWriter) {
+												fileWriter.onwriteend = callback;
+												fileWriter.write(data);
+											}, callback);
+										},
+										callback
+									);
+								},
+								callback
+							);
+						}
+						else if (typeof require == "function") {
+							const zip = new JSZip();
+							zip.file("i", data);
+							const fs = require("fs");
+							fs.writeFile(
+								__dirname + "/" + path + "/" + name,
+								zip.files.i.asNodeBuffer(),
+								null,
+								callback
+							);
+						}
 					});
-				}, () => {}, 'noname_source_list');
+				},
+				ensureDirectory(list, callback, file) {
+					const directoryList = typeof list == "string" ? [list] : list.slice().reverse(),
+						num = file ? 1 : 0;
+					let access;
+					if (window.cordova) {
+						access = (entry, directory, createDirectory) => {
+							if (directory.length <= num) {
+								createDirectory();
+								return;
+							}
+							const str = directory.pop();
+							return new Promise((resolve, reject) =>
+								entry.getDirectory(
+									str,
+									{
+										create: false,
+									},
+									resolve,
+									reject
+								)
+							)
+								.catch(
+									() =>
+										new Promise((resolve) =>
+											entry.getDirectory(
+												str,
+												{
+													create: true,
+												},
+												resolve
+											)
+										)
+								)
+								.then((directoryEntry) => access(directoryEntry, directory, createDirectory));
+						};
+					}
+					else if (typeof require == "function") {
+						access = (path, directory, createDirectory) => {
+							const fs = require("fs");
+							if (directory.length <= number) {
+								createDirectory();
+								return;
+							}
+							path += `/${directory.pop()}`;
+							const fullPath = `${__dirname}${path}`;
+							return new Promise((resolve, reject) =>
+								fs.access(fullPath, (errnoException) => {
+									if (errnoException) reject();
+									else resolve();
+								})
+							)
+								.catch(
+									() =>
+										new Promise((resolve, reject) =>
+											fs.mkdir(fullPath, (errnoException) => {
+												if (errnoException) reject(errnoException);
+												else resolve();
+											})
+										)
+								)
+								.then(() => access(path, directory, createDirectory), console.log);
+						};
+					}
+					return new Promise((resolve, reject) => {
+						if (window.cordova) {
+							window.resolveLocalFileSystemURL(
+								dir,
+								(rootEntry) => {
+									const createDirectory = () => {
+										if (directoryList.length)
+											access(rootEntry, directoryList.pop().split("/").reverse(), createDirectory);
+										if (typeof callback == "function") callback();
+										resolve();
+									};
+									createDirectory();
+								},
+								reject
+							)
+						}
+						else if (typeof require == "function") {
+							const createDirectory = () => {
+								if (directoryList.length)
+									access("", directoryList.pop().split("/").reverse(), createDirectory);
+								else {
+									if (typeof callback == "function") callback();
+									resolve();
+								}
+							};
+							createDirectory();
+						}
+					});
+				}
+			};
+
+			if (window.FileTransfer) {
+				window.tempSetNoname = dir;
+			} else {
+				window.tempSetNoname = 'nodejs';
 			}
 
-			helpnodetext.innerHTML =
-				`<div>
-					<ol>
-						<li>访问
-						<a href="https://github.com/libccy/noname/releases/latest">网址1</a>，
-						下载zip文件，或者通过其他方式(比如QQ群,QQ频道,微信公众号)下载最新的“无名杀完整包”。
-						<li>使用QQ或者文件管理器选择zip文件,然后用其他方式-无名杀导入(诗笺版)进行导入
-						<li>完成上述步骤后，<a href="javascript:localStorage.setItem(\'noname_inited\',window.tempSetNoname);window.location.reload()">点击此处</a></div>
-					</ol>
-				</div>`;
+			window.addEventListener("importPackage", e => {
+				localStorage.setItem('noname_inited', dir);
+				window.location.reload();
+			}, false);
+
+			checkConnection()
+				.then(() => getLatestVersionFromGitHub())
+				.then(tagName => getRepoTagDescription(tagName))
+				.then(description => {
+					button.classList.remove('disabled');
+					button.innerHTML = '下载无名杀';
+					versionnode.innerHTML = description.name;
+					zipDataDiv.innerText = 'github资源加载成功';
+				})
+				.catch((e) => {
+					alert("获取更新失败: " + e);
+					button.classList.add('disabled');
+					button.innerHTML = '连接失败';
+					zipDataDiv.innerText = 'github资源加载失败';
+				});
 		},
 	}
 	app.initialize();

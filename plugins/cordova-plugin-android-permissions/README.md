@@ -1,13 +1,15 @@
-Android permission Cordova plugin
+Android Permission Cordova Plugin
 ========
 
-This plugin is designed for supporting Android new permissions checking mechanism.
+This plugin is designed to support Android's new permissions checking mechanism, and has been updated to include the newest permissions added in Android 13.
 
-Since Android 6.0, the Android permissions checking mechanism has been changed. In the past, the permissions were granted by users when they decide to install the app. Now, the permissions should be granted by a user when he/she is using the app.
+The Android permissions checking mechanism changed starting in Android 6.0. In the past, permissions were granted by users when they decided to install the app.
+Now the permissions should be granted by users when they are using the app.
 
-For old Android plugins you (developers) are using may not support this new mechanism or already stop updating. So either to find a new plugin to solving this problem, nor trying to add the mechanism in the old plugin. If you don't want to do those, you can try this plugin.
+Older Android plugins may not support this new approach or request the necessary permissions,
+but Cordova developers can work around this problem by using this permissions plugin to request the appropriate permissions prior to using the older plugin.
 
-As a convenience we support browser and iOS platforms as well. But this plugin will simple reply that any permission checked of requested was granted.
+As a convenience we support browser and iOS platforms as well, but this permissions plugin will simply reply that any permission checked or requested was granted.
 
 Installation
 --------

@@ -21,11 +21,17 @@ description: Upload and download files.
 #         under the License.
 -->
 
-|AppVeyor|Travis CI|
-|:-:|:-:|
-|[![Build status](https://ci.appveyor.com/api/projects/status/github/apache/cordova-plugin-file-transfer?branch=master)](https://ci.appveyor.com/project/ApacheSoftwareFoundation/cordova-plugin-file-transfer)|[![Build Status](https://travis-ci.org/apache/cordova-plugin-file-transfer.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-file-transfer)|
-
 # cordova-plugin-file-transfer
+
+[![Android Testsuite](https://github.com/apache/cordova-plugin-file-transfer/actions/workflows/android.yml/badge.svg)](https://github.com/apache/cordova-plugin-file-transfer/actions/workflows/android.yml) [![Chrome Testsuite](https://github.com/apache/cordova-plugin-file-transfer/actions/workflows/chrome.yml/badge.svg)](https://github.com/apache/cordova-plugin-file-transfer/actions/workflows/chrome.yml) [![iOS Testsuite](https://github.com/apache/cordova-plugin-file-transfer/actions/workflows/ios.yml/badge.svg)](https://github.com/apache/cordova-plugin-file-transfer/actions/workflows/ios.yml) [![Lint Test](https://github.com/apache/cordova-plugin-file-transfer/actions/workflows/lint.yml/badge.svg)](https://github.com/apache/cordova-plugin-file-transfer/actions/workflows/lint.yml)
+
+# Usage notice
+
+With the new features introduced in the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) and the [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest), this plugin may not be needed any more for your use case. For small file transfers, you probably won't require this plugin. But, if you plan to handle large downloads, suffering from slow saving, timeouts, or crashes, this plugin is better suited for your use case over the Fetch API or the XMLHttpRequest.
+
+Migrating from this plugin to using the new features of [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest), is explained in this [Cordova blog post](https://cordova.apache.org/blog/2017/10/18/from-filetransfer-to-xhr2.html).
+
+## Description
 
 This plugin allows you to upload and download files.
 
@@ -42,10 +48,6 @@ function onDeviceReady() {
 
 Report issues with this plugin on the [Apache Cordova issue tracker](https://issues.apache.org/jira/issues/?jql=project%20%3D%20CB%20AND%20status%20in%20%28Open%2C%20%22In%20Progress%22%2C%20Reopened%29%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20%22Plugin%20File%20Transfer%22%20ORDER%20BY%20priority%20DESC%2C%20summary%20ASC%2C%20updatedDate%20DESC)
 
-## Deprecated
-
-With the new features introduced in [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest), this plugin is not needed any more. Migrating from this plugin to using the new features of [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest), is explained in this [Cordova blog post](https://cordova.apache.org/blog/2017/10/18/from-filetransfer-to-xhr2.html).
-
 ## Installation
 
 ```bash
@@ -54,18 +56,9 @@ cordova plugin add cordova-plugin-file-transfer
 
 ## Supported Platforms
 
-- Amazon Fire OS
 - Android
-- BlackBerry 10
 - Browser
-- Firefox OS**
 - iOS
-- Windows Phone 7 and 8*
-- Windows
-
-\* _Do not support `onprogress` nor `abort()`_
-
-\** _Do not support `onprogress`_
 
 # FileTransfer
 
@@ -168,12 +161,17 @@ var headers={'headerParam':'headerValue', 'headerParam2':'headerValue2'};
 options.headers = headers;
 
 var ft = new FileTransfer();
+var progressValue = 0;
 ft.onprogress = function(progressEvent) {
     if (progressEvent.lengthComputable) {
-        loadingStatus.setPercentage(progressEvent.loaded / progressEvent.total);
+        // Calculate the percentage
+        progressValue = progressEvent.loaded / progressEvent.total;
     } else {
-        loadingStatus.increment();
+        progressValue++;
     }
+
+    // Display percentage in the UI
+    document.getElementByID('progress-value').innerHTML = progressValue;
 };
 ft.upload(fileURL, uri, win, fail, options);
 ```
@@ -203,12 +201,6 @@ A `FileUploadResult` object is passed to the success callback of the
 ### Browser Quirks
 
 - __withCredentials__: _boolean_ that tells the browser to set the withCredentials flag on the XMLHttpRequest
-
-### Windows Quirks
-
-- An option parameter with empty/null value is excluded in the upload operation due to the Windows API design.
-
-- __chunkedMode__ is not supported and all uploads are set to non-chunked mode.
 
 ## download
 
@@ -254,10 +246,6 @@ fileTransfer.download(
     }
 );
 ```
-
-### WP8 Quirks
-
-- Download requests is being cached by native implementation. To avoid caching, pass `if-Modified-Since` header to download method.
 
 ### Browser Quirks
 
@@ -323,10 +311,6 @@ __exception__ is never defined.
 - 3 = `FileTransferError.CONNECTION_ERR`
 - 4 = `FileTransferError.ABORT_ERR`
 - 5 = `FileTransferError.NOT_MODIFIED_ERR`
-
-## Windows Quirks
-
-- The plugin implementation is based on [BackgroundDownloader](https://msdn.microsoft.com/en-us/library/windows/apps/windows.networking.backgroundtransfer.backgrounddownloader.aspx)/[BackgroundUploader](https://msdn.microsoft.com/en-us/library/windows/apps/windows.networking.backgroundtransfer.backgrounduploader.aspx), which entails the latency issues on Windows devices (creation/starting of an operation can take up to a few seconds). You can use XHR or [HttpClient](https://msdn.microsoft.com/en-us/library/windows/apps/windows.web.http.httpclient.aspx) as a quicker alternative for small downloads.
 
 ## Backwards Compatibility Notes
 

@@ -279,7 +279,7 @@ window.config = {
 		"yongjian",
 	],
 	plays: [],
-	extensions: ['Settings'],
+	extensions: [],
 	extension_Settings_enable:true,
 	banned: [],
 	bannedcards: [],

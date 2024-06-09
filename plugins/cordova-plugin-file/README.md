@@ -21,11 +21,9 @@ description: Read/write files on the device.
 #         under the License.
 -->
 
-|AppVeyor|Travis CI|
-|:-:|:-:|
-|[![Build status](https://ci.appveyor.com/api/projects/status/github/apache/cordova-plugin-file?branch=master)](https://ci.appveyor.com/project/ApacheSoftwareFoundation/cordova-plugin-file)|[![Build Status](https://travis-ci.org/apache/cordova-plugin-file.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-file)|
-
 # cordova-plugin-file
+
+[![Android Testsuite](https://github.com/apache/cordova-plugin-file/actions/workflows/android.yml/badge.svg)](https://github.com/apache/cordova-plugin-file/actions/workflows/android.yml) [![Chrome Testsuite](https://github.com/apache/cordova-plugin-file/actions/workflows/chrome.yml/badge.svg)](https://github.com/apache/cordova-plugin-file/actions/workflows/chrome.yml) [![iOS Testsuite](https://github.com/apache/cordova-plugin-file/actions/workflows/ios.yml/badge.svg)](https://github.com/apache/cordova-plugin-file/actions/workflows/ios.yml) [![Lint Test](https://github.com/apache/cordova-plugin-file/actions/workflows/lint.yml/badge.svg)](https://github.com/apache/cordova-plugin-file/actions/workflows/lint.yml)
 
 This plugin implements a File API allowing read/write access to files residing on the device.
 
@@ -49,9 +47,9 @@ To get a few ideas how to use the plugin, check out the [sample](#sample) at the
 For an overview of other storage options, refer to Cordova's
 [storage guide](http://cordova.apache.org/docs/en/latest/cordova/storage/storage.html).
 
-This plugin defines global `cordova.file` object.
+This plugin defines a global `cordova.file` object.
 
-Although in the global scope, it is not available until after the `deviceready` event.
+Although the object is in the global scope, it is not available to applications until after the `deviceready` event fires.
 
     document.addEventListener("deviceready", onDeviceReady, false);
     function onDeviceReady() {
@@ -97,15 +95,15 @@ Each URL is in the form _file:///path/to/spot/_, and can be converted to a
   in here. (_iOS_, _Android_, _BlackBerry 10_, _OSX_, _windows_)
 
 * `cordova.file.externalApplicationStorageDirectory` - Application space on
-  external storage. (_Android_)
+  external storage. (_Android_). See [Quirks](#androids-external-storage-quirks).
 
 * `cordova.file.externalDataDirectory` - Where to put app-specific data files on
-  external storage. (_Android_)
+  external storage. (_Android_). See [Quirks](#androids-external-storage-quirks).
 
 * `cordova.file.externalCacheDirectory` - Application cache on external storage.
-  (_Android_)
+  (_Android_). See [Quirks](#androids-external-storage-quirks).
 
-* `cordova.file.externalRootDirectory` - External storage (SD card) root. (_Android_, _BlackBerry 10_)
+* `cordova.file.externalRootDirectory` - External storage (SD card) root. (_Android_, _BlackBerry 10_). See [Quirks](#androids-external-storage-quirks).
 
 * `cordova.file.tempDirectory` - Temp directory that the OS can clear at will. Do not
   rely on the OS to clear this directory; your app should always remove files as
@@ -162,7 +160,7 @@ the `cordova.file.*` properties map to physical paths on a real device.
 | &nbsp;&nbsp;&nbsp;`cache`                       | cacheDirectory              | cache                     | r/w  |     Yes     |     Yes\* |   Yes   |
 | &nbsp;&nbsp;&nbsp;`files`                       | dataDirectory               | files                     | r/w  |     Yes     |     No    |   Yes   |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`Documents` |                             | documents                 | r/w  |     Yes     |     No    |   Yes   |
-| `<sdcard>/`                                     | externalRootDirectory       | sdcard                    | r/w  |     Yes     |     No    |   No    |
+| `<sdcard>/`                                     | externalRootDirectory       | sdcard                    | r/w\*\*\*  |     Yes     |     No    |   No    |
 | &nbsp;&nbsp;&nbsp;`Android/data/<app-id>/`      | externalApplicationStorageDirectory | -                 | r/w  |     Yes     |     No    |   No    |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache`     | externalCacheDirectory       | cache-external            | r/w  |     Yes     |     No\*\*|   No    |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`files`     | externalDataDirectory       | files-external            | r/w  |     Yes     |     No    |   No    |
@@ -175,8 +173,30 @@ the `cordova.file.*` properties map to physical paths on a real device.
      the contents yourself. Should the user purge the cache manually, the contents of the
      directory are removed.
 
+\*\*\* As of API 30, these directories are no longer writable.
+
 **Note**: If external storage can't be mounted, the `cordova.file.external*`
 properties are `null`.
+
+#### Android's External Storage Quirks
+
+With the introduction of [Scoped Storage](https://source.android.com/docs/core/storage/scoped) access to External Storage is unreliable or limited via File APIs.
+Scoped Storage was introduced in API 29. While existing apps may have the ability to opt out, this option is not available for new apps. On Android API 30 and later, Scoped Storage is fully enforced.
+
+Additionally, Direct File Access **is not** supported on API 29. This means this plugin **cannot** access external storage mediums on API 29 devices.
+
+API 30 introduced [FUSE](https://source.android.com/docs/core/storage/scoped) which allowed limited access to external storage using File APIs, allowing this plugin to
+partially work again.
+
+Limited access includes but isn't limited to:
+- Read only access with appropriate `READ_EXTERNAL` or [READ_MEDIA_*](https://developer.android.com/training/data-storage/shared/media#access-other-apps-files) permissions.
+- Read only access is limited to media files, but not documents.
+- Writes are limited to only files owned by your app. Modifying files owned by a third-party app (including an image file created via the camera plugin for example) is not possible via the File API.
+- Not all paths in external storage is writable.
+
+These limitations only applies to external filesystems (e.g. `cordova.file.external*` paths). Internal filesystems such as `cordova.file.dataDirectory` path are not imposed by these limitations.
+
+If interfacing with the external file system is a requirement for your application, consider using a [MediaStore](https://www.npmjs.com/search?q=ecosystem%3Acordova%20storage%20access%20framework) plugin instead.
 
 ### OS X File System Layout
 
@@ -268,6 +288,20 @@ Marshmallow requires the apps to ask for permissions when reading/writing to ext
 `cordova.file.applicationStorageDirectory` and `cordova.file.externalApplicationStorageDirectory`, and the plugin doesn't request permission
 for these two directories unless external storage is not mounted. However due to a limitation, when external storage is not mounted, it would ask for
 permission to write to `cordova.file.externalApplicationStorageDirectory`.
+
+### SDK Target Less Than 29
+
+From the official [Storage updates in Android 11](https://developer.android.com/about/versions/11/privacy/storage) documentation, the [`WRITE_EXTERNAL_STORAGE`](https://developer.android.com/reference/android/Manifest.permission#WRITE_EXTERNAL_STORAGE) permission is no longer operational and does not provide access.
+
+> If this permission is not allowlisted for an app that targets an API level before [`Build.VERSION_CODES.Q`](https://developer.android.com/reference/android/os/Build.VERSION_CODES#Q) (SDK 29) this permission cannot be granted to apps.
+
+If you need to add this permission, please add the following to your `config.xml`.
+
+```xml
+<config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+</config-file>
+```
 
 ## iOS Quirks
 
@@ -422,7 +456,22 @@ This method will now return filesystem URLs of the form
 
 which can be used to identify the file uniquely.
 
+In v7.0.0 the return value of `toURL()` for Android was updated to return the absolute `file://` URL when app content is served from the `file://` scheme.
+
+If app content is served from the `http(s)://` scheme, a `cdvfile` formatted URL will be returned instead. The `cdvfile` formatted URL is created from the internal method `toInternalURL()`.
+
+An example `toInternalURL()` return filesystem URL:
+
+    https://localhost/persistent/path/to/file
+
+[![toURL flow](https://sketchviz.com/@erisu/7b05499842275be93a0581e8e3576798/6dc71d8302cafd05b443d874a592d10fa415b8e3.sketchy.png)](//sketchviz.com/@erisu/7b05499842275be93a0581e8e3576798)
+
+It is recommended to always use the `toURL()` to ensure that the correct URL is returned.
+
 ## cdvfile protocol
+
+- Not Supported on Android
+
 **Purpose**
 
 `cdvfile://localhost/persistent|temporary|another-fs-root*/path/to/file` can be used for platform-independent file paths.

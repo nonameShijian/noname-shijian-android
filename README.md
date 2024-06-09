@@ -11,3 +11,88 @@
 先秦介子推曾言：“窃人之财，犹谓之盗，况贪天之功以为己力乎。”无名杀社区发展至今，正是因为有大量的开源代码进行参考，才能不断推陈出新。试想每个扩展开发者在成为一个扩展开发者之前，谁敢说没有大量参考社区内的源码？每个作品凝聚的都是大家的心血，而不是仅仅归属于个别人。我们相信：开放、共享、多元才是无名杀的初心，绝不是封闭、私藏与趋同。
 
 我们在此呼吁无名杀社区正确认识《无名杀十周年》开发团队的一些行为与做法，并希望《无名杀十周年》开发团队能反省迄今以来的所作所为。**自由开源**是无名杀社区的灵魂，希望各方都能够遵循这一精神。
+
+
+# 创建安卓项目
+先按教程全局安装cordova环境(本项目用的是cordova12)
+
+然后安装项目依赖
+
+```
+npm i cordova@12 -g
+npm i
+```
+
+创建安卓项目: 
+```
+cordova platform add android@12
+```
+
+在platforms\android\repositories.gradle
+和
+在platforms\android\app\repositories.gradle
+`改为`:
+```gradle
+ext.repos = {
+    google()
+    mavenCentral()
+    jcenter()
+    maven { url "https://oss.jfrog.org/libs-snapshot" }
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.aliyun.com/repository/public/' }
+}
+```
+
+在platforms\android\app\build.gradle的android块上面添加:
+```gradle
+def generateTime() {
+    return new Date().format("yyyy-MM-dd")
+}
+android { ... }
+```
+在platforms\android\app\build.gradle的android块中添加:
+```gradle
+android.applicationVariants.all {
+    variant ->
+        variant.outputs.all {
+            if (buildType.name == 'release') {
+                outputFileName = "无名杀诗笺版(安卓)v${variant.versionName}(${generateTime()}).ApK"
+            }
+        }
+}
+
+aaptOptions {
+    // 表示不让aapt压缩的文件后缀
+    noCompress "apk"
+}
+```
+
+在platforms\android\app\build.gradle的dependencies`改为`:
+```gradle
+dependencies {
+    implementation fileTree(dir: 'libs', include: '*.jar')
+    implementation "androidx.appcompat:appcompat:${cordovaConfig.ANDROIDX_APP_COMPAT_VERSION}"
+    implementation "androidx.core:core-splashscreen:${cordovaConfig.ANDROIDX_CORE_SPLASHSCREEN_VERSION}"
+
+    if (cordovaConfig.IS_GRADLE_PLUGIN_KOTLIN_ENABLED) {
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${cordovaConfig.KOTLIN_VERSION}"
+    }
+
+    // SUB-PROJECT DEPENDENCIES START
+    implementation(project(path: ":CordovaLib"))
+    implementation "androidx.webkit:webkit:1.4.0"
+    implementation "com.android.support:support-v4:26.+"
+    // SUB-PROJECT DEPENDENCIES END
+
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation fileTree(dir: 'src/main/libs', include: '*.jar')
+    implementation 'com.alibaba:fastjson:1.1.55.android'
+    implementation 'androidx.palette:palette:1.0.0'
+    implementation 'io.github.jonanorman.android.webviewup:core:0.1.0'
+}
+```
+
+在platforms\android\cordova-plugin-local-notification的
+唯一子文件的dependencies块，将compile改成implementation
+
+然后打开`最新版`Android Studio进行安卓开发

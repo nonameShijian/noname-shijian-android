@@ -7,44 +7,47 @@
     "files": {}
   },
   "installed_plugins": {
-    "cordova-plugin-dialogs": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
-    "cordova-plugin-file-transfer": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
-    "cordova-plugin-local-notification": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
-    "cordova-plugin-websocket": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
-    "cordova-plugin-whitelist": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
     "cordova-plugin-android-permissions": {
       "PACKAGE_NAME": "com.noname.shijian"
     },
-    "cordova-plugin-file-opener2": {
-      "ANDROID_SUPPORT_V4_VERSION": "27.+",
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
-    "cordova-plugin-insomnia": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    },
-    "cordova-plugin-inappbrowser": {
-      "PACKAGE_NAME": "com.noname.shijian"
-    }
-  },
-  "dependent_plugins": {
     "cordova-plugin-badge": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-battery-status": {
       "PACKAGE_NAME": "com.noname.shijian"
     },
     "cordova-plugin-device": {
       "PACKAGE_NAME": "com.noname.shijian"
     },
+    "cordova-plugin-dialogs": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
     "cordova-plugin-file": {
+      "ANDROIDX_WEBKIT_VERSION": "1.4.0",
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-file-transfer": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-inappbrowser": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-insomnia": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-statusbar": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-vibration": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-file-opener2": {
+      "PACKAGE_NAME": "com.noname.shijian"
+    },
+    "cordova-plugin-local-notification": {
+      "ANDROID_SUPPORT_V4_VERSION": "26.+",
       "PACKAGE_NAME": "com.noname.shijian"
     }
-  }
+  },
+  "dependent_plugins": {}
 }

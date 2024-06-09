@@ -1,6 +1,54 @@
 cordova.define('cordova/plugin_list', function(require, exports, module) {
   module.exports = [
     {
+      "id": "cordova-plugin-android-permissions.Permissions",
+      "file": "plugins/cordova-plugin-android-permissions/www/permissions.js",
+      "pluginId": "cordova-plugin-android-permissions",
+      "clobbers": [
+        "cordova.plugins.permissions"
+      ]
+    },
+    {
+      "id": "cordova-plugin-badge.Badge",
+      "file": "plugins/cordova-plugin-badge/www/badge.js",
+      "pluginId": "cordova-plugin-badge",
+      "clobbers": [
+        "cordova.plugins.notification.badge"
+      ]
+    },
+    {
+      "id": "cordova-plugin-battery-status.battery",
+      "file": "plugins/cordova-plugin-battery-status/www/battery.js",
+      "pluginId": "cordova-plugin-battery-status",
+      "clobbers": [
+        "navigator.battery"
+      ]
+    },
+    {
+      "id": "cordova-plugin-device.device",
+      "file": "plugins/cordova-plugin-device/www/device.js",
+      "pluginId": "cordova-plugin-device",
+      "clobbers": [
+        "device"
+      ]
+    },
+    {
+      "id": "cordova-plugin-dialogs.notification",
+      "file": "plugins/cordova-plugin-dialogs/www/notification.js",
+      "pluginId": "cordova-plugin-dialogs",
+      "merges": [
+        "navigator.notification"
+      ]
+    },
+    {
+      "id": "cordova-plugin-dialogs.notification_android",
+      "file": "plugins/cordova-plugin-dialogs/www/android/notification.js",
+      "pluginId": "cordova-plugin-dialogs",
+      "merges": [
+        "navigator.notification"
+      ]
+    },
+    {
       "id": "cordova-plugin-file.DirectoryEntry",
       "file": "plugins/cordova-plugin-file/www/DirectoryEntry.js",
       "pluginId": "cordova-plugin-file",
@@ -151,6 +199,14 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
       "runs": true
     },
     {
+      "id": "cordova-plugin-file.androidEntry",
+      "file": "plugins/cordova-plugin-file/www/android/Entry.js",
+      "pluginId": "cordova-plugin-file",
+      "merges": [
+        "Entry"
+      ]
+    },
+    {
       "id": "cordova-plugin-file.androidFileSystem",
       "file": "plugins/cordova-plugin-file/www/android/FileSystem.js",
       "pluginId": "cordova-plugin-file",
@@ -190,77 +246,27 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
       ]
     },
     {
-      "id": "cordova-plugin-device.device",
-      "file": "plugins/cordova-plugin-device/www/device.js",
-      "pluginId": "cordova-plugin-device",
+      "id": "cordova-plugin-inappbrowser.inappbrowser",
+      "file": "plugins/cordova-plugin-inappbrowser/www/inappbrowser.js",
+      "pluginId": "cordova-plugin-inappbrowser",
       "clobbers": [
-        "device"
+        "cordova.InAppBrowser.open"
       ]
     },
     {
-      "id": "cordova-plugin-badge.Badge",
-      "file": "plugins/cordova-plugin-badge/www/badge.js",
-      "pluginId": "cordova-plugin-badge",
+      "id": "cordova-plugin-insomnia.Insomnia",
+      "file": "plugins/cordova-plugin-insomnia/www/Insomnia.js",
+      "pluginId": "cordova-plugin-insomnia",
       "clobbers": [
-        "cordova.plugins.notification.badge"
+        "window.plugins.insomnia"
       ]
     },
     {
-      "id": "cordova-plugin-local-notification.LocalNotification",
-      "file": "plugins/cordova-plugin-local-notification/www/local-notification.js",
-      "pluginId": "cordova-plugin-local-notification",
+      "id": "cordova-plugin-statusbar.statusbar",
+      "file": "plugins/cordova-plugin-statusbar/www/statusbar.js",
+      "pluginId": "cordova-plugin-statusbar",
       "clobbers": [
-        "cordova.plugins.notification.local"
-      ]
-    },
-    {
-      "id": "cordova-plugin-local-notification.LocalNotification.Core",
-      "file": "plugins/cordova-plugin-local-notification/www/local-notification-core.js",
-      "pluginId": "cordova-plugin-local-notification",
-      "clobbers": [
-        "cordova.plugins.notification.local.core",
-        "plugin.notification.local.core"
-      ]
-    },
-    {
-      "id": "cordova-plugin-local-notification.LocalNotification.Util",
-      "file": "plugins/cordova-plugin-local-notification/www/local-notification-util.js",
-      "pluginId": "cordova-plugin-local-notification",
-      "merges": [
-        "cordova.plugins.notification.local.core",
-        "plugin.notification.local.core"
-      ]
-    },
-    {
-      "id": "cordova-plugin-dialogs.notification",
-      "file": "plugins/cordova-plugin-dialogs/www/notification.js",
-      "pluginId": "cordova-plugin-dialogs",
-      "merges": [
-        "navigator.notification"
-      ]
-    },
-    {
-      "id": "cordova-plugin-dialogs.notification_android",
-      "file": "plugins/cordova-plugin-dialogs/www/android/notification.js",
-      "pluginId": "cordova-plugin-dialogs",
-      "merges": [
-        "navigator.notification"
-      ]
-    },
-    {
-      "id": "cordova-plugin-websocket.websocket",
-      "file": "plugins/cordova-plugin-websocket/www/websocket.js",
-      "pluginId": "cordova-plugin-websocket",
-      "clobbers": [
-        "WebSocket"
-      ]
-    },
-    {
-      "id": "cordova-plugin-android-permissions.Permissions",
-      "file": "plugins/cordova-plugin-android-permissions/www/permissions.js",
-      "pluginId": "cordova-plugin-android-permissions",
-      "clobbers": [
-        "cordova.plugins.permissions"
+        "window.StatusBar"
       ]
     },
     {
@@ -272,34 +278,27 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
       ]
     },
     {
-      "id": "cordova-plugin-inappbrowser.inappbrowser",
-      "file": "plugins/cordova-plugin-inappbrowser/www/inappbrowser.js",
-      "pluginId": "cordova-plugin-inappbrowser",
+      "id": "cordova-plugin-local-notification.LocalNotification",
+      "file": "plugins/cordova-plugin-local-notification/www/local-notification.js",
+      "pluginId": "cordova-plugin-local-notification",
       "clobbers": [
-        "cordova.InAppBrowser.open"
-      ]
-    },
-    {
-      "id": "cordova-plugin-insomnia",
-      "file": "plugins/cordova-plugin-insomnia/www/Insomnia.js",
-      "pluginId": "cordova-plugin-insomnia",
-      "clobbers": [
-        "window.plugins.insomnia"
+        "cordova.plugins.notification.local"
       ]
     }
   ];
   module.exports.metadata = {
-    "cordova-plugin-file": "6.0.2",
-    "cordova-plugin-file-transfer": "1.7.1",
-    "cordova-plugin-device": "2.0.3",
-    "cordova-plugin-badge": "0.8.8",
-    "cordova-plugin-local-notification": "0.9.0-beta.2",
-    "cordova-plugin-whitelist": "1.3.4",
-    "cordova-plugin-dialogs": "2.0.2",
-    "cordova-plugin-websocket": "0.12.2",
     "cordova-plugin-android-permissions": "1.1.5",
-    "cordova-plugin-file-opener2": "3.0.5",
-    "cordova-plugin-inappbrowser": "5.0.0",
-    "cordova-plugin-insomnia": "4.3.0"
+    "cordova-plugin-badge": "0.8.9",
+    "cordova-plugin-battery-status": "2.0.3",
+    "cordova-plugin-device": "2.1.0",
+    "cordova-plugin-dialogs": "2.0.2",
+    "cordova-plugin-file": "8.0.1",
+    "cordova-plugin-file-transfer": "2.0.0",
+    "cordova-plugin-inappbrowser": "6.0.0",
+    "cordova-plugin-insomnia": "4.3.0",
+    "cordova-plugin-statusbar": "4.0.0",
+    "cordova-plugin-vibration": "3.1.1",
+    "cordova-plugin-file-opener2": "4.0.0",
+    "cordova-plugin-local-notification": "0.9.0-beta.4"
   };
 });

@@ -1,14 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.noname.shijian" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.noname.shijian" version="1.6.4" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <name>无名杀</name>
-    <description>
-        无名杀
-    </description>
+    <description>无名杀</description>
     <author email="dev@cordova.apache.org" href="http://cordova.io">
         诗笺
     </author>
     <content src="index.html" />
-
     <preference name="Orientation" value="landscape" />
     <preference name="Fullscreen" value="true" />
     <preference name="SplashScreenDelay" value="1500" />
@@ -25,7 +22,7 @@
     <allow-intent href="geo:*" />
 
     <feature name="FinishImport">
-        <param name="android-package" value="com.noname.shijian.FinishImport" />
+        <param name="android-package" value="com.noname.shijian.FinishImport"/>
     </feature>
 
     <platform name="android">
@@ -33,23 +30,113 @@
         <allow-navigation href="http://*/*" />
         <allow-navigation href="https://*/*" />
         <allow-navigation href="data:*" />
-
-        <icon density="ldpi" src="res/drawable-ldpi/icon.png" />
-        <icon density="mdpi" src="res/drawable-mdpi/icon.png" />
-        <icon density="hdpi" src="res/drawable-hdpi/icon.png" />
-        <icon density="xhdpi" src="res/drawable-land-xhdpi/icon.png" />
-        <icon density="xxhdpi" src="res/drawable-land-xxhdpi/icon.png" />
-        <icon density="xxxhdpi" src="res/drawable-land-xxxhdpi/icon.png" />
-
-        <splash src="res/drawable-hdpi/screen.png" density="land-hdpi"/>
-        <splash src="res/drawable-hdpi/screen.png" density="land-ldpi"/>
-        <splash src="res/drawable-hdpi/screen.png" density="land-mdpi"/>
-        <splash src="res/drawable-hdpi/screen.png" density="land-xhdpi"/>
-
-        <splash src="res/drawable-port-hdpi/screen.png" density="port-hdpi"/>
-        <splash src="res/drawable-port-ldpi/screen.png" density="port-ldpi"/>
-        <splash src="res/drawable-port-mdpi/screen.png" density="port-mdpi"/>
-        <splash src="res/drawable-port-xhdpi/screen.png" density="port-xhdpi"/>
+        <!-- 配置xmlns:tool -->
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/*">
+            <manifest xmlns:tools="http://schemas.android.com/tools" />
+        </edit-config>
+        <!-- 设置版本代码，低版本不能覆盖高版本的安卓 -->
+        <preference name="android-versionCode" value="16004" />
+        <!-- 设置usesCleartextTraffic -->
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:icon="@mipmap/ic_launcher_round" android:usesCleartextTraffic="true" android:name=".updateDataApplication"/>
+        </edit-config>
+        <!-- 配置MainActivity的可旋转横屏 -->
+        <edit-config file="app/src/main/AndroidManifest.xml" target="/manifest/application/activity[@android:name='MainActivity']" mode="merge">
+            <activity android:screenOrientation="sensorLandscape" />
+        </edit-config>
+        <!-- cordova12内置的Splash功能 -->
+        <!-- 初始屏幕图像。此首选项用于动画和非动画图标。当前可接受的资源文件可以是 XML Vector Drawable 或 PNG -->
+        <!-- <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/screen/android/splashscreen.xml" /> -->
+        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/mipmap-xxxhdpi/ic_launcher_round.png" />
+        <!-- 是否自动隐藏初始屏幕。初始屏幕在首选项中指定的时间量后隐藏 -->
+        <preference name="AutoHideSplashScreen" value="true" />
+        <!-- 淡入和淡出 -->
+        <preference name="FadeSplashScreen" value="true" />
+        <!-- 淡入和淡出效果的时长(毫秒)默认500 -->
+        <preference name="FadeSplashScreenDuration" value="100" />
+        <!-- 动画的持续时间 -->
+        <preference name="AndroidWindowSplashScreenAnimationDuration" value="500" />
+        <!-- 全屏游戏 -->
+        <preference name="Fullscreen" value="true" />
+        <!-- 横屏游戏 -->
+        <preference name="Orientation" value="landscape" />
+        <!-- webview滚动到底部不显示反馈 -->
+        <preference name="DisallowOverscroll" value="true" />
+        <!-- statusbar插件配置 -->
+        <preference name="StatusBarOverlaysWebView" value="true" />
+        <!-- file插件的配置，兼容以前的设置 -->
+        <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+        <!-- 默认以file协议启动webview -->
+        <!-- 但是我魔改了cordova源码，这个值没多大意义了 -->
+        <preference name="AndroidInsecureFileModeEnabled" value="true" />
+        <!-- 启动模式 -->
+        <preference name="AndroidLaunchMode" value="singleTask" />
+        <!-- targetSdk改为31 -->
+        <preference name="android-targetSdkVersion" value="31" />
+        <!-- 编译的时候采用该api的规范进行代码检查和警告，但是并不会编译进apk中 -->
+        <preference name="android-compileSdkVersion" value="33" />
+        <!-- android构建工具的版本 -->
+        <preference name="android-buildToolsVersion" value="33.0.2" />
+        <!-- 配置Android Gradle Plugin Version -->
+        <!-- <preference name="AndroidGradlePluginVersion" value="8.3.1" /> -->
+        <!-- 配置Gradle Version -->
+        <preference name="GradleVersion" value="8.7" />
+        <!-- 配置http或是https协议 -->
+        <preference name="scheme" value="https" />
+        <!-- 配置域名 -->
+        <preference name="hostname" value="localhost" />
+        <!-- 安卓权限配置 -->
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <queries>
+                <package android:name="com.android.chrome" />
+            </queries>
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:ignore="ManifestOrder" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <!-- <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /> -->
+            <!-- 安卓13(准确来说是11)以下的读写权限 -->
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" tools:ignore="ScopedStorage" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+            <!--  安卓13将READ_EXTERNAL_STORAGE细分为IMAGES、VIDEO、AUDIO权限  -->
+            <!--  但是不请求这三个权限也不影响webview的文件选择  -->
+            <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+            <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+            <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+            <!--  安卓13 通知权限  -->
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+        </config-file>
+        <!-- 配置FileProvider和导入zip功能 -->
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity
+                android:name=".NonameImportActivity"
+                android:launchMode="singleTask"
+                android:screenOrientation="portrait"
+                android:theme="@android:style/Theme.Wallpaper.NoTitleBar.Fullscreen"
+                android:exported="true">
+                <intent-filter
+                    android:label="@string/noname_import"
+                    tools:ignore="AppLinkUrlError">
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <data
+                        android:host="*"
+                        android:mimeType="application/zip"
+                        android:scheme="content" />
+                </intent-filter>
+            </activity>
+            <provider
+                android:name="androidx.core.content.FileProvider"
+                android:authorities="${applicationId}.fileProvider"
+                android:exported="false"
+                android:grantUriPermissions="true">
+                <meta-data
+                    android:name="android.support.FILE_PROVIDER_PATHS"
+                    android:resource="@xml/opener_paths" />
+             </provider>
+        </config-file>
+        <!-- 处理文件资源 -->
+        <hook type="after_platform_add" src="hooks/after_platform_add/copy_files.js" />
     </platform>
     <platform name="ios">
         <allow-intent href="itms:*" />

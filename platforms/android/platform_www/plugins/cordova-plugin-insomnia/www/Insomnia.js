@@ -1,23 +1,23 @@
-cordova.define("cordova-plugin-insomnia", function(require, exports, module) {
-    function Insomnia() {}
+cordova.define("cordova-plugin-insomnia.Insomnia", function(require, exports, module) {
+function Insomnia() {
+}
 
-    Insomnia.prototype.keepAwake = function (successCallback, errorCallback) {
-      cordova.exec(successCallback, errorCallback, "Insomnia", "keepAwake", []);
-    };
+Insomnia.prototype.keepAwake = function (successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Insomnia", "keepAwake", []);
+};
 
-    Insomnia.prototype.allowSleepAgain = function (successCallback, errorCallback) {
-      cordova.exec(successCallback, errorCallback, "Insomnia", "allowSleepAgain", []);
-    };
+Insomnia.prototype.allowSleepAgain = function (successCallback, errorCallback) {
+  cordova.exec(successCallback, errorCallback, "Insomnia", "allowSleepAgain", []);
+};
 
-    Insomnia.install = function () {
-      if (!window.plugins) {
-        window.plugins = {};
-      }
+Insomnia.install = function () {
+  if (!window.plugins) {
+    window.plugins = {};
+  }
 
-      window.plugins.insomnia = new Insomnia();
-      return window.plugins.insomnia;
-    };
+  window.plugins.insomnia = new Insomnia();
+  return window.plugins.insomnia;
+};
 
-    cordova.addConstructor(Insomnia.install);
-    module.exports = Insomnia;
+cordova.addConstructor(Insomnia.install);
 });

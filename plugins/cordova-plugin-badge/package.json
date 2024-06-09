@@ -1,35 +1,7 @@
 {
-  "_from": "cordova-plugin-badge@>=0.8.5",
-  "_id": "cordova-plugin-badge@0.8.8",
-  "_inBundle": false,
-  "_integrity": "sha1-CSQBhpm0j5LdOzNhVFJzdYIUTJY=",
-  "_location": "/cordova-plugin-badge",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "cordova-plugin-badge@>=0.8.5",
-    "name": "cordova-plugin-badge",
-    "escapedName": "cordova-plugin-badge",
-    "rawSpec": ">=0.8.5",
-    "saveSpec": null,
-    "fetchSpec": ">=0.8.5"
-  },
-  "_requiredBy": [
-    "#DEV:/",
-    "#USER"
-  ],
-  "_resolved": "https://registry.npm.taobao.org/cordova-plugin-badge/download/cordova-plugin-badge-0.8.8.tgz",
-  "_shasum": "0924018699b48f92dd3b33615452737582144c96",
-  "_spec": "cordova-plugin-badge@>=0.8.5",
-  "_where": "E:\\Kuang\\xuanwunoname",
-  "author": {
-    "name": "Sebastián Katzer"
-  },
-  "bugs": {
-    "url": "https://github.com/katzer/cordova-plugin-badge/issues"
-  },
-  "bundleDependencies": false,
+  "name": "cordova-plugin-badge",
+  "version": "0.8.9",
+  "description": "Shows the count of unread messages as a badge on the app icon.",
   "cordova": {
     "id": "cordova-plugin-badge",
     "platforms": [
@@ -40,8 +12,21 @@
       "windows"
     ]
   },
-  "deprecated": false,
-  "description": "Shows the count of unread messages as a badge on the app icon.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/katzer/cordova-plugin-badge.git"
+  },
+  "keywords": [
+    "appplant",
+    "badge",
+    "shortcutbadger",
+    "ecosystem:cordova",
+    "cordova-ios",
+    "cordova-osx",
+    "cordova-android",
+    "cordova-browser",
+    "cordova-windows"
+  ],
   "engines": [
     {
       "name": "cordova",
@@ -60,23 +45,10 @@
       "version": ">=4.2.0"
     }
   ],
-  "homepage": "https://github.com/katzer/cordova-plugin-badge#readme",
-  "keywords": [
-    "appplant",
-    "badge",
-    "shortcutbadger",
-    "ecosystem:cordova",
-    "cordova-ios",
-    "cordova-osx",
-    "cordova-android",
-    "cordova-browser",
-    "cordova-windows"
-  ],
+  "author": "Sebastián Katzer",
   "license": "Apache 2.0",
-  "name": "cordova-plugin-badge",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/katzer/cordova-plugin-badge.git"
+  "bugs": {
+    "url": "https://github.com/katzer/cordova-plugin-badge/issues"
   },
-  "version": "0.8.8"
+  "homepage": "https://github.com/katzer/cordova-plugin-badge#readme"
 }

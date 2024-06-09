@@ -123,3 +123,16 @@ a{
     font-family: 'xinwei';
     src: url('xinwei.ttf');
 }
+#importdata{
+    width: 120px;
+    font-size: 20px;
+    top: calc(50% + 55px);
+    left: calc(50% - 140px);
+}
+#importselect{
+    position: absolute;
+    width: 120px;
+    font-size: 16px;
+    top: calc(50% + 55px);
+    left: 50%;
+}

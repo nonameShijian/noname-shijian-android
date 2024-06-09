@@ -1,93 +1,44 @@
 {
-  "_from": "cordova-plugin-file-transfer",
-  "_id": "cordova-plugin-file-transfer@1.7.1",
-  "_inBundle": false,
-  "_integrity": "sha1-p12L4uvDu5sjxbG70ZkhTsJnWGs=",
-  "_location": "/cordova-plugin-file-transfer",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "tag",
-    "registry": true,
-    "raw": "cordova-plugin-file-transfer",
-    "name": "cordova-plugin-file-transfer",
-    "escapedName": "cordova-plugin-file-transfer",
-    "rawSpec": "",
-    "saveSpec": null,
-    "fetchSpec": "latest"
-  },
-  "_requiredBy": [
-    "#DEV:/",
-    "#USER"
-  ],
-  "_resolved": "https://registry.npm.taobao.org/cordova-plugin-file-transfer/download/cordova-plugin-file-transfer-1.7.1.tgz",
-  "_shasum": "a75d8be2ebc3bb9b23c5b1bbd199214ec267586b",
-  "_spec": "cordova-plugin-file-transfer",
-  "_where": "E:\\Kuang\\xuanwunoname",
-  "author": {
-    "name": "Apache Software Foundation"
-  },
-  "bugs": {
-    "url": "https://issues.apache.org/jira/browse/CB"
-  },
-  "bundleDependencies": false,
+  "name": "cordova-plugin-file-transfer",
+  "version": "2.0.0",
+  "description": "Cordova File Transfer Plugin",
+  "types": "./types/index.d.ts",
   "cordova": {
     "id": "cordova-plugin-file-transfer",
     "platforms": [
       "android",
-      "amazon-fireos",
-      "ubuntu",
-      "blackberry10",
       "ios",
-      "wp7",
-      "wp8",
-      "windows8",
-      "windows",
-      "firefoxos",
       "browser"
     ]
   },
-  "deprecated": false,
-  "description": "Cordova File Transfer Plugin",
-  "devDependencies": {
-    "jscs": "^2.6.0",
-    "jshint": "^2.8.0"
+  "scripts": {
+    "test": "npm run lint",
+    "lint": "eslint ."
   },
-  "engines": {
-    "cordovaDependencies": {
-      "2.0.0": {
-        "cordova": ">100"
-      }
-    }
-  },
-  "homepage": "https://github.com/apache/cordova-plugin-file-transfer#readme",
+  "repository": "github:apache/cordova-plugin-file-transfer",
+  "bugs": "https://github.com/apache/cordova-plugin-file-transfer/issues",
   "keywords": [
     "cordova",
     "file",
     "transfer",
     "ecosystem:cordova",
     "cordova-android",
-    "cordova-amazon-fireos",
-    "cordova-ubuntu",
-    "cordova-blackberry10",
     "cordova-ios",
-    "cordova-wp7",
-    "cordova-wp8",
-    "cordova-windows8",
-    "cordova-windows",
-    "cordova-firefoxos",
     "cordova-browser"
   ],
+  "author": "Apache Software Foundation",
   "license": "Apache-2.0",
-  "name": "cordova-plugin-file-transfer",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/apache/cordova-plugin-file-transfer.git"
+  "engines": {
+    "cordovaDependencies": {
+      "2.0.0": {
+        "cordova-android": ">=12.0.0"
+      },
+      "3.0.0": {
+        "cordova": ">100"
+      }
+    }
   },
-  "scripts": {
-    "lint": "jshint www && jshint src && jshint tests",
-    "style": "jscs tests/tests.js",
-    "test": "npm run lint && npm run style"
-  },
-  "types": "./types/index.d.ts",
-  "version": "1.7.1"
+  "devDependencies": {
+    "@cordova/eslint-config": "^5.0.0"
+  }
 }

@@ -3,5 +3,6 @@
     <string name="app_name">无名杀</string>
     <string name="launcher_name">@string/app_name</string>
     <string name="activity_name">@string/launcher_name</string>
-    <string name="noname_import">无名杀导入(测试)</string>
+    <string name="noname_import">无名杀导入(诗笺版)</string>
+    <string name="noname_listview">无名杀文件管理(诗笺版)</string>
 </resources>

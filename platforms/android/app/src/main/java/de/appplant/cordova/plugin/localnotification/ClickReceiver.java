@@ -29,12 +29,11 @@ import org.json.JSONObject;
 
 import de.appplant.cordova.plugin.notification.Notification;
 import de.appplant.cordova.plugin.notification.receiver.AbstractClickReceiver;
+import de.appplant.cordova.plugin.notification.util.LaunchUtils;
 
-
-import de.appplant.cordova.plugin.notification.Options;
-import de.appplant.cordova.plugin.notification.Request;
-// import static de.appplant.cordova.plugin.notification.Options.EXTRA_LAUNCH;
-// import static de.appplant.cordova.plugin.notification.Request.EXTRA_LAST;
+import static de.appplant.cordova.plugin.localnotification.LocalNotification.fireEvent;
+import static de.appplant.cordova.plugin.notification.Options.EXTRA_LAUNCH;
+import static de.appplant.cordova.plugin.notification.Request.EXTRA_LAST;
 
 /**
  * The receiver activity is triggered when a notification is clicked by a user.
@@ -57,7 +56,7 @@ public class ClickReceiver extends AbstractClickReceiver {
         setTextInput(action, data);
         launchAppIf();
 
-        LocalNotification.fireEvent(action, notification, data);
+        fireEvent(action, notification, data);
 
         if (notification.getOptions().isSticky())
             return;
@@ -82,7 +81,7 @@ public class ClickReceiver extends AbstractClickReceiver {
             return;
 
         try {
-            data.put("text", input.getString(action));
+            data.put("text", input.getCharSequence(action));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -92,19 +91,19 @@ public class ClickReceiver extends AbstractClickReceiver {
      * Launch app if requested by user.
      */
     private void launchAppIf() {
-        boolean doLaunch = getIntent().getBooleanExtra(Options.EXTRA_LAUNCH, true);
+        boolean doLaunch = getIntent().getBooleanExtra(EXTRA_LAUNCH, true);
 
         if (!doLaunch)
             return;
 
-        launchApp();
+        LaunchUtils.launchApp(getApplicationContext());
     }
 
     /**
      * If the notification was the last scheduled one by request.
      */
     private boolean isLast() {
-        return getIntent().getBooleanExtra(Request.EXTRA_LAST, false);
+        return getIntent().getBooleanExtra(EXTRA_LAST, false);
     }
 
 }

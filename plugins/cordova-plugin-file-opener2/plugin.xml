@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-file-opener2" version="3.0.5">
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-file-opener2" version="4.0.0">
 
     <name>File Opener2</name>
     <description>A File Opener Plugin for Cordova. (The Original Version)</description>
     <license>MIT</license>
-
-    <engines>
-        <engine name="cordova" version=">=3.0.0" />
-    </engines>
 
     <js-module src="www/plugins.FileOpener2.js" name="FileOpener2">
         <clobbers target="cordova.plugins.fileOpener2" />
@@ -24,7 +20,6 @@
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
         </config-file>
         <config-file target="AndroidManifest.xml" parent="application">
           <provider android:name="io.github.pwlin.cordova.plugins.fileopener2.FileProvider" android:authorities="${applicationId}.fileOpener2.provider" android:exported="false" android:grantUriPermissions="true">
@@ -32,8 +27,6 @@
           </provider>
         </config-file>
         <source-file src="src/android/res/xml/opener_paths.xml" target-dir="res/xml" />
-        <preference name="ANDROID_SUPPORT_V4_VERSION" default="27.+"/>
-        <framework src="com.android.support:support-v4:$ANDROID_SUPPORT_V4_VERSION"/>
     </platform>
 
     <!-- iOS -->

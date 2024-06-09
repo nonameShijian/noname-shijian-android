@@ -31,7 +31,7 @@ import android.webkit.WebChromeClient.CustomViewCallback;
  * are not expected to implement it.
  */
 public interface CordovaWebView {
-    public static final String CORDOVA_VERSION = "9.0.0";
+    public static final String CORDOVA_VERSION = "12.0.1";
 
     void init(CordovaInterface cordova, List<PluginEntry> pluginEntries, CordovaPreferences preferences);
 
@@ -94,7 +94,7 @@ public interface CordovaWebView {
     /**
      * Load the specified URL in the Cordova webview or a new browser instance.
      *
-     * NOTE: If openExternal is false, only whitelisted URLs can be loaded.
+     * NOTE: If openExternal is false, only allow listed URLs can be loaded.
      *
      * @param url           The url to load.
      * @param openExternal  Load url in browser instead of Cordova webview.
