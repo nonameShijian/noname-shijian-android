@@ -1,11 +1,9 @@
 package com.noname.shijian.check;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.zip.ZipEntry;
@@ -24,7 +22,8 @@ public class CheckUtils {
             // {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 111},
             {106, 115, 106, 46, 110, 111, 110, 97, 109, 101, 46, 116, 121, 104, 109, 46, 104, 121, 121, 109},
             {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 104, 101, 97, 114, 116, 104, 115, 116, 111, 110, 101},
-            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110, 46, 108, 105, 121, 97}
+            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110, 46, 108, 105, 121, 97},
+            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 104, 101, 97, 114, 116, 104, 115, 116, 111, 110, 101}
     };
 
     public static void check(Context context, Executor executor){
