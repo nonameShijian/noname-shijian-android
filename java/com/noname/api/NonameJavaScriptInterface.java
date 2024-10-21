@@ -247,4 +247,10 @@ public class NonameJavaScriptInterface {
     // 可使用FileObserver实现文件监听功能
 
     // activity.getCallingPackage()
+
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public boolean captureScreen(String fileName) {
+        return Utils.captureAndSaveScreenshot(activity, fileName);
+    }
 }

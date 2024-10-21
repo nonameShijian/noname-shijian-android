@@ -65,7 +65,7 @@
 						appDirEntry.getFile('noname.zip', { create: false }, fileEntry => {
 							navigator.notification.activityStop();
 							const zipDataDiv = document.getElementById('changesite');
-							zipDataDiv.innerText = '内置zip资源存在';
+							if (zipDataDiv) zipDataDiv.innerText = '内置zip资源存在';
 							// 跳转到java解压
 							if (confirm('检测到内置压缩包存在，是否解压？\n注意: 此客户端不是懒人包的情况建议点击取消，然后在此页面在线下载最新离线包')) cordova.exec(() => { }, () => { }, 'FinishImport', 'assetZip', []);
 							// else checkConnection();
@@ -73,7 +73,7 @@
 							navigator.notification.activityStop();
 							console.error('www/app/noname.zip不存在: ' + error.code);
 							const zipDataDiv = document.getElementById('changesite');
-							zipDataDiv.innerText = 'www/app/noname.zip不存在';
+							if (zipDataDiv) zipDataDiv.innerText = 'www/app/noname.zip不存在';
 							// alert('请用其他方式打开zip文件，选择无名杀导入(诗笺版)，注: 万能导入无效');
 							// checkConnection();
 						});
@@ -81,7 +81,7 @@
 						navigator.notification.activityStop();
 						console.error('www/app文件夹不存在: ' + error.code);
 						const zipDataDiv = document.getElementById('changesite');
-						zipDataDiv.innerText = 'www/app文件夹不存在';
+						if (zipDataDiv) zipDataDiv.innerText = 'www/app文件夹不存在';
 						// alert('请用其他方式打开zip文件，选择无名杀导入(诗笺版)，注: 万能导入无效');
 						// checkConnection();
 					});

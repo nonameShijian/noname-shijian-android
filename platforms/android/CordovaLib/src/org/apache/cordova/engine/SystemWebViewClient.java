@@ -27,6 +27,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
@@ -48,12 +49,16 @@ import org.apache.cordova.CordovaPluginPathHandler;
 import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginManager;
+import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
@@ -61,6 +66,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -487,6 +493,54 @@ public class SystemWebViewClient extends WebViewClient {
         String method = request.getMethod();
         Map<String, String> headers = request.getRequestHeaders();
         Log.e("Request", method + "  " + url + "  " + headers);
+        if (url.startsWith("http://localhost:9222/remote/debug/image_base64")){
+            try {
+                Map<String, String> query_pairs = new LinkedHashMap<>();
+                String query = new URL(url).getQuery();
+                if (query != null) {
+                    for (String param : query.split("&")) {
+                        String[] pair = param.split("=");
+                        if (pair.length > 1) {
+                            query_pairs.put(pair[0], URLDecoder.decode(pair[1], "UTF-8"));
+                        } else {
+                            query_pairs.put(pair[0], "");
+                        }
+                    }
+                }
+                String imgUrl = query_pairs.get("url");
+                if (imgUrl != null) {
+                    if (imgUrl.startsWith("http://localhost/") || imgUrl.startsWith("https://localhost/")) {
+                        File imageFile = new File(
+                                this.parentEngine.webView.getContext().getExternalFilesDir(null).getParentFile(),
+                                imgUrl.substring(17)
+                        );
+                        Log.e("Request", imageFile.getAbsolutePath());
+                        InputStream inputStream = new FileInputStream(imageFile);
+                        byte[] buffer = new byte[(int) imageFile.length()];
+                        inputStream.read(buffer);
+                        inputStream.close();
+                        String base64 =  Base64.encodeToString(buffer, Base64.DEFAULT);
+                        Log.e("Request", base64);
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("base64", base64);
+                        String jsonString = jsonObject.toString();
+                        ByteArrayInputStream bais = new ByteArrayInputStream(jsonString.getBytes());
+                        WebResourceResponse response = new WebResourceResponse(
+                                "application/json",
+                                "UTF-8",
+                                bais
+                        );
+                        Map<String, String> responseHeaders = new HashMap<>();
+                        if (response.getResponseHeaders() != null) {
+                            responseHeaders.putAll(response.getResponseHeaders());
+                        }
+                        responseHeaders.put("Access-Control-Allow-Origin", "*");
+                        response.setResponseHeaders(responseHeaders);
+                        return response;
+                    }
+                }
+            } catch (Exception e) {}
+        }
         return this.assetLoader.shouldInterceptRequest(request.getUrl());
     }
 

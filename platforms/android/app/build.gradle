@@ -325,8 +325,11 @@ dependencies {
     implementation fileTree(dir: 'src/main/libs', include: '*.jar')
     implementation 'com.alibaba:fastjson:1.1.55.android'
     implementation 'androidx.palette:palette:1.0.0'
-    implementation 'io.github.jonanorman.android.webviewup:core:0.1.0'
     implementation "com.android.support:support-v4:27.+"
+    // 升级应用内Webview
+    implementation 'io.github.jonanorman.android.webviewup:core:0.1.0'
+    // devtools需要websocket
+    implementation 'org.java-websocket:Java-WebSocket:1.5.6'
 }
 
 def addSigningProps(propsFilePath, signingConfig) {

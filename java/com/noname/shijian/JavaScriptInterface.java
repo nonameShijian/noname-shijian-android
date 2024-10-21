@@ -442,4 +442,30 @@ public class JavaScriptInterface {
 
         return scheme + "://" + hostname + '/';
     }
+
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public void showDebugButton() {
+        activity.showDebugButtonState = true;
+        activity.runOnUiThread(activity::showDebugButton);
+    }
+
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public void hideDebugButton() {
+        activity.showDebugButtonState = false;
+        activity.runOnUiThread(activity::hideDebugButton);
+    }
+
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public void showDevTools() {
+        activity.runOnUiThread(activity::showDevTools);
+    }
+
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public void hideDevTools() {
+        activity.runOnUiThread(activity::hideDevTools);
+    }
 }

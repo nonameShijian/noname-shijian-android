@@ -4,11 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.media.projection.MediaProjectionManager;
-import android.net.Uri;
-import android.os.Build;
-import android.provider.DocumentsContract;
 import android.util.Log;
+
+import com.noname.shijian.chooseFolder.ListViewActivity;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;

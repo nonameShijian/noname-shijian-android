@@ -57,14 +57,6 @@ public class ConfigXmlParser {
         return launchUrl;
     }
 
-    public String getLaunchUrl(String protocol) {
-        if (launchUrl == null) {
-            setStartUrl(contentSrc, protocol);
-        }
-
-        return launchUrl;
-    }
-
     public void parse(Context action) {
         // First checking the class namespace for config.xml
         int id = action.getResources().getIdentifier("config", "xml", action.getClass().getPackage().getName());
@@ -224,23 +216,6 @@ public class ConfigXmlParser {
             launchUrl = src;
         } else {
             String launchUrlPrefix = getLaunchUrlPrefix();
-
-            // remove leading slash, "/", from content src if existing,
-            if (src.charAt(0) == '/') {
-                src = src.substring(1);
-            }
-
-            launchUrl = launchUrlPrefix + src;
-        }
-    }
-
-    private void setStartUrl(String src, String protocol) {
-        Pattern schemeRegex = Pattern.compile("^[a-z-]+://");
-        Matcher matcher = schemeRegex.matcher(src);
-        if (matcher.find()) {
-            launchUrl = src;
-        } else {
-            String launchUrlPrefix = getLaunchUrlPrefix(protocol);
 
             // remove leading slash, "/", from content src if existing,
             if (src.charAt(0) == '/') {

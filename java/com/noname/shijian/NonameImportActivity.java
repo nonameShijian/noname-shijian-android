@@ -35,6 +35,8 @@ import androidx.core.content.FileProvider;
 import androidx.palette.graphics.Palette;
 
 import com.alibaba.fastjson.JSON;
+import com.noname.api.Utils;
+import com.noname.shijian.chooseFolder.ListViewActivity;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -300,19 +302,19 @@ public class NonameImportActivity extends Activity {
 				}
 				if(bitMap==null){
 					updateText("正在加载默认墙纸");
-					WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
-					if (wallpaperManager.isWallpaperSupported() &&
-							Build.VERSION.SDK_INT < 33 &&
-							ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-						// 默认获取系统壁纸
-						BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable();
-						// 获取系统壁纸的Bitmap
-						bitMap = bitmapDrawable.getBitmap();
-					} else {
+//					WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
+//					if (wallpaperManager.isWallpaperSupported() &&
+//							Build.VERSION.SDK_INT < 33 &&
+//							ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//						// 默认获取系统壁纸
+//						BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperManager.getDrawable();
+//						// 获取系统壁纸的Bitmap
+//						bitMap = bitmapDrawable.getBitmap();
+//					} else {
 						View view = getWindow().getDecorView();
 						// 截屏获取view
 						bitMap = getViewBitmap(view);
-					}
+//					}
 				}
 				JSONObject colorJson = getStyleJson().optJSONObject("textColor");
 				final String titleColor = colorJson==null?"": colorJson.optString("title","");
