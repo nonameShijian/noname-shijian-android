@@ -1727,17 +1727,11 @@ public class NonameImportActivity extends Activity {
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 			Uri uri;
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-				//如果SDK版本 =24，即：Build.VERSION.SDK_INT  = 24
-				String packageName = getApplicationContext().getPackageName();
-				String authority = new StringBuilder(packageName).append(".fileProvider").toString();
-				uri = FileProvider.getUriForFile(this, authority, file);
-				intent.setDataAndType(uri, "application/vnd.android.package-archive");
-			} else{
-				uri = Uri.fromFile(file);
-				intent.setDataAndType(uri, "application/vnd.android.package-archive");
-			}
-			startActivity(intent);
+            String packageName = getApplicationContext().getPackageName();
+            String authority = new StringBuilder(packageName).append(".fileProvider").toString();
+            uri = FileProvider.getUriForFile(this, authority, file);
+            intent.setDataAndType(uri, "application/vnd.android.package-archive");
+            startActivity(intent);
 			finish();
 		} catch (Exception e) {
 			Log.e("install", Objects.requireNonNull(e.getMessage()));

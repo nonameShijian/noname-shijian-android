@@ -46,6 +46,7 @@ import org.apache.cordova.AuthenticationToken;
 import org.apache.cordova.CordovaClientCertRequest;
 import org.apache.cordova.CordovaHttpAuthHandler;
 import org.apache.cordova.CordovaPluginPathHandler;
+import org.apache.cordova.CordovaPreferences;
 import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginManager;
@@ -57,6 +58,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.text.DateFormat;
@@ -72,6 +74,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import androidx.webkit.WebViewAssetLoader;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /**
  * This class is the WebViewClient that implements callbacks for our web view.
@@ -541,6 +545,14 @@ public class SystemWebViewClient extends WebViewClient {
                 }
             } catch (Exception e) {}
         }
+        CordovaPreferences prefs = parentEngine.preferences;
+        String scheme = prefs.getString("scheme", "https").toLowerCase();
+        String hostname = prefs.getString("hostname", "localhost").toLowerCase();
+        // 不是以本网址显示的，一律由java请求
+        if (!url.startsWith(scheme + "://" + hostname + '/')) {
+            WebResourceResponse newRequest = hookResponse(request);
+            if (newRequest != null) return newRequest;
+        }
         return this.assetLoader.shouldInterceptRequest(request.getUrl());
     }
 
@@ -553,5 +565,162 @@ public class SystemWebViewClient extends WebViewClient {
         }
 
         return super.onRenderProcessGone(view, detail);
+    }
+
+    private WebResourceResponse hookResponse(WebResourceRequest request) {
+        String url = request.getUrl().toString();
+        String method = request.getMethod();
+        try {
+            HttpURLConnection httpConnect;
+            HttpsURLConnection httpsConnect;
+            if (url.startsWith("https")) {
+                httpsConnect = (HttpsURLConnection) new URL(url).openConnection();
+                return request(request, httpsConnect);
+            }
+            else {
+                httpConnect = (HttpURLConnection) new URL(url).openConnection();
+                return request(request, httpConnect);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "出现异常，路径为：" + url);
+            Log.e(TAG, e.getMessage());
+        }
+        return null;
+    }
+
+    private WebResourceResponse request(WebResourceRequest request, HttpURLConnection httpConnect) throws Exception {
+        String url = request.getUrl().toString();
+        String method = request.getMethod();
+        httpConnect.setReadTimeout(5000);
+        httpConnect.setConnectTimeout(5000);
+        httpConnect.setRequestMethod(method);
+        httpConnect.setUseCaches(false);
+        if (request.getRequestHeaders() != null) for (Map.Entry<String, String> item : request.getRequestHeaders().entrySet()) {
+            //设置header
+            Log.e(TAG, "request添加header: " + item.getKey() + " : " + item.getValue());
+            httpConnect.setRequestProperty(item.getKey(), item.getValue());
+        }
+        if (httpConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            InputStream inputStream = httpConnect.getInputStream();
+            String mimeType = httpConnect.getContentType();
+            String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+            if (extension != null) {
+                if (url.endsWith(".js") || url.endsWith(".mjs")) {
+                    // Make sure JS files get the proper mimetype to support ES modules
+                    mimeType = "application/javascript";
+                } else if (url.endsWith(".wasm")) {
+                    mimeType = "application/wasm";
+                } else {
+                    mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                }
+            }
+            WebResourceResponse newRequest = new WebResourceResponse(mimeType, "utf-8", inputStream);
+            Map<String, List<String>> allHeaders = httpConnect.getHeaderFields();
+            Map<String, String> singleValueHeaders = new HashMap<>();
+            for (Map.Entry<String, List<String>> entry : allHeaders.entrySet()) {
+                String headerName = entry.getKey();
+                StringBuilder headerValueBuilder = new StringBuilder();
+
+                if (!entry.getValue().isEmpty()) {
+                    Log.e(TAG, "httpsConnect返回header: " + entry.getKey() + " : " + entry.getValue());
+                    boolean isCookieHeader = "Cookie".equalsIgnoreCase(headerName);
+
+                    for (String value : entry.getValue()) {
+                        if (isCookieHeader) {
+                            // 对于Cookie特殊处理，用分号和空格隔开各个cookie值
+                            if (headerValueBuilder.length() > 0) {
+                                headerValueBuilder.append("; ");
+                            }
+                            headerValueBuilder.append(value);
+                        } else {
+                            // 其他头字段直接用逗号分隔
+                            if (headerValueBuilder.length() > 0) {
+                                headerValueBuilder.append(",");
+                            }
+                            headerValueBuilder.append(value);
+                        }
+                    }
+
+                    singleValueHeaders.put(headerName, headerValueBuilder.toString());
+                }
+            }
+            singleValueHeaders.put("Access-Control-Allow-Origin", "*");
+            singleValueHeaders.put("Access-Control-Allow-Headers","X-Requested-With,Content-Type");
+            singleValueHeaders.put("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+            singleValueHeaders.put("Access-Control-Allow-Credentials", "true");
+            newRequest.setResponseHeaders(singleValueHeaders);
+            return newRequest;
+        } else {
+            httpConnect.disconnect();
+            return null;
+        }
+    }
+
+    private WebResourceResponse request(WebResourceRequest request, HttpsURLConnection httpConnect) throws Exception {
+        String url = request.getUrl().toString();
+        String method = request.getMethod();
+        httpConnect.setReadTimeout(5000);
+        httpConnect.setConnectTimeout(5000);
+        httpConnect.setRequestMethod(method);
+        httpConnect.setUseCaches(false);
+        if (request.getRequestHeaders() != null) for (Map.Entry<String, String> item : request.getRequestHeaders().entrySet()) {
+            //设置header
+            Log.e(TAG, "request添加header: " + item.getKey() + " : " + item.getValue());
+            httpConnect.setRequestProperty(item.getKey(), item.getValue());
+        }
+        if (httpConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            InputStream inputStream = httpConnect.getInputStream();
+            String mimeType = httpConnect.getContentType();
+            String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+            if (extension != null) {
+                if (url.endsWith(".js") || url.endsWith(".mjs")) {
+                    // Make sure JS files get the proper mimetype to support ES modules
+                    mimeType = "application/javascript";
+                } else if (url.endsWith(".wasm")) {
+                    mimeType = "application/wasm";
+                } else {
+                    mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                }
+            }
+            WebResourceResponse newRequest = new WebResourceResponse(mimeType, "utf-8", inputStream);
+            Map<String, List<String>> allHeaders = httpConnect.getHeaderFields();
+            Map<String, String> singleValueHeaders = new HashMap<>();
+            for (Map.Entry<String, List<String>> entry : allHeaders.entrySet()) {
+                String headerName = entry.getKey();
+                StringBuilder headerValueBuilder = new StringBuilder();
+
+                if (!entry.getValue().isEmpty()) {
+                    Log.e(TAG, "httpsConnect返回header: " + entry.getKey() + " : " + entry.getValue());
+                    boolean isCookieHeader = "Cookie".equalsIgnoreCase(headerName);
+
+                    for (String value : entry.getValue()) {
+                        if (isCookieHeader) {
+                            // 对于Cookie特殊处理，用分号和空格隔开各个cookie值
+                            if (headerValueBuilder.length() > 0) {
+                                headerValueBuilder.append("; ");
+                            }
+                            headerValueBuilder.append(value);
+                        } else {
+                            // 其他头字段直接用逗号分隔
+                            if (headerValueBuilder.length() > 0) {
+                                headerValueBuilder.append(",");
+                            }
+                            headerValueBuilder.append(value);
+                        }
+                    }
+
+                    singleValueHeaders.put(headerName, headerValueBuilder.toString());
+                }
+            }
+            singleValueHeaders.put("Access-Control-Allow-Origin", "*");
+            singleValueHeaders.put("Access-Control-Allow-Headers","X-Requested-With,Content-Type");
+            singleValueHeaders.put("Access-Control-Allow-Methods","POST, GET, OPTIONS, DELETE");
+            singleValueHeaders.put("Access-Control-Allow-Credentials", "true");
+            newRequest.setResponseHeaders(singleValueHeaders);
+            return newRequest;
+        } else {
+            httpConnect.disconnect();
+            return null;
+        }
     }
 }
