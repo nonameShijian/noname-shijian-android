@@ -91,7 +91,7 @@ public class MainActivity extends CordovaActivity {
         return preferences;
     }
 
-    private static boolean inited = false;
+    private static boolean inited = Build.VERSION.SDK_INT > 34;
 
     private ProgressDialog WebViewUpgradeProgressDialog;
 

@@ -27,6 +27,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.util.Base64;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
 import android.webkit.MimeTypeMap;
@@ -493,7 +494,7 @@ public class SystemWebViewClient extends WebViewClient {
         String url = request.getUrl().toString();
         String method = request.getMethod();
         Map<String, String> headers = request.getRequestHeaders();
-        Log.e("Request", method + "  " + url + "  " + headers);
+        LOG.e("Request", method + "  " + url + "  " + headers);
         if (url.startsWith("http://localhost:9222/remote/debug/image_base64")){
             try {
                 Map<String, String> query_pairs = new LinkedHashMap<>();
@@ -515,13 +516,13 @@ public class SystemWebViewClient extends WebViewClient {
                                 this.parentEngine.webView.getContext().getExternalFilesDir(null).getParentFile(),
                                 imgUrl.substring(17)
                         );
-                        Log.e("Request", imageFile.getAbsolutePath());
+                        LOG.e("Request", imageFile.getAbsolutePath());
                         InputStream inputStream = new FileInputStream(imageFile);
                         byte[] buffer = new byte[(int) imageFile.length()];
                         inputStream.read(buffer);
                         inputStream.close();
                         String base64 =  Base64.encodeToString(buffer, Base64.DEFAULT);
-                        Log.e("Request", base64);
+                        LOG.e("Request", base64);
                         JSONObject jsonObject = new JSONObject();
                         jsonObject.put("base64", base64);
                         String jsonString = jsonObject.toString();
@@ -579,8 +580,8 @@ public class SystemWebViewClient extends WebViewClient {
                 return request(request, httpConnect);
             }
         } catch (Exception e) {
-            Log.e(TAG, "出现异常，路径为：" + url);
-            Log.e(TAG, e.getMessage());
+            LOG.e(TAG, "出现异常，路径为：" + url);
+            LOG.e(TAG, e.getMessage());
         }
         return null;
     }
@@ -594,7 +595,7 @@ public class SystemWebViewClient extends WebViewClient {
         httpConnect.setUseCaches(false);
         if (request.getRequestHeaders() != null) for (Map.Entry<String, String> item : request.getRequestHeaders().entrySet()) {
             //设置header
-            Log.e(TAG, "request添加header: " + item.getKey() + " : " + item.getValue());
+            LOG.e(TAG, "request添加header: " + item.getKey() + " : " + item.getValue());
             httpConnect.setRequestProperty(item.getKey(), item.getValue());
         }
         if (httpConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
@@ -619,7 +620,7 @@ public class SystemWebViewClient extends WebViewClient {
                 StringBuilder headerValueBuilder = new StringBuilder();
 
                 if (!entry.getValue().isEmpty()) {
-                    Log.e(TAG, "httpsConnect返回header: " + entry.getKey() + " : " + entry.getValue());
+                    LOG.e(TAG, "httpsConnect返回header: " + entry.getKey() + " : " + entry.getValue());
                     boolean isCookieHeader = "Cookie".equalsIgnoreCase(headerName);
 
                     for (String value : entry.getValue()) {
@@ -662,7 +663,7 @@ public class SystemWebViewClient extends WebViewClient {
         httpConnect.setUseCaches(false);
         if (request.getRequestHeaders() != null) for (Map.Entry<String, String> item : request.getRequestHeaders().entrySet()) {
             //设置header
-            Log.e(TAG, "request添加header: " + item.getKey() + " : " + item.getValue());
+            LOG.e(TAG, "request添加header: " + item.getKey() + " : " + item.getValue());
             httpConnect.setRequestProperty(item.getKey(), item.getValue());
         }
         if (httpConnect.getResponseCode() == HttpURLConnection.HTTP_OK) {
@@ -687,7 +688,7 @@ public class SystemWebViewClient extends WebViewClient {
                 StringBuilder headerValueBuilder = new StringBuilder();
 
                 if (!entry.getValue().isEmpty()) {
-                    Log.e(TAG, "httpsConnect返回header: " + entry.getKey() + " : " + entry.getValue());
+                    LOG.e(TAG, "httpsConnect返回header: " + entry.getKey() + " : " + entry.getValue());
                     boolean isCookieHeader = "Cookie".equalsIgnoreCase(headerName);
 
                     for (String value : entry.getValue()) {

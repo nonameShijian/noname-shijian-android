@@ -88,11 +88,15 @@ dependencies {
     implementation fileTree(dir: 'src/main/libs', include: '*.jar')
     implementation 'com.alibaba:fastjson:1.1.55.android'
     implementation 'androidx.palette:palette:1.0.0'
+    // 升级应用内Webview
     implementation 'io.github.jonanorman.android.webviewup:core:0.1.0'
+    // devtools需要websocket
+    implementation 'org.java-websocket:Java-WebSocket:1.5.6'
 }
 ```
 
 在platforms\android\cordova-plugin-local-notification的
 唯一子文件的dependencies块，将compile改成implementation
+(已经是implementation的就不用改了)
 
 然后打开`最新版`Android Studio进行安卓开发
