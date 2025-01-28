@@ -13,6 +13,7 @@
   "author": "Apache Cordova Team",
   "license": "GPL-3.0-only",
   "devDependencies": {
+    "cordova-android": "^13.0.0",
     "cordova-plugin-android-permissions": "^1.1.5",
     "cordova-plugin-badge": "^0.8.9",
     "cordova-plugin-battery-status": "^2.0.3",
@@ -24,8 +25,7 @@
     "cordova-plugin-inappbrowser": "^6.0.0",
     "cordova-plugin-insomnia": "^4.3.0",
     "cordova-plugin-local-notification": "github:katzer/cordova-plugin-local-notifications",
-    "cordova-plugin-statusbar": "^4.0.0",
-    "cordova-plugin-vibration": "^3.1.1"
+    "cordova-plugin-statusbar": "^4.0.0"
   },
   "cordova": {
     "plugins": {
@@ -36,7 +36,6 @@
       "cordova-plugin-inappbrowser": {},
       "cordova-plugin-insomnia": {},
       "cordova-plugin-statusbar": {},
-      "cordova-plugin-vibration": {},
       "cordova-plugin-badge": {},
       "cordova-plugin-file-opener2": {},
       "cordova-plugin-local-notification": {
@@ -45,6 +44,8 @@
       "cordova-plugin-device": {},
       "cordova-plugin-file": {}
     },
-    "platforms": []
+    "platforms": [
+      "android"
+    ]
   }
 }

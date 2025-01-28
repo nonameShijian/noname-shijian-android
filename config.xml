@@ -91,6 +91,7 @@
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:ignore="ManifestOrder" />
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
             <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="Android.permission.VIBRATE" />
             <!-- <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /> -->
             <!-- 安卓13(准确来说是11)以下的读写权限 -->
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" tools:ignore="ScopedStorage" />
