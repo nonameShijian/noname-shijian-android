@@ -25,7 +25,7 @@ npm i
 
 创建安卓项目: 
 ```
-cordova platform add android@12
+cordova platform add android
 ```
 
 在platforms\android\repositories.gradle

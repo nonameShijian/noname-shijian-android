@@ -46,7 +46,6 @@
         </edit-config>
         <!-- cordova12内置的Splash功能 -->
         <!-- 初始屏幕图像。此首选项用于动画和非动画图标。当前可接受的资源文件可以是 XML Vector Drawable 或 PNG -->
-        <!-- <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/screen/android/splashscreen.xml" /> -->
         <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/mipmap-xxxhdpi/ic_launcher_round.png" />
         <!-- 是否自动隐藏初始屏幕。初始屏幕在首选项中指定的时间量后隐藏 -->
         <preference name="AutoHideSplashScreen" value="true" />
@@ -66,17 +65,16 @@
         <preference name="StatusBarOverlaysWebView" value="true" />
         <!-- file插件的配置，兼容以前的设置 -->
         <preference name="AndroidPersistentFileLocation" value="Compatibility" />
-        <!-- 默认以file协议启动webview -->
-        <!-- 但是我魔改了cordova源码，这个值没多大意义了 -->
-        <preference name="AndroidInsecureFileModeEnabled" value="true" />
+        <!-- 默认以https协议启动webview -->
+        <preference name="AndroidInsecureFileModeEnabled" value="false" />
         <!-- 启动模式 -->
         <preference name="AndroidLaunchMode" value="singleTask" />
-        <!-- targetSdk改为31 -->
-        <preference name="android-targetSdkVersion" value="31" />
+        <!-- 发应用时所针对的最高Android版本。它告知Android系统你的应用已经为该版本进行了优化，并且了解该版本中的所有行为变更。 -->
+        <preference name="android-targetSdkVersion" value="34" />
         <!-- 编译的时候采用该api的规范进行代码检查和警告，但是并不会编译进apk中 -->
-        <preference name="android-compileSdkVersion" value="33" />
+        <preference name="android-compileSdkVersion" value="35" />
         <!-- android构建工具的版本 -->
-        <preference name="android-buildToolsVersion" value="33.0.2" />
+        <preference name="android-buildToolsVersion" value="35.0.0" />
         <!-- 配置Android Gradle Plugin Version -->
         <!-- <preference name="AndroidGradlePluginVersion" value="8.3.1" /> -->
         <!-- 配置Gradle Version -->
@@ -148,13 +146,13 @@
                     <category android:name="android.intent.category.DEFAULT" />
                 </intent-filter>
             </activity>
-            <provider
+            <!-- <provider
                 android:name="rikka.shizuku.ShizukuProvider"
                 android:authorities="${applicationId}.shizuku"
                 android:multiprocess="false"
                 android:enabled="true"
                 android:exported="true"
-                android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+                android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" /> -->
         </config-file>
         <!-- 处理文件资源 -->
         <hook type="after_platform_add" src="hooks/after_platform_add/copy_files.js" />

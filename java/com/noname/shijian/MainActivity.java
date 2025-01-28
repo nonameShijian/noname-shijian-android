@@ -78,6 +78,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -153,16 +154,17 @@ public class MainActivity extends CordovaActivity {
         // initShizuku();
 
         boolean is64Bit = ProcessUtils.is64Bit();
-        String[] supportBitAbis = is64Bit ? Build.SUPPORTED_64_BIT_ABIS : Build.SUPPORTED_32_BIT_ABIS;
+        ArrayList<String> supportBitAbis = new ArrayList<>(Arrays.asList(is64Bit ? Build.SUPPORTED_64_BIT_ABIS : Build.SUPPORTED_32_BIT_ABIS));
 
         // 内置的apk只有这两种，如果都不包含，就不触发升级内核操作（例如: 虚拟机需要x86）
-        int indexOfArm64 = Arrays.binarySearch(supportBitAbis,"arm64-v8a");
-        int indexOfArmeabi = Arrays.binarySearch(supportBitAbis,"armeabi-v7a");
+        boolean containsArm64 = supportBitAbis.contains("arm64-v8a");
+        boolean containsArmeabi = supportBitAbis.contains("armeabi-v7a");
+        // boolean containsX86 = Arrays.binarySearch(supportBitAbis, "x86");
 
-        Log.e(TAG, Arrays.toString(supportBitAbis));
+        Log.e(TAG, supportBitAbis.toString());
         boolean useUpgrade = getSharedPreferences("nonameyuri", MODE_PRIVATE).getBoolean("useUpgrade", true);
 
-        if (!useUpgrade || inited || (indexOfArm64 < 0 && indexOfArmeabi < 0)) {
+        if (!useUpgrade || inited || (!containsArm64 && !containsArmeabi)) {
             ActivityOnCreate(extras);
         }
         else {
@@ -226,6 +228,7 @@ public class MainActivity extends CordovaActivity {
                 }
 
                 String SystemWebViewPackageName = WebViewUpgrade.getSystemWebViewPackageName();
+                Log.e(TAG, SystemWebViewPackageName);
                 // 如果webview就是chrome
                 if ("com.android.chrome".equals(SystemWebViewPackageName)) {
                     ActivityOnCreate(extras);

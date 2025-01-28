@@ -70,8 +70,6 @@ The `device.cordova` property will display `10.1.1`.
 - Android
 - Browser
 - iOS
-- Windows
-- OS X
 
 ## device.model
 
@@ -84,17 +82,17 @@ different across versions of the same product.
 - Android
 - Browser
 - iOS
-- Windows
-- OS X
 
 ### Quick Example
 
 ```js
-// Android:    Nexus One       returns "Passion" (Nexus One code name)
-//             Motorola Droid  returns "voles"
-// Browser:    Google Chrome   returns "Chrome"
-//             Safari          returns "Safari"
-// iOS:     for the iPad Mini, returns iPad2,5; iPhone 5 is iPhone 5,1. See https://www.theiphonewiki.com/wiki/Models
+// Android: Pixel 4             returns "Pixel 4"
+//          Motorola Moto G3    returns "MotoG3"
+// Browser: Google Chrome       returns "Chrome"
+//          Safari              returns "Safari"
+// iOS:     iPad Mini           returns "iPad2,5"
+//          iPhone 5            returns "iPhone5,1"
+// See https://www.theiphonewiki.com/wiki/Models
 // OS X:                        returns "x86_64"
 //
 var model = device.model;
@@ -102,7 +100,7 @@ var model = device.model;
 
 ### Android Quirks
 
-- Gets the [product name](https://developer.android.com/reference/android/os/Build.html#PRODUCT) instead of the [model name](https://developer.android.com/reference/android/os/Build.html#MODEL), which is often the production code name. For example, the Nexus One returns `Passion`, and Motorola Droid returns `voles`.
+- Gets the [model name](https://developer.android.com/reference/android/os/Build.html#MODEL).
 
 ### iOS Quirks
 
@@ -126,8 +124,6 @@ var string = device.platform;
 - Android
 - Browser
 - iOS
-- Windows
-- OS X
 
 ### Quick Example
 
@@ -136,8 +132,6 @@ var string = device.platform;
 //   - "Android"
 //   - "browser"
 //   - "iOS"
-//   - "WinCE"
-//   - "Mac OS X"
 //
 var devicePlatform = device.platform;
 ```
@@ -158,8 +152,6 @@ The details of how a UUID is generated are determined by the device manufacturer
 
 - Android
 - iOS
-- Windows
-- OS X
 
 ### Quick Example
 
@@ -168,9 +160,6 @@ The details of how a UUID is generated are determined by the device manufacturer
 //
 // iOS: (Paraphrased from the UIDevice Class documentation)
 //         Returns the [UIDevice identifierForVendor] UUID which is unique and the same for all apps installed by the same vendor. However the UUID can be different if the user deletes all apps from the vendor and then reinstalls it.
-//
-// Windows Phone 7 : Returns a hash of device+current user,
-// if the user is not defined, a guid is generated and will persist until the app is uninstalled
 //
 var deviceID = device.uuid;
 ```
@@ -212,8 +201,6 @@ Get the operating system version.
 - Android
 - Browser
 - iOS
-- Windows
-- OS X
 
 ### Quick Example
 
@@ -225,10 +212,6 @@ Get the operating system version.
 // Browser:    Returns version number for the browser
 //
 // iOS:     iOS 3.2 returns "3.2"
-//
-// Windows 8: return the current OS version, ex on Windows 8.1 returns 6.3.9600.16384
-//
-// OS X:        El Capitan would return "10.11.2"
 //
 var deviceVersion = device.version;
 ```
@@ -243,7 +226,6 @@ Get the device's manufacturer.
 
 - Android
 - iOS
-- Windows
 
 ### Quick Example
 
@@ -264,15 +246,11 @@ var isSim = device.isVirtual;
 
 ## device.sdkVersion (Android only)
 
-Will return the Android device's SDK version.
+Get the Android device's SDK version ([SDK_INT](https://developer.android.com/reference/android/os/Build.VERSION#SDK_INT)).
 
 ### Supported Platforms
 
 - Android
-- Browser
-- iOS
-- Windows
-- OS X
 
 ### OS X and Browser Quirk
 
@@ -307,3 +285,48 @@ var boolean = device.isiOSAppOnMac;
 ### Supported Platforms
 
 - iOS
+
+---
+
+## iOS Privacy Manifest
+
+As of May 1, 2024, Apple requires a privacy manifest file to be created for apps and third-party SDKs. The purpose of the privacy manifest file is to explain the data being collected and the reasons for the required APIs it uses. Starting with `cordova-ios@7.1.0`, APIs are available for configuring the privacy manifest file from `config.xml`.
+
+This plugin comes pre-bundled with a `PrivacyInfo.xcprivacy` file that contains the list of APIs it uses and the reasons for using them.
+
+However, as an app developer, it will be your responsibility to identify additional information explaining what your app does with that data.
+
+In this case, you will need to review the "[Describing data use in privacy manifests](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests)" to understand the list of known `NSPrivacyCollectedDataTypes` and `NSPrivacyCollectedDataTypePurposes`.
+
+For example, if you collected the device ID for app functionality and analytics, you would write the following in `config.xml`:
+
+```xml
+<platform name="ios">
+    <privacy-manifest>
+        <key>NSPrivacyTracking</key>
+        <false/>
+        <key>NSPrivacyTrackingDomains</key>
+        <array/>
+        <key>NSPrivacyAccessedAPITypes</key>
+        <array/>
+        <key>NSPrivacyCollectedDataTypes</key>
+        <array>
+            <dict>
+                <key>NSPrivacyCollectedDataType</key>
+                <string>NSPrivacyCollectedDataTypeDeviceID</string>
+                <key>NSPrivacyCollectedDataTypeLinked</key>
+                <false/>
+                <key>NSPrivacyCollectedDataTypeTracking</key>
+                <false/>
+                <key>NSPrivacyCollectedDataTypePurposes</key>
+                <array>
+                    <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+                    <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+                </array>
+            </dict>
+        </array>
+    </privacy-manifest>
+</platform>
+```
+
+Also, ensure all four keys—`NSPrivacyTracking`, `NSPrivacyTrackingDomains`, `NSPrivacyAccessedAPITypes`, and `NSPrivacyCollectedDataTypes`—are defined, even if you are not making an addition to the other items. Apple requires all to be defined.

@@ -68,7 +68,10 @@ module.exports = function (context) {
 				// 覆盖ic_launcher-playstore.png
 				console.log(`Copying ic_launcher-playstore.png files from "./ic_launcher-playstore.png" to "./platforms/android/app/src/main/ic_launcher-playstore.png"`);
 				fs.copySync('./ic_launcher-playstore.png', path.join('./platforms', 'android', 'app', 'src', 'main', 'ic_launcher-playstore.png'), { overwrite: true });
-				
+				// 覆盖gradle.properties
+				console.log(`Copying gradle.properties files from "./gradle.properties" to "./platforms/android/gradle.properties"`);
+				fs.copySync('./gradle.properties', path.join('./platforms', 'android', 'gradle.properties'), { overwrite: true });
+			
 			})
 		})
 		.catch((err) => {
