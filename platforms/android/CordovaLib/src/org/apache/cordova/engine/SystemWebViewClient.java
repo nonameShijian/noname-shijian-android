@@ -132,7 +132,7 @@ public class SystemWebViewClient extends WebViewClient {
                 String[] newSplit = Arrays.copyOfRange(split, 0, split.length - 1);
                 List<String> list = Arrays.asList(assetManager.list(String.join("/", newSplit)));
                 Long lastModified = null;
-                if (!path.startsWith("game/") && list.contains(split[split.length - 1])) {
+                if (list.contains(split[split.length - 1])) {
                     is = assetManager.open("www/" + path, AssetManager.ACCESS_STREAMING);
                 } else {
                     File file = new File(
