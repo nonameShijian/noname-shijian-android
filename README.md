@@ -28,6 +28,13 @@ npm i
 cordova platform add android@13
 ```
 
+在platforms\android\res\xml\config.xml中的edit-config标签前面加入以下代码
+```xml
+<feature name="FinishImport">
+    <param name="android-package" value="com.noname.shijian.FinishImport"/>
+</feature>
+```
+
 在platforms\android\repositories.gradle
 和
 在platforms\android\app\repositories.gradle
