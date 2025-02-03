@@ -1,68 +1,94 @@
 package com.noname.shijian.check;
 
+import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import java.io.InputStream;
+import com.noname.shijian.UpdateDataApplication;
+
 import java.security.MessageDigest;
-import java.util.Locale;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.concurrent.Executor;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class CheckUtils {
 
-    private static final String[] SHALIST = new String[]{
-            "A804D0723B4C211F561320BD60D79C40C66FCDC7B44FC2B856F3FFE36B0DBCB5",
-            "cc3ee232e9a60daf9f47a9e71f02f07148f8eff87347f74f87d04be548c64203"
+    private static LinearLayout linearLayout;
+
+    private static TextView textView;
+
+    private static final byte[][] BYTES = new byte[][]{
+            {-117, 61, -81, 38, 79, 104, -123, -99, -1, -56, -117, -19, -66, -72, 3, -97, -18, 110, 19, -28},
+            {83, -29, -92, -55, 84, -1, 48, -6, 30, -11, -82, 13, -52, -121, 2, -51, 30, 90, 84, -36},
+            {-70, 4, 49, -92, 59, 90, -60, -127, -32, 48, 54, 40, -116, -111, -9, -7, -30, 96, 127, -11}
     };
 
-    private static final byte[][] SHALIST2 = new byte[][]{
-            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110},
-            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110, 46, 72, 85, 73},
-            // {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 111},
-            {106, 115, 106, 46, 110, 111, 110, 97, 109, 101, 46, 116, 121, 104, 109, 46, 104, 121, 121, 109},
-            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 104, 101, 97, 114, 116, 104, 115, 116, 111, 110, 101},
-            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 115, 104, 105, 106, 105, 97, 110, 46, 108, 105, 121, 97},
-            {99, 111, 109, 46, 110, 111, 110, 97, 109, 101, 46, 104, 101, 97, 114, 116, 104, 115, 116, 111, 110, 101}
-    };
-
-    public static void check(Context context, Executor executor){
-        final String apkPath = context.getApplicationInfo().sourceDir;
+    public static byte[] g(Context context, String packageName) {
         try {
-            executor.execute(() -> {
-                try {
-                    ZipFile zipFile = new ZipFile(apkPath);
-                    ZipEntry zipEntry = zipFile.getEntry("AndroidManifest.xml");
-                    InputStream inputStream = zipFile.getInputStream(zipEntry);
-                    byte[] buffer = new byte[1024];
-                    MessageDigest md = MessageDigest.getInstance("SHA-256");
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        md.update(buffer, 0, bytesRead);
-                    }
-                    byte[] digestBytes = md.digest();
-                    StringBuilder sb = new StringBuilder();
-                    for (byte b : digestBytes) {
-                        sb.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
-                    }
-                    String sha = sb.toString().toUpperCase(Locale.ROOT);
-                    // Log.e("sha", sha);
-                    for(String s:SHALIST){
-                        if(s.equals(sha)){
+            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
+            if (packageInfo.signatures == null) return null;
+            for (Signature signature : packageInfo.signatures) {
+                MessageDigest md = MessageDigest.getInstance("SHA");
+                md.update(signature.toByteArray());
+                return md.digest();
+            }
+        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void check(Context context, Executor executor) {
+        executor.execute(() -> {
+            Application app = (Application) context.getApplicationContext();
+            if (!(app instanceof UpdateDataApplication) || UpdateDataApplication.class.getSuperclass() != Application.class) {
+                setText(context);
+            }
+            try {
+                Class.forName(new String(new byte[] {98, 105, 110, 46, 109, 116, 46, 115, 105, 103, 110, 97, 116, 117, 114, 101, 46, 75, 105, 108, 108, 101, 114, 65, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110}));
+                setText(context);
+            } catch (ClassNotFoundException ignored) {
+            }
+            try {
+                byte[] si = g(context, context.getPackageName());
+                if (si != null) {
+                    for (byte[] s : BYTES) {
+                        if (Arrays.equals(si, s)) {
                             return;
                         }
                     }
-                    for(byte[] s:SHALIST2){
-                        if (context.getPackageName().equals(new String(s))) return;
-                    }
-                    System.exit(0);
-                }catch (Throwable e){
-                    System.exit(0);
+                    setText(context);
                 }
-            });
-        }catch (Throwable e){
-            System.exit(0);
-        }
+            } catch (Throwable e){
+                setText(context);
+            }
+        });
     }
 
+    private static void setText(Context context) {
+        // 创建一个垂直方向的 LinearLayout 作为容器
+        if (linearLayout == null) {
+            linearLayout = new LinearLayout(context);
+        }
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        // 设置 LinearLayout 的布局参数
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        linearLayout.setLayoutParams(layoutParams);
+        if (textView == null) {
+            textView = new TextView(context);
+        }
+        textView.setText(-1);
+        // 将 TextView 添加到 LinearLayout 中
+        linearLayout.addView(textView);
+        // 将 LinearLayout 设置为 Activity 的内容视图
+        Activity activity = (Activity) context;
+        activity.setContentView(linearLayout);
+    }
 }

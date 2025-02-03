@@ -222,7 +222,7 @@
 			 *
 			 * 获取指定仓库的tags
 			 * @param { Object } options
-			 * @param { string } [options.username = 'libccy'] 仓库拥有者
+			 * @param { string } [options.username = 'libnoname'] 仓库拥有者
 			 * @param { string } [options.repository = 'noname'] 仓库名称
 			 * @param { string } [options.accessToken] 身份令牌
 			 * @returns { Promise<{ commit: { sha: string, url: string }, name: string, node_id: string, tarball_url: string, zipball_url: string }[]> }
@@ -237,8 +237,8 @@
 			 * });
 			 * ```
 			 */
-			const getRepoTags = async function (options = { username: "libccy", repository: "noname" }) {
-				const { username = "libccy", repository = "noname", accessToken } = options;
+			const getRepoTags = async function (options = { username: "libnoname", repository: "noname" }) {
+				const { username = "libnoname", repository = "noname", accessToken } = options;
 				const headers = Object.assign({}, defaultHeaders);
 				if (accessToken) {
 					headers["Authorization"] = `token ${accessToken}`;
@@ -257,7 +257,7 @@
 			 * 获取指定仓库的指定tags的描述
 			 * @param { string } tagName tag名称
 			 * @param { Object } options
-			 * @param { string } [options.username = 'libccy'] 仓库拥有者
+			 * @param { string } [options.username = 'libnoname'] 仓库拥有者
 			 * @param { string } [options.repository = 'noname'] 仓库名称
 			 * @param { string } [options.accessToken] 身份令牌
 			 * @example
@@ -268,8 +268,8 @@
 			 * ```
 			 */
 
-			const getRepoTagDescription = async function (tagName, options = { username: "libccy", repository: "noname" }) {
-				const { username = "libccy", repository = "noname", accessToken } = options;
+			const getRepoTagDescription = async function (tagName, options = { username: "libnoname", repository: "noname" }) {
+				const { username = "libnoname", repository = "noname", accessToken } = options;
 				const headers = Object.assign({}, defaultHeaders);
 				if (accessToken) {
 					headers["Authorization"] = `token ${accessToken}`;
@@ -516,7 +516,7 @@
 			 * @returns {Promise<string>} 以最新版本tag的名称解析的promise，或者如果操作失败则以错误拒绝。
 			 * @throws {Error} 如果获取操作失败或找不到有效tag，将抛出错误。
 			 */
-			const getLatestVersionFromGitHub = async function (owner = "libccy", repo = "noname") {
+			const getLatestVersionFromGitHub = async function (owner = "libnoname", repo = "noname") {
 				const tags = await getRepoTags({
 					username: owner,
 					repository: repo,
@@ -603,7 +603,7 @@
 				innerHTML: `<div>
 					<ol>
 						<li>访问
-						<a href="https://github.com/libccy/noname/releases/latest">网址1</a>，
+						<a href="https://github.com/libnoname/noname/releases/latest">网址1</a>，
 						下载zip文件，或者通过其他方式(比如QQ群,QQ频道,微信公众号)下载最新的“无名杀完整包”。
 						<li>使用QQ或者文件管理器将完整包导入进无名杀目录
 						<li>完成上述步骤后，<a href="javascript:localStorage.setItem(\'noname_inited\',window.tempSetNoname);window.location.reload()">点击此处</a></div>

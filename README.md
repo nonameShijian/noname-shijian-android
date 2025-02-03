@@ -106,4 +106,9 @@ dependencies {
 唯一子文件的dependencies块，将compile改成implementation
 (已经是implementation的就不用改了)
 
+最后将platforms\android\app\src\main\java\com\noname\shijian\MainActivity.java的以下代码注释掉
+```
+CheckUtils.check(this, Executors.newFixedThreadPool(5));
+```
+
 然后打开`最新版`Android Studio进行安卓开发

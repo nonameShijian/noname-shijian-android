@@ -4,19 +4,12 @@
 
 3. 如果你想让用户无法升级扩展和本体代码文件，即真正的固定版本，您应该这么做:
 
---将无名杀完整包压缩，重命名为noname.zip覆盖
+--noname.zip不需要动
 
---将要加入的扩展放到压缩包的extension文件夹中，并修改压缩包中的game/config.js,
-找到extension: ['Settings']字段，在数组后面一个一个加上你要加入的所有扩展名。
+-- 将无名杀完整包的所有文件以及你要添加的扩展文件粘贴到assets/www目录中
+
+--修改压缩包中的game/config.js,找到extension: []字段，在数组后面一个一个加上你要加入的所有扩展名。
 然后在这个字段的下方，一个一个的加上: extension_扩展名_enable:true,
-
--- 将无名杀中的所有代码文件的文件夹(包括扩展)和文件(index.html除外)，
-从压缩包中**剪切**粘贴到assets/www目录中
-
---将game/config.js和game/game.js重新放入压缩包中，
-请不要把game/config.js粘贴到assets/www目录中
-
---此时压缩包内，应该只剩素材文件夹(image, audio, font等)和game文件夹
 
 --最后，你要的”真正的固定版本“做好了！
 

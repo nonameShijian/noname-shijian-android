@@ -3,10 +3,9 @@ package com.noname.shijian.websocket;
 import android.util.Log;
 import android.webkit.WebView;
 
-import com.noname.shijian.MainActivity;
+
 import com.noname.shijian.websocket.model.Client;
 import com.noname.shijian.websocket.model.Devtool;
-import com.norman.webviewup.lib.WebViewUpgrade;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;

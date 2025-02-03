@@ -23,7 +23,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.res.AssetManager;
@@ -48,7 +47,6 @@ import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import androidx.appcompat.widget.ContentFrameLayout;
 import androidx.webkit.WebViewAssetLoader;
@@ -336,6 +334,7 @@ public class MainActivity extends CordovaActivity {
             if (devWebView.getParent() != null) {
                 ((ViewGroup) devWebView.getParent()).removeView(devWebView);
             }
+            devWebView = null;
         }
 
         super.onDestroy();
@@ -352,7 +351,7 @@ public class MainActivity extends CordovaActivity {
             webview.goBack();
             Log.e(TAG, "SystemWebView -> " + webview.getUrl());
         }
-        if (devWebView != null && focusView == appView.getView() && devWebView.canGoBack()) {
+        if (devWebView != null && focusView == devWebView && devWebView.canGoBack()) {
             devWebView.goBack();
             Log.e(TAG, "devWebView -> " + devWebView.getUrl());
         }
@@ -671,10 +670,10 @@ public class MainActivity extends CordovaActivity {
         devSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         devSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
         devSettings.setSaveFormData(false);
-//        if (preferences.getBoolean("AndroidInsecureFileModeEnabled", false)) {
-//        devSettings.setAllowFileAccess(true);
-//        devSettings.setAllowUniversalAccessFromFileURLs(true);
-//        }
+        if (preferences.getBoolean("AndroidInsecureFileModeEnabled", false)) {
+            devSettings.setAllowFileAccess(true);
+            devSettings.setAllowUniversalAccessFromFileURLs(true);
+        }
         devSettings.setMediaPlaybackRequiresUserGesture(false);
         devSettings.setDatabaseEnabled(true);
         devSettings.setDomStorageEnabled(true);
