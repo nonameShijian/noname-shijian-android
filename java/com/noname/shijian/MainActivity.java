@@ -74,7 +74,7 @@ public class MainActivity extends com.noname.core.activity.MainActivity {
         return preferences;
     }
 
-    // private static boolean inited = Build.VERSION.SDK_INT > 34;
+    // private static boolean WebviewUpgraded = Build.VERSION.SDK_INT > 34;
 
     @Override
     protected void ActivityOnCreate(Bundle extras) {

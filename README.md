@@ -7,6 +7,7 @@
 git clone --recursive https://github.com/nonameShijian/noname-shijian-android.git
 
 # 更新NonameCore模块
+git pull
 git submodule update
 
 # 创建安卓项目
