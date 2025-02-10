@@ -3,6 +3,12 @@
 # 项目说明
 将公共的Api和升级Webview内核操作封装到NoameCore模块中，使所有App可以共用相同功能
 
+# 克隆本项目后需要克隆NonameCore模块
+git clone --recursive https://github.com/libnoname/noname-android-core.git
+
+# 更新NonameCore模块
+git submodule update
+
 # 创建安卓项目
 先按教程全局安装cordova环境(本项目用的是cordova12)
 
