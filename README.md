@@ -3,7 +3,7 @@
 # 项目说明
 将公共的Api和升级Webview内核操作封装到NoameCore模块中，使所有App可以共用相同功能
 
-# 克隆本项目后需要克隆NonameCore模块
+# 克隆本项目
 git clone --recursive https://github.com/nonameShijian/noname-shijian-android.git
 
 # 更新NonameCore模块
