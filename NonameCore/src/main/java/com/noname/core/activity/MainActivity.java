@@ -73,7 +73,7 @@ public class MainActivity extends CordovaActivity {
         }
 
         View view = appView.getView();
-        SystemWebView webview = (SystemWebView) view;
+        webview = (WebView) view;
         WebSettings settings = webview.getSettings();
         Log.e(TAG, settings.getUserAgentString());
         initWebViewSettings(webview, settings);
