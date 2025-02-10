@@ -6,10 +6,6 @@
 # 克隆本项目
 git clone --recursive https://github.com/nonameShijian/noname-shijian-android.git
 
-# 更新NonameCore模块
-git pull
-git submodule update
-
 # 创建安卓项目
 先按教程全局安装cordova环境(本项目用的是cordova12)
 
