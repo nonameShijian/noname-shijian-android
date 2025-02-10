@@ -1,4 +1,4 @@
-package com.noname.api;
+package com.noname.core;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -27,10 +27,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import 	android.content.pm.PackageManager;
+import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
-
-import com.noname.shijian.R;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -344,6 +343,18 @@ public class Utils {
         // 创建一个PopupWindow来显示截图
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View layout = inflater.inflate(R.layout.toast_layout, null);
+
+        ImageView imageIcon = layout.findViewById(R.id.app_icon);
+        int mipmapResId = context.getResources().getIdentifier("ic_launcher_round", "mipmap", context.getPackageName());
+        if (mipmapResId != 0) {
+            imageIcon.setImageResource(mipmapResId);
+        }
+
+        TextView appName = layout.findViewById(R.id.app_name);
+        int stringResId = context.getResources().getIdentifier("app_name", "string", context.getPackageName());
+        if (stringResId != 0) {
+            appName.setText(context.getString(stringResId));
+        }
 
         ImageView imageView = layout.findViewById(R.id.popup_image);
         Button shareButton = layout.findViewById(R.id.btn_share);

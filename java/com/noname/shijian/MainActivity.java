@@ -22,12 +22,9 @@ package com.noname.shijian;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.res.AssetManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -51,21 +48,12 @@ import android.widget.FrameLayout;
 import androidx.appcompat.widget.ContentFrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 
-import com.noname.api.NonameJavaScriptInterface;
 import com.noname.shijian.check.CheckUtils;
 import com.noname.shijian.view.DraggableButton;
 import com.noname.shijian.websocket.SocketServer;
 import com.noname.shijian.websocket.model.Client;
-import com.norman.webviewup.lib.UpgradeCallback;
-import com.norman.webviewup.lib.WebViewUpgrade;
-import com.norman.webviewup.lib.source.UpgradeAssetSource;
-import com.norman.webviewup.lib.source.UpgradePackageSource;
-import com.norman.webviewup.lib.source.UpgradeSource;
-import com.norman.webviewup.lib.util.ProcessUtils;
-import com.norman.webviewup.lib.util.VersionUtils;
 
 import org.apache.cordova.*;
-import org.apache.cordova.engine.SystemWebView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -73,234 +61,56 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends CordovaActivity {
+public class MainActivity extends com.noname.core.activity.MainActivity {
     public final static int FILE_CHOOSER_RESULT_CODE = 1;
 
     public CordovaPreferences getPreferences() {
         return preferences;
     }
 
-    private static boolean inited = Build.VERSION.SDK_INT > 34;
+    // private static boolean inited = Build.VERSION.SDK_INT > 34;
 
-    private ProgressDialog WebViewUpgradeProgressDialog;
-
-    private WebView webview;
-
-    private void ActivityOnCreate(Bundle extras) {
-        if (WebViewUpgradeProgressDialog != null) {
-            WebViewUpgradeProgressDialog.hide();
-            WebViewUpgradeProgressDialog.dismiss();
-            WebViewUpgradeProgressDialog = null;
+    @Override
+    protected void ActivityOnCreate(Bundle extras) {
+        if (extras != null && extras.getString("importExtensionName") != null) {
+            String extName = extras.getString("importExtensionName");
+            FinishImport.ext = extName;
         }
-
-        try {
-            if (extras != null && extras.getString("importExtensionName") != null) {
-                String extName = extras.getString("importExtensionName");
-                FinishImport.ext = extName;
-                URI uri = new URI(launchUrl);
-                String newQuery = uri.getQuery();
-                String appendQuery = "importExtensionName=" + extName;
-                if (newQuery == null) {
-                    newQuery = appendQuery;
-                } else {
-                    newQuery += "&" + appendQuery;
-                }
-                URI newUri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), newQuery, uri.getFragment());
-                Log.e(TAG, newUri.toString());
-                loadUrl(newUri.toString());
-            }
-            else {
-                loadUrl(launchUrl);
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            // Set by <content src="index.html" /> in config.xml
-            loadUrl(launchUrl);
-        }
-
-        View view = appView.getView();
-        Log.e("webview", String.valueOf(view));
-        webview = (WebView) view;
-        WebSettings settings = webview.getSettings();
-        initWebViewSettings(webview, settings);
-        Log.e("getUserAgentString", settings.getUserAgentString());
+        super.ActivityOnCreate(extras);
         CheckUtils.check(this, Executors.newFixedThreadPool(5));
-
         initDevToolsFloatWindow();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        LOG.e("onCreate", String.valueOf(savedInstanceState));
         super.onCreate(savedInstanceState);
-
-        // enable Cordova apps to be started in the background
-        Bundle extras = getIntent().getExtras();
-        if (extras != null && extras.getBoolean("cdvStartInBackground", false)) {
-            moveTaskToBack(true);
-        }
-
         // initShizuku();
-
-        boolean is64Bit = ProcessUtils.is64Bit();
-        ArrayList<String> supportBitAbis = new ArrayList<>(Arrays.asList(is64Bit ? Build.SUPPORTED_64_BIT_ABIS : Build.SUPPORTED_32_BIT_ABIS));
-
-        // 内置的apk只有这两种，如果都不包含，就不触发升级内核操作（例如: 虚拟机需要x86）
-        boolean containsArm64 = supportBitAbis.contains("arm64-v8a");
-        boolean containsArmeabi = supportBitAbis.contains("armeabi-v7a");
-        // boolean containsX86 = Arrays.binarySearch(supportBitAbis, "x86");
-
-        Log.e(TAG, supportBitAbis.toString());
-        boolean useUpgrade = getSharedPreferences("nonameyuri", MODE_PRIVATE).getBoolean("useUpgrade", true);
-
-        if (!useUpgrade || inited || (!containsArm64 && !containsArmeabi)) {
-            ActivityOnCreate(extras);
-        }
-        else {
-            inited = true;
-
-            if (WebViewUpgradeProgressDialog == null) {
-                WebViewUpgradeProgressDialog = new ProgressDialog(this);
-                WebViewUpgradeProgressDialog.setTitle("正在更新Webview内核");
-                WebViewUpgradeProgressDialog.setCancelable(false);
-                WebViewUpgradeProgressDialog.setIndeterminate(false);
-                WebViewUpgradeProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                WebViewUpgradeProgressDialog.setMax(100);
-                WebViewUpgradeProgressDialog.setProgress(0);
-                if (WebViewUpgradeProgressDialog.isShowing()) WebViewUpgradeProgressDialog.hide();
-            }
-
-            WebViewUpgrade.addUpgradeCallback(new UpgradeCallback() {
-                @Override
-                public void onUpgradeProcess(float percent) {
-                    if (percent <= 0.9 && !WebViewUpgradeProgressDialog.isShowing()) {
-                        WebViewUpgradeProgressDialog.show();
-                    }
-                    WebViewUpgradeProgressDialog.setProgress((int) (percent * 100));
-                }
-
-                @Override
-                public void onUpgradeComplete() {
-                    Log.e(TAG, "onUpgradeComplete");
-                    WebViewUpgradeProgressDialog.setProgress(100);
-                    ActivityOnCreate(extras);
-                }
-
-                @Override
-                public void onUpgradeError(Throwable throwable) {
-                    Log.e(TAG, "onUpgradeError: " + throwable.getMessage());
-                    ActivityOnCreate(extras);
-                }
-            });
-
-            try {
-                // 添加webview
-                UpgradeSource upgradeSource;
-
-                // 兼容版需要内置webview
-                UpgradeAssetSource webviewUpgradeSource = new UpgradeAssetSource(
-                        getApplicationContext(),
-                        "com.google.android.webview_119.0.6045.194.apk",
-                        new File(getApplicationContext().getFilesDir(), "com.google.android.webview/119.0.6045.194.apk")
-                );
-
-                // 其他的使用chrome就行
-                UpgradePackageSource chromeUpgradeSource = new UpgradePackageSource(
-                        getApplicationContext(),
-                        "com.android.chrome"
-                );
-
-                if ("yuri.nakamura.noname".equals(getPackageName())) {
-                    upgradeSource = webviewUpgradeSource;
-                } else {
-                    upgradeSource = chromeUpgradeSource;
-                }
-
-                String SystemWebViewPackageName = WebViewUpgrade.getSystemWebViewPackageName();
-                Log.e(TAG, SystemWebViewPackageName);
-                // 如果webview就是chrome
-                if ("com.android.chrome".equals(SystemWebViewPackageName)) {
-                    ActivityOnCreate(extras);
-                    return;
-                }
-
-                PackageInfo upgradePackageInfo = getPackageManager().getPackageInfo(chromeUpgradeSource.getPackageName(), 0);
-                if (upgradePackageInfo != null) {
-                    // google webview应当等同于chrome
-                    if (upgradeSource == chromeUpgradeSource && "com.google.android.webview".equals(SystemWebViewPackageName) && "com.android.chrome".equals(chromeUpgradeSource.getPackageName())) {
-                        SystemWebViewPackageName = "com.android.chrome";
-                    }
-                    if (SystemWebViewPackageName.equals(chromeUpgradeSource.getPackageName())
-                            && VersionUtils.compareVersion( WebViewUpgrade.getSystemWebViewPackageVersion(), upgradePackageInfo.versionName) >= 0) {
-                        // Toast.makeText(getApplicationContext(), "系统Webview版本较新，无需升级", Toast.LENGTH_LONG).show();
-                        ActivityOnCreate(extras);
-                        return;
-                    }
-                    WebViewUpgrade.upgrade(upgradeSource);
-                } else {
-                    ActivityOnCreate(extras);
-                }
-            } catch (Exception e) {
-                Log.e(TAG, String.valueOf(e));
-                ActivityOnCreate(extras);
-            }
-        }
     }
 
-    private void initWebViewSettings(WebView webview, WebSettings settings) {
-        // int textZoom = settings.getTextZoom();
-        // Log.e("textZoom", "WebView当前的字体变焦百分比是: " + textZoom + "%");
-        settings.setTextZoom(100);
+    @Override
+    protected void initWebViewSettings(WebView webview, WebSettings settings) {
+        super.initWebViewSettings(webview, settings);
         String userAgent = settings.getUserAgentString();
         settings.setUserAgentString(userAgent + " 无名杀诗笺版/" + FinishImport.getAppVersion(MainActivity.this));
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         webview.addJavascriptInterface(new JavaScriptInterface(MainActivity.this, MainActivity.this, webview) , "noname_shijianInterfaces");
-        webview.addJavascriptInterface(new NonameJavaScriptInterface(this, webview, preferences), "NonameAndroidBridge");
-        WebView.setWebContentsDebuggingEnabled(true);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
-        LOG.e("onNewIntent" ,"111");
-        super.onNewIntent(intent);
-        setIntent(intent);
         Bundle extras = intent.getExtras();
         if (extras != null) {
             String extName = extras.getString("importExtensionName");
-            boolean importPackage = extras.getBoolean("importPackage", false);
             if (extName != null) {
                 FinishImport.ext = extName;
             }
-            View view = appView.getView();
-            SystemWebView webview = (SystemWebView) view;
-            if (webview != null) {
-                if (extName != null) {
-                    webview.evaluateJavascript("(() => {" +
-                            "const event = new CustomEvent('importExtension', { " +
-                            "detail: { extensionName: '" + extName + "'}" +
-                            "});" +
-                            "window.dispatchEvent(event);" +
-                            "})();", null);
-                }
-                if (importPackage) {
-                    webview.evaluateJavascript("(() => {" +
-                            "const event = new CustomEvent('importPackage', { " +
-                            "detail: { importPackage: true }" +
-                            "});" +
-                            "window.dispatchEvent(event);" +
-                            "})();", null);
-                }
-            }
         }
+        super.onNewIntent(intent);
     }
 
     @Override
@@ -313,12 +123,6 @@ public class MainActivity extends CordovaActivity {
             for (File tempFile : tempFiles) {
                 tempFile.delete();
             }
-        }
-
-        if (WebViewUpgradeProgressDialog != null) {
-            WebViewUpgradeProgressDialog.hide();
-            WebViewUpgradeProgressDialog.dismiss();
-            WebViewUpgradeProgressDialog = null;
         }
 
         try {
@@ -345,12 +149,6 @@ public class MainActivity extends CordovaActivity {
         View rootview = getWindow().getDecorView();
         View focusView = rootview.findFocus();
         Log.e(TAG, String.valueOf(focusView));
-        if (appView != null && focusView == appView.getView() && ((SystemWebView) appView.getView()).canGoBack()) {
-            Log.e(TAG, "SystemWebView");
-            SystemWebView webview = (SystemWebView) appView.getView();
-            webview.goBack();
-            Log.e(TAG, "SystemWebView -> " + webview.getUrl());
-        }
         if (devWebView != null && focusView == devWebView && devWebView.canGoBack()) {
             devWebView.goBack();
             Log.e(TAG, "devWebView -> " + devWebView.getUrl());

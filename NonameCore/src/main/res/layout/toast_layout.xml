@@ -16,7 +16,6 @@
             android:id="@+id/app_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@mipmap/ic_launcher_round"
             android:contentDescription="Noname Icon"/>
 
         <!-- 应用名称 -->
@@ -24,7 +23,6 @@
             android:id="@+id/app_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/app_name"
             android:layout_gravity="center_vertical"
             android:textAppearance="?android:attr/textAppearanceLarge" />
     </LinearLayout>

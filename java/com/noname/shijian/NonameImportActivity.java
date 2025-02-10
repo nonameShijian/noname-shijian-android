@@ -35,7 +35,7 @@ import androidx.core.content.FileProvider;
 import androidx.palette.graphics.Palette;
 
 import com.alibaba.fastjson.JSON;
-import com.noname.api.Utils;
+import com.noname.core.Utils;
 import com.noname.shijian.chooseFolder.ListViewActivity;
 
 import java.io.BufferedInputStream;
@@ -82,10 +82,10 @@ public class NonameImportActivity extends Activity {
 	public static final String[] WAITING_MESSAGES = {
 			"无名杀的创造者是水乎，也叫村长。",
 			"最好不要在扩展文件里包含除英文字母和英文标点之外的任何符号，防止导入的时候麻烦。",
-			"苏婆玛丽奥是无名杀的现任更新者。",
+			"诗笺是无名杀的现任更新者。",
 			"GPLv3协议提倡开源与共享，是无名杀代码的基础协议。",
 			"原生的换肤功能不好用？装个千幻聆音扩展试试吧！可以语音图片一起换哦！",
-			"在线更新扩展能避免更新时崩溃导致需要重装游戏的问题。",
+			// "在线更新扩展能避免更新时崩溃导致需要重装游戏的问题。",
 			"萌新记着要看公告和教程哦，不要频繁提问，大佬很忙的。",
 			"诗笺版无名杀的前身是玄武版，现在玄武版已经光荣退役了。",
 			"诗笺的第二个字念“jiān”，是“信纸”的意思，不要念错了。",
@@ -97,7 +97,7 @@ public class NonameImportActivity extends Activity {
 			"千幻聆音扩展的换肤换音功能，是可以让其它扩展接入并自定义的。",
 			"我知道你很急，但是你先别急。",
 			"无名杀扩展内置的导入键并不好用，不建议使用。",
-			"无名杀的外壳和本体代码是分开的，目前本体仓库在GitHub上由苏婆进行更新维护。",
+			"无名杀的外壳和本体代码是分开的，目前本体仓库在GitHub上由诗笺进行更新维护。",
 			"代码混淆的扩展有一定的风险，请谨慎甄别发布者。",
 			"不要退出，你也不想导入出问题吧？",
 			"请不要拿无名杀去别的圈子招仇恨，这种行为并不会显得你很智慧。",
@@ -108,7 +108,7 @@ public class NonameImportActivity extends Activity {
 			"越开放的扩展，在传播上有更多的优势。",
 			"熟练掌握万能导入法，防止一切崩溃问题。",
 			"强中更有强中手，一山更比一山高。",
-			"在官服，联机情况下，是不能使用扩展的。",
+			// "在官服，联机情况下，是不能使用扩展的。",
 			"关于无名杀的种种问题，牢记别人帮你是情分，别人不帮你是本分。",
 			"无名杀不排斥开发自己的版本，但是必须遵守GPL协议。",
 			"广告位招租！不要money交个朋友！",

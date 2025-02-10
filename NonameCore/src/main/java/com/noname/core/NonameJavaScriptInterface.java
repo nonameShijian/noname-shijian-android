@@ -1,4 +1,4 @@
-package com.noname.api;
+package com.noname.core;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -12,6 +12,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
+
+import com.noname.core.activity.WebViewSelectionActivity;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
@@ -252,5 +254,13 @@ public class NonameJavaScriptInterface {
     @SuppressWarnings("unused")
     public boolean captureScreen(String fileName) {
         return Utils.captureAndSaveScreenshot(activity, fileName);
+    }
+
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public void changeWebviewProvider() {
+        Intent newIntent = new Intent(context, WebViewSelectionActivity.class);
+        newIntent.setAction(Intent.ACTION_VIEW);
+        activity.startActivity(newIntent);
     }
 }

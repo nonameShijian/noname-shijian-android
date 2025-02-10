@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.noname.core.activity.WebViewSelectionActivity;
+
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.CompressionLevel;
@@ -467,5 +469,13 @@ public class JavaScriptInterface {
     @SuppressWarnings("unused")
     public void hideDevTools() {
         activity.runOnUiThread(activity::hideDevTools);
+    }
+
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public void changeWebviewProvider() {
+        Intent newIntent = new Intent(context, WebViewSelectionActivity.class);
+        newIntent.setAction(Intent.ACTION_VIEW);
+        activity.startActivity(newIntent);
     }
 }

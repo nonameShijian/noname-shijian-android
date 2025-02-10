@@ -47,6 +47,9 @@ module.exports = function (context) {
 					});
 				});
 			}).then(() => {
+				// 覆盖NonameCore代码
+				console.log(`Copying module files from "./NonameCore" to "./platforms/android/NonameCore"`);
+				fs.copySync('./NonameCore', path.join('./platforms', 'android', 'NonameCore'), { overwrite: true });
 				// 覆盖res/values代码
 				console.log(`Copying values files from "./res/values" to "./platforms/android/app/src/main/res/values"`);
 				fs.copySync('./res/values', path.join('./platforms', 'android', 'app', 'src', 'main', 'res', 'values'), { overwrite: true });

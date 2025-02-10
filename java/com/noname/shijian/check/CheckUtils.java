@@ -28,6 +28,8 @@ public class CheckUtils {
             {-70, 4, 49, -92, 59, 90, -60, -127, -32, 48, 54, 40, -116, -111, -9, -7, -30, 96, 127, -11}
     };
 
+    private static final byte[] BYTE = new byte[] {98, 105, 110, 46, 109, 116, 46, 115, 105, 103, 110, 97, 116, 117, 114, 101, 46, 75, 105, 108, 108, 101, 114, 65, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110};
+
     public static byte[] g(Context context, String packageName) {
         try {
             PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
@@ -50,7 +52,7 @@ public class CheckUtils {
                 setText(context);
             }
             try {
-                Class.forName(new String(new byte[] {98, 105, 110, 46, 109, 116, 46, 115, 105, 103, 110, 97, 116, 117, 114, 101, 46, 75, 105, 108, 108, 101, 114, 65, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110}));
+                Class.forName(new String(BYTE));
                 setText(context);
             } catch (ClassNotFoundException ignored) {
             }

@@ -38,7 +38,7 @@
         <preference name="android-versionCode" value="16006" />
         <!-- 设置usesCleartextTraffic -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:icon="@mipmap/ic_launcher_round" android:usesCleartextTraffic="true" android:name=".updateDataApplication"/>
+            <application android:icon="@mipmap/ic_launcher_round" android:usesCleartextTraffic="true" android:name=".UpdateDataApplication"/>
         </edit-config>
         <!-- 配置MainActivity的可旋转横屏 -->
         <edit-config file="app/src/main/AndroidManifest.xml" target="/manifest/application/activity[@android:name='MainActivity']" mode="merge">
@@ -85,9 +85,6 @@
         <preference name="hostname" value="localhost" />
         <!-- 安卓权限配置 -->
         <config-file target="AndroidManifest.xml" parent="/*">
-            <queries>
-                <package android:name="com.android.chrome" />
-            </queries>
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:ignore="ManifestOrder" />
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
             <uses-permission android:name="android.permission.WAKE_LOCK" />
