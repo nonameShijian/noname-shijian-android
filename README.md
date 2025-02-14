@@ -24,6 +24,7 @@ cordova platform add android@13
 在platforms\android\settings.gradle中加入以下代码
 ```
 include ":NonameCore"
+include ':MTDataFiles'
 ```
 
 在platforms\android\app\src\main\res\xml\config.xml中的edit-config标签前面加入以下代码
@@ -86,6 +87,7 @@ dependencies {
     // devtools需要websocket
     implementation 'org.java-websocket:Java-WebSocket:1.5.6'
     implementation(project(path: ":NonameCore"))
+    implementation(project(path: ":MTDataFiles"))
 }
 ```
 
@@ -94,11 +96,6 @@ dependencies {
 (已经是implementation的就不用改了)
 
 由于不太了解Cordova的版本号设置，如果需要，在platforms\android\app\src\main\AndroidManifest.xml中修改指定的版本号(versionCode)
-
-最后将platforms\android\app\src\main\java\com\noname\shijian\MainActivity.java的以下代码注释掉以解除签名验证
-```
-CheckUtils.check(this, Executors.newFixedThreadPool(5));
-```
 
 然后打开`最新版`Android Studio进行安卓开发
 
