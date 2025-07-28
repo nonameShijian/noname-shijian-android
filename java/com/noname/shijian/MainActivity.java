@@ -58,13 +58,9 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.Executors;
 
 public class MainActivity extends com.noname.core.activities.WebViewUpgradeCordovaActivity {
     public final static int FILE_CHOOSER_RESULT_CODE = 1;
@@ -368,20 +364,7 @@ public class MainActivity extends com.noname.core.activities.WebViewUpgradeCordo
                             InputStream inputStream = new ByteArrayInputStream(byteArray);
                             return new WebResourceResponse("application/json", null, inputStream);
                         }
-                        // InputStream is = assetManager.open("www/" + path, AssetManager.ACCESS_STREAMING);
-                        InputStream is;
-                        String[] split = ("www/" + path).split("/");
-                        String[] newSplit = Arrays.copyOfRange(split, 0, split.length - 1);
-                        List<String> list = Arrays.asList(assetManager.list(String.join("/", newSplit)));
-                        if (list.contains(split[split.length - 1])) {
-                            is = assetManager.open("www/" + path, AssetManager.ACCESS_STREAMING);
-                        } else {
-                            File file = new File(
-                                    getExternalFilesDir(null).getParentFile(),
-                                    path
-                            );
-                            is = new FileInputStream(file);
-                        }
+                        InputStream is = assetManager.open("www/" + path, AssetManager.ACCESS_STREAMING);
                         String mimeType = "text/html";
                         String extension = MimeTypeMap.getFileExtensionFromUrl(path);
                         if (extension != null) {
