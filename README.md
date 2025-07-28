@@ -1,6 +1,8 @@
 本项目中使用[WebViewUpgrade](https://github.com/JonaNorman/WebViewUpgrade)项目的代码升级Webview内核
 
 # 项目说明
+本项目将要与[noname-plus](https://github.com/zhaiyanqi/noname-plus)进行合并，并且重新创建项目，所以本项目将会进入停止更新的状态。仅当遇到恶性bug时会进行修复
+
 将公共的Api和升级Webview内核操作封装到[NoameCore](https://github.com/libnoname/noname-android-core)模块中，使所有App可以共用相同功能
 
 # Cordova 14.0.0环境
