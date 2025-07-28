@@ -1,7 +1,7 @@
 {
   "name": "com.noname.shijian",
   "displayName": "无名杀",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "A sample Apache Cordova application that responds to the deviceready event.",
   "main": "index.js",
   "scripts": {
