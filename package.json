@@ -5,7 +5,6 @@
   "description": "A sample Apache Cordova application that responds to the deviceready event.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "create": "cordova platform add android",
     "remove": "cordova platform remove android"
   },
@@ -15,7 +14,7 @@
   "author": "Apache Cordova Team",
   "license": "GPL-3.0-only",
   "devDependencies": {
-    "cordova-android": "^13.0.0",
+    "cordova-android": "^14.0.0",
     "cordova-plugin-android-permissions": "^1.1.5",
     "cordova-plugin-badge": "^0.8.9",
     "cordova-plugin-battery-status": "^2.0.3",
@@ -49,5 +48,8 @@
     "platforms": [
       "android"
     ]
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.0"
   }
 }

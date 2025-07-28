@@ -35,7 +35,7 @@ import androidx.core.content.FileProvider;
 import androidx.palette.graphics.Palette;
 
 import com.alibaba.fastjson.JSON;
-import com.noname.core.Utils;
+import com.noname.core.utils.Utils;
 import com.noname.shijian.chooseFolder.ListViewActivity;
 
 import java.io.BufferedInputStream;

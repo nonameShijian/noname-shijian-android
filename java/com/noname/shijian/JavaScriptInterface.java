@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.noname.core.activity.WebViewSelectionActivity;
+import com.noname.core.activities.WebViewSelectionActivity;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;

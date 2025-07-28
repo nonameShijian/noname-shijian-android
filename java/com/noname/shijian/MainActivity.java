@@ -48,7 +48,6 @@ import android.widget.FrameLayout;
 import androidx.appcompat.widget.ContentFrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 
-import com.noname.shijian.check.CheckUtils;
 import com.noname.shijian.view.DraggableButton;
 import com.noname.shijian.websocket.SocketServer;
 import com.noname.shijian.websocket.model.Client;
@@ -67,7 +66,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends com.noname.core.activity.MainActivity {
+public class MainActivity extends com.noname.core.activities.WebViewUpgradeCordovaActivity {
     public final static int FILE_CHOOSER_RESULT_CODE = 1;
 
     public CordovaPreferences getPreferences() {
@@ -83,7 +82,6 @@ public class MainActivity extends com.noname.core.activity.MainActivity {
             FinishImport.ext = extName;
         }
         super.ActivityOnCreate(extras);
-        CheckUtils.check(this, Executors.newFixedThreadPool(5));
         initDevToolsFloatWindow();
     }
 

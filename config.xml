@@ -70,15 +70,15 @@
         <!-- 启动模式 -->
         <preference name="AndroidLaunchMode" value="singleTask" />
         <!-- 发应用时所针对的最高Android版本。它告知Android系统你的应用已经为该版本进行了优化，并且了解该版本中的所有行为变更。 -->
-        <preference name="android-targetSdkVersion" value="34" />
+        <!-- <preference name="android-targetSdkVersion" value="35" /> -->
         <!-- 编译的时候采用该api的规范进行代码检查和警告，但是并不会编译进apk中 -->
-        <preference name="android-compileSdkVersion" value="35" />
+        <!-- <preference name="android-compileSdkVersion" value="35" /> -->
         <!-- android构建工具的版本 -->
-        <preference name="android-buildToolsVersion" value="35.0.0" />
+        <!-- <preference name="android-buildToolsVersion" value="35.0.0" /> -->
         <!-- 配置Android Gradle Plugin Version -->
         <!-- <preference name="AndroidGradlePluginVersion" value="8.3.1" /> -->
         <!-- 配置Gradle Version -->
-        <preference name="GradleVersion" value="8.7" />
+        <!-- <preference name="GradleVersion" value="8.7" /> -->
         <!-- 配置http或是https协议 -->
         <preference name="scheme" value="https" />
         <!-- 配置域名 -->

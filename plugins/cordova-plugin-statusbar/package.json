@@ -1,0 +1,46 @@
+{
+  "name": "cordova-plugin-statusbar",
+  "version": "4.0.0",
+  "description": "Cordova StatusBar Plugin",
+  "types": "./types/index.d.ts",
+  "cordova": {
+    "id": "cordova-plugin-statusbar",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": "github:apache/cordova-plugin-statusbar",
+  "bugs": "https://github.com/apache/cordova-plugin-statusbar/issues",
+  "keywords": [
+    "cordova",
+    "statusbar",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "scripts": {
+    "test": "npm run lint",
+    "lint": "eslint ."
+  },
+  "engines": {
+    "cordovaDependencies": {
+      "0.1.0": {
+        "cordova": ">=3.0.0"
+      },
+      "4.0.0": {
+        "cordova-android": ">=10.0.0",
+        "cordova": ">=3.0.0",
+        "cordova-ios": ">=6.0.0"
+      },
+      "5.0.0": {
+        "cordova": ">100"
+      }
+    }
+  },
+  "author": "Apache Software Foundation",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@cordova/eslint-config": "^4.0.0"
+  }
+}

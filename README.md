@@ -1,7 +1,12 @@
 本项目中使用[WebViewUpgrade](https://github.com/JonaNorman/WebViewUpgrade)项目的代码升级Webview内核
 
 # 项目说明
-将公共的Api和升级Webview内核操作封装到NoameCore模块中，使所有App可以共用相同功能
+将公共的Api和升级Webview内核操作封装到[NoameCore](https://github.com/libnoname/noname-android-core)模块中，使所有App可以共用相同功能
+
+# Cordova 14.0.0环境
+1. 最新版Android Studio 和 Android SDK Platform 35
+2. JDK 11+（但IDE应该会自带个17，不太需要额外配置）
+3. Node.js 20.5.0+
 
 # 克隆本项目
 git clone --recursive https://github.com/nonameShijian/noname-shijian-android.git
@@ -18,7 +23,7 @@ npm i
 
 创建安卓项目: 
 ```
-cordova platform add android@13
+cordova platform add android@14
 ```
 
 在platforms\android\settings.gradle中加入以下代码
@@ -38,7 +43,7 @@ include ':MTDataFiles'
 和
 在platforms\android\app\repositories.gradle
 `改为`:
-```gradle
+```groovy
 ext.repos = {
     google()
     mavenCentral()
@@ -50,14 +55,14 @@ ext.repos = {
 ```
 
 在platforms\android\app\build.gradle的android块上面添加:
-```gradle
+```groovy
 def generateTime() {
     return new Date().format("yyyy-MM-dd")
 }
 android { ... }
 ```
 在platforms\android\app\build.gradle的android块中添加:
-```gradle
+```groovy
 android.applicationVariants.all {
     variant ->
         variant.outputs.all {
@@ -74,7 +79,7 @@ aaptOptions {
 ```
 
 在platforms\android\app\build.gradle的dependencies块的SUB-PROJECT DEPENDENCIES END注释后加入:
-```gradle
+```groovy
 dependencies {
     ...
     // SUB-PROJECT DEPENDENCIES END
