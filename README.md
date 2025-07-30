@@ -5,7 +5,7 @@
 
 将公共的Api和升级Webview内核操作封装到[NoameCore](https://github.com/libnoname/noname-android-core)模块中，使所有App可以共用相同功能
 
-# Cordova 14.0.0环境
+# Cordova-android 14.0.0环境
 1. 最新版Android Studio 和 Android SDK Platform 35
 2. JDK 11+（但IDE应该会自带个17，不太需要额外配置）
 3. Node.js 20.5.0+
@@ -105,6 +105,19 @@ dependencies {
 由于不太了解Cordova的版本号设置，如果需要，在platforms\android\app\src\main\AndroidManifest.xml中修改指定的版本号(versionCode)
 
 然后打开`最新版`Android Studio进行安卓开发
+
+# 修改本项目
+
+修改包名：
+1. 在platforms\android\cdv-gradle-config.json，修改PACKAGE_NAMESPACE字段为你需要的包名
+2. 然后把platforms\android\app\src\main\java\${包名文件夹}改为你需要的包名
+3. 将platforms\android\app\src\main\java\${包名文件夹}里的java文件的第一行“package com.noname.shijian;”改为“package 你的包名;”
+
+修改app名称：
+1. platforms\android\app\src\main\res\values\strings.xml中修改app_name字段为你需要的名称
+
+修改app图标：
+1. 打开Android Studio，点击File -> new -> Image Asset
 
 # 说明
 最近有一伙人号称是《无名杀十周年》的开发团队，宣称《无名杀十周年》“全新无名杀，比旧版拥有更多武将，兼容更多扩展”，实际上: 
