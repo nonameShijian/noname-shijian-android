@@ -4,7 +4,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.WallpaperManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -479,6 +478,7 @@ public class NonameImportActivity extends Activity {
 					.setIcon(R.mipmap.ic_banner_foreground)
 					.setTitle("请选择是否解压")
 					.setMessage("检测到您是首次安装或是升级了app,是否解压内置资源？")
+					.setCancelable(false)
 					.setNegativeButton("取消", (dialogInterface, i) -> {
 						dialogInterface.dismiss();
 						loadAssetExt();
@@ -501,6 +501,7 @@ public class NonameImportActivity extends Activity {
 					.setIcon(R.mipmap.ic_banner_foreground)
 					.setTitle("请选择是否解压")
 					.setMessage("是否解压内置资源？")
+					.setCancelable(false)
 					.setNegativeButton("取消", (dialogInterface, i) -> {
 						dialogInterface.dismiss();
 						loadAssetExt();
@@ -954,6 +955,7 @@ public class NonameImportActivity extends Activity {
 				final TextView textView = new TextView(this);
 				textView.setText("注: 此过程不消耗流量，且点击确定后将自动关闭本界面");
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setCancelable(false);
 				builder.setTitle("解压完内置资源后，是否覆盖安装没有资源的apk以节省资源？");
 				builder.setView(textView);
 				// builder.setIcon(R.mipmap.ic_launcher);
@@ -1064,6 +1066,7 @@ public class NonameImportActivity extends Activity {
 				final TextView textView = new TextView(this);
 				textView.setText("注: 此过程不消耗流量，点击确定后将自动关闭本界面");
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setCancelable(false);
 				builder.setTitle("解压完内置资源后，是否覆盖安装没有资源的apk以节省资源？");
 				builder.setView(textView);
 				// builder.setIcon(R.mipmap.ic_launcher);
@@ -1422,6 +1425,7 @@ public class NonameImportActivity extends Activity {
 		}
 		CharSequence[] items = list.toArray(new CharSequence[messyCodeMap.size()]);
 		AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+		alertBuilder.setCancelable(false);
 		alertBuilder.setTitle("请选择以下不为乱码的一项");
 		fixCharSet = keys.get(0);
 		alertBuilder.setSingleChoiceItems(items, 0, new DialogInterface.OnClickListener() {

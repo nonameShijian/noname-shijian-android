@@ -5,8 +5,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -39,6 +42,27 @@ public class ListViewActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_listview);
+
+        // 设置全屏沉浸模式
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11 (API 30) 及以上推荐使用 WindowInsetsController
+            getWindow().setDecorFitsSystemWindows(false);
+            WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                // 隐藏状态栏和导航栏
+                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                // 设置系统栏在边缘手势时才显示（手势导航模式）
+                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            // Android 10 (API 29) 及以下使用旧的 flags
+            View decorView = getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN // 隐藏状态栏
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // 隐藏导航栏
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY; // 沉浸式粘性模式，用户从边缘滑动可临时显示，稍后自动隐藏
+            decorView.setSystemUiVisibility(uiOptions);
+        }
+
         title = (TextView) findViewById(R.id.title);
         button = (Button) findViewById(R.id.button);
         // 初始路径为app根目录
